@@ -6,11 +6,14 @@ import { AuthModule } from './auth/auth.module';
 import { UsersModule } from './users/users.module';
 import { JwtModule } from '@nestjs/jwt';
 import { PrismaModule } from './prisma/prisma.module';
+import { GroupsModule } from './groups/groups.module';
 
 @Module({
   imports: [
-    AuthModule, 
-    UsersModule, PrismaModule,
+    AuthModule,
+    UsersModule,
+    PrismaModule,
+    GroupsModule,
     ConfigModule.forRoot({
       isGlobal: true,
       envFilePath: '.env',
