@@ -7,6 +7,8 @@ import {
   Param,
   Delete,
   ParseIntPipe,
+  UseGuards,
+  Req,
 } from '@nestjs/common';
 import { UsersService } from './users.service';
 import { CreateUserDto } from './dto/create-user.dto';
@@ -17,6 +19,9 @@ import {
   ApiResponse,
   ApiParam,
 } from '@nestjs/swagger';
+import { AuthGuard } from '@nestjs/passport';
+import { Session } from 'src/common/session.decorator';
+import { Role, User } from 'generated/prisma';
 
 @ApiTags('users')
 @Controller('users')
@@ -33,7 +38,9 @@ export class UsersController {
   @Get()
   @ApiOperation({ summary: 'Get all users' })
   @ApiResponse({ status: 200, description: 'List of users.' })
-  findAll() {
+  @UseGuards(AuthGuard('jwt'))
+  findAll(@Session() session: User) {
+    console.log(session); 
     return this.usersService.findAll();
   }
 

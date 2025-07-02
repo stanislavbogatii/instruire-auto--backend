@@ -3,13 +3,14 @@ import { CreateUserDto } from './dto/create-user.dto';
 import { UpdateUserDto } from './dto/update-user.dto';
 import { PrismaService } from 'src/prisma/prisma.service';
 import * as bcrypt from 'bcrypt';
+import { User } from '@prisma/client';
 
 @Injectable()
 export class UsersService {
   constructor(private prisma: PrismaService) {}
 
   /** Create a new user, hashing password and stripping hash from return */
-  async create(dto: CreateUserDto) {
+  async create(dto: CreateUserDto, groupId?: number) {
     const { email, password } = dto;
 
     // 1) Check for existing user
@@ -23,7 +24,7 @@ export class UsersService {
 
     // 3) Create in the DB
     const user = await this.prisma.user.create({
-      data: { email, hash },
+      data: { email, hash, groupId },
     });
 
     // 4) Strip out the hash before returning
@@ -45,6 +46,10 @@ export class UsersService {
       },
     });
     return users;
+  }
+
+  async findByEmail(email: string): Promise<User | null> {
+    return this.prisma.user.findUnique({ where: { email } });
   }
 
   /** Return one user or throw 404 */

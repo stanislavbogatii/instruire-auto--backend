@@ -5,4 +5,7 @@ import { ApiPropertyOptional } from '@nestjs/swagger';
 export class UpdateGroupDto extends PartialType(CreateGroupDto) {
   @ApiPropertyOptional({ description: 'New name for the group' })
   name?: string;
+
+  @ApiPropertyOptional({ description: 'New instructor ID' })
+  instructorId?: number;
 }

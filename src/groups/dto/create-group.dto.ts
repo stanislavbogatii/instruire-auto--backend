@@ -6,4 +6,8 @@ export class CreateGroupDto {
   @IsNotEmpty()
   @MaxLength(100)
   name: string;
+
+  @ApiProperty({ example: 1, description: 'Instructor ID' })
+  @IsNotEmpty()
+  instructorId: number;
 }
