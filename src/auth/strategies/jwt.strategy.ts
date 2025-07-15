@@ -21,7 +21,7 @@ export class JwtStrategy extends PassportStrategy(Strategy, 'jwt') {
       throw new Error('Invalid JWT payload');
     }
     const user = await this.userService.findOne(payload.sub);
-    if (!user) {
+    if (user) {
       return user;
     }
     throw new Error('User not found');

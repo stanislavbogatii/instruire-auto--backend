@@ -54,8 +54,7 @@ export class UsersService {
     if (!user) {
       throw new NotFoundException(`User with id=${id} not found`);
     }
-    const { hash: _, ...rest } = user;
-    return rest;
+    return user;
   }
 
   async update(id: number, dto: UpdateUserDto) {

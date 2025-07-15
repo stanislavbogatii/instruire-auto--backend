@@ -22,6 +22,8 @@ model User {
   group     Group?   @relation(fields: [groupId], references: [id])
   groupId   Int?
 
+  reservations Reservation[]
+
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 }
@@ -37,6 +39,16 @@ model Group {
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
+}
+
+
+model Reservation {
+  id       Int      @id @default(autoincrement())
+  userId   Int
+  startTime DateTime
+  createdAt DateTime @default(now())
+
+  user    User   @relation(fields: [userId], references: [id])
 }
 
 model Instructor {

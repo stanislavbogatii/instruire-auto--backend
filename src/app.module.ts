@@ -12,6 +12,7 @@ import { HandlebarsAdapter } from '@nestjs-modules/mailer/dist/adapters/handleba
 import { MailerModule } from '@nestjs-modules/mailer';
 import { join } from 'path';
 import { MailModule } from './mail/mail.module';
+import { ReservationsModule } from './reservations/reservations.module';
 
 @Module({
   imports: [
@@ -48,6 +49,7 @@ import { MailModule } from './mail/mail.module';
       },
     }),
     MailModule,
+    ReservationsModule,
   ],
   controllers: [AppController],
   providers: [AppService],

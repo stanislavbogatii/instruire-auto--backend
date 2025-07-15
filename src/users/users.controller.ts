@@ -40,7 +40,6 @@ export class UsersController {
   @ApiResponse({ status: 200, description: 'List of users.' })
   @UseGuards(AuthGuard('jwt'))
   findAll(@Session() session: User) {
-    console.log(session); 
     return this.usersService.findAll();
   }
 

@@ -6,7 +6,7 @@ import { SwaggerModule, DocumentBuilder } from '@nestjs/swagger';
 async function bootstrap() {
   const app = await NestFactory.create(AppModule);
   app.useGlobalPipes(new ValidationPipe({ whitelist: true }));
-  app.setGlobalPrefix('api');
+  app.setGlobalPrefix('api'); // Your API endpoints will be prefixed with /api
 
   const config = new DocumentBuilder()
     .setTitle('Instruire Auto API')
@@ -14,9 +14,21 @@ async function bootstrap() {
     .setVersion('1.0')
     .addTag('users')
     .addTag('auth')
+    .addBearerAuth( // Add this line
+      {
+        type: 'http', // Specify the security scheme type as 'http'
+        scheme: 'bearer', // Indicate it's a bearer token
+        bearerFormat: 'JWT', // Optional: specify the format of the token
+        name: 'JWT', // A name for the security scheme (displayed in Swagger UI)
+        description: 'Enter JWT token', // A helpful description for users
+        in: 'header', // The token will be sent in the request header
+      },
+      'access-token', // This is the unique key that links to @ApiBearerAuth()
+    )
     .build();
+
   const document = SwaggerModule.createDocument(app, config);
-  SwaggerModule.setup('api-docs', app, document);
+  SwaggerModule.setup('api-docs', app, document); // Swagger UI will be at /api-docs
 
   await app.listen(process.env.PORT ?? 3000);
 }
