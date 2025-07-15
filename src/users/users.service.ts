@@ -13,23 +13,17 @@ export class UsersService {
   async create(dto: CreateUserDto, groupId?: number) {
     const { email, password } = dto;
 
-    // 1) Check for existing user
     const exists = await this.prisma.user.findUnique({ where: { email } });
     if (exists) {
       throw new ConflictException('Email already in use');
     }
 
-    // 2) Hash the password
     const hash = await bcrypt.hash(password, 10);
 
-    // 3) Create in the DB
     const user = await this.prisma.user.create({
       data: { email, hash, groupId },
     });
 
-    // 4) Strip out the hash before returning
-    //    (createdAt/updatedAt come from the database defaults)
-    // eslint-disable-next-line @typescript-eslint/no-unused-vars
     const { hash: _, ...rest } = user;
     return rest;
   }
@@ -64,9 +58,7 @@ export class UsersService {
     return rest;
   }
 
-  /** Update email and/or password */
   async update(id: number, dto: UpdateUserDto) {
-    // 1) Ensure user exists
     const user = await this.prisma.user.findUnique({ where: { id } });
     if (!user) {
       throw new NotFoundException(`User with id=${id} not found`);
@@ -86,12 +78,10 @@ export class UsersService {
       data.email = dto.email;
     }
 
-    // 3) If updating password, hash it
     if (dto.password) {
       data.hash = await bcrypt.hash(dto.password, 10);
     }
 
-    // 4) Perform update
     const updated = await this.prisma.user.update({
       where: { id },
       data,

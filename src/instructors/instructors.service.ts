@@ -21,8 +21,8 @@ export class InstructorsService {
     return this.prisma.instructor.create({ data: dto });
   }
 
-  findAll() {
-    return this.prisma.instructor.findMany();
+  async findAll() {
+    return await this.prisma.instructor.findMany();
   }
 
   async findOne(id: number) {

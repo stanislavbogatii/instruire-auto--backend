@@ -1,16 +1,21 @@
-import { Injectable, UnauthorizedException } from '@nestjs/common';
+import { BadRequestException, Injectable, InternalServerErrorException, NotFoundException, UnauthorizedException } from '@nestjs/common';
 import { JwtService } from '@nestjs/jwt';
 import { UsersService } from 'src/users/users.service';
 import * as bcrypt from 'bcrypt';
 import { GroupsService } from 'src/groups/groups.service';
+import { ResetPasswordDto } from './dto/reset-password-dto';
+import { RequestResetPasswordDto } from './dto/request-reset-password.dto';
+import { MailService } from 'src/mail/mail.service';
+import { RegisterAuthDto } from './dto/register-auth.dto';
 
 @Injectable()
 export class AuthService {
   constructor(
     private usersService: UsersService,
     private groupsService: GroupsService,
-    private jwtService: JwtService
-  ) {}
+    private jwtService: JwtService,
+    private mailService: MailService
+  ) { }
 
 
   async validate(password: string, hash: string) {
@@ -18,33 +23,28 @@ export class AuthService {
   }
 
   async login(dto: { email: string; password: string }) {
-    // 1) Load the user (with hash)
     const user = await this.usersService.findByEmail(dto.email);
     if (!user) throw new UnauthorizedException('Invalid credentials');
 
-    // 2) Compare password
     const isMatch = await bcrypt.compare(dto.password, user.hash);
     if (!isMatch) throw new UnauthorizedException('Invalid credentials');
 
-    // 3) Sign token
     const payload = { sub: user.id, email: user.email };
     return { access_token: this.jwtService.sign(payload) };
   }
 
-  async register(dto: any) {
+  async register(dto: RegisterAuthDto) {
     let groupId: number | undefined;
     if (dto.groupToken) {
       const group = await this.groupsService.findByToken(dto.groupToken);
       groupId = group.id;
     }
 
-    // 2) Create the user (UsersService now accepts optional groupId)
     const user = await this.usersService.create(
       { email: dto.email, password: dto.password },
       groupId,
     );
 
-    // 3) Sign & return JWT
     const payload = { sub: user.id, email: user.email };
     return { access_token: this.jwtService.sign(payload) };
   }
@@ -53,5 +53,32 @@ export class AuthService {
   async hashPassword(password: string): Promise<string> {
     const saltRounds = 10;
     return await bcrypt.hash(password, saltRounds);
+  }
+
+
+  async sendResetPasswordEmail(dto: RequestResetPasswordDto) {
+    const user = await this.usersService.findByEmail(dto.email);
+    if (!user) throw new UnauthorizedException('Invalid email');
+
+    const payload = { sub: user.id };
+    const token = this.jwtService.sign(payload, {
+      expiresIn: '15m'
+    })
+    if (!process.env.CLIENT_URL) {
+      throw new InternalServerErrorException("CLIENT_URL not set");
+    }
+    const resetLink = `${process.env.CLIENT_URL}/reset-password?token=${token}`;
+    await this.mailService.sendResetPasswordMail(user.email, resetLink);
+  }
+
+  async resetPassword(dto: ResetPasswordDto) {
+    try {
+      const payload = this.jwtService.verify(dto.token);
+      const user = await this.usersService.findOne(payload.sub);
+      if (!user) throw new NotFoundException('User not found');
+      await this.usersService.update(user.id, {password: dto.newPassword});
+    } catch (err) {
+      throw new BadRequestException('Invalid or expired reset token');
+    }
   }
 }
