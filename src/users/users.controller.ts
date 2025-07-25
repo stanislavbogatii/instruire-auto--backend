@@ -18,10 +18,11 @@ import {
   ApiOperation,
   ApiResponse,
   ApiParam,
+  ApiBearerAuth,
 } from '@nestjs/swagger';
 import { AuthGuard } from '@nestjs/passport';
 import { Session } from 'src/common/session.decorator';
-import { Role, User } from 'generated/prisma';
+import { Role, User } from '@prisma/client';
 
 @ApiTags('users')
 @Controller('users')
@@ -38,8 +39,9 @@ export class UsersController {
   @Get()
   @ApiOperation({ summary: 'Get all users' })
   @ApiResponse({ status: 200, description: 'List of users.' })
+  @ApiBearerAuth('access-token') 
   @UseGuards(AuthGuard('jwt'))
-  findAll(@Session() session: User) {
+  findAll(@Session() session: User) {  
     return this.usersService.findAll();
   }
 

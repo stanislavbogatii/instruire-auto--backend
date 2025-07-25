@@ -1,63 +1,62 @@
-// This is your Prisma schema file,
-// learn more about it in the docs: https://pris.ly/d/prisma-schema
-
-// Looking for ways to speed up your queries, or scale easily with your serverless or edge functions?
-// Try Prisma Accelerate: https://pris.ly/cli/accelerate-init
-
 generator client {
   provider = "prisma-client-js"
 }
 
 datasource db {
-  provider = "mysql"
-  url      = env("DATABASE_URL")
+  provider          = "mysql"
+  url               = env("DATABASE_URL")
+  shadowDatabaseUrl = env("SHADOW_DATABASE_URL")
 }
 
-
 model User {
-  id      Int    @id @default(autoincrement())
-  email   String @unique
-  hash    String
-  role    Role @default(USER)
-  group     Group?   @relation(fields: [groupId], references: [id])
-  groupId   Int?
-
+  id           Int           @id @default(autoincrement())
+  email        String        @unique
+  hash         String
+  firstName    String?       @default("")
+  lastName     String?       @default("")
+  role         Role          @default(USER)
+  groupId      Int?
+  createdAt    DateTime      @default(now())
+  updatedAt    DateTime      @updatedAt
   reservations Reservation[]
+  group        Group?        @relation(fields: [groupId], references: [id])
 
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
+  @@index([groupId], map: "User_groupId_fkey")
 }
 
 model Group {
-  id        Int      @id @default(autoincrement())
-  name      String
-  token     String   @unique
-  users     User[]
-
-  instructor   Instructor? @relation(fields: [instructorId], references: [id])
+  id           Int         @id @default(autoincrement())
+  name         String
+  token        String      @unique
   instructorId Int?
+  createdAt    DateTime    @default(now())
+  updatedAt    DateTime    @updatedAt
+  instructor   Instructor? @relation(fields: [instructorId], references: [id])
+  users        User[]
 
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
+  @@index([instructorId], map: "Group_instructorId_fkey")
 }
 
-
 model Reservation {
-  id       Int      @id @default(autoincrement())
-  userId   Int
-  startTime DateTime
-  createdAt DateTime @default(now())
+  id           Int        @id @default(autoincrement())
+  userId       Int
+  instructorId Int
+  startTime    DateTime
+  createdAt    DateTime   @default(now())
+  instructor   Instructor @relation(fields: [instructorId], references: [id])
+  user         User       @relation(fields: [userId], references: [id])
 
-  user    User   @relation(fields: [userId], references: [id])
+  @@index([instructorId], map: "Reservation_instructorId_fkey")
+  @@index([userId], map: "Reservation_userId_fkey")
 }
 
 model Instructor {
-  id        Int      @id @default(autoincrement())
-  firstName String
-  lastName  String
-  phone     String
-
-  groups    Group[]
+  id           Int           @id @default(autoincrement())
+  firstName    String
+  lastName     String
+  phone        String
+  groups       Group[]
+  reservations Reservation[]
 }
 
 enum Role {

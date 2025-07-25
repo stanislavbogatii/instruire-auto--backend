@@ -41,7 +41,12 @@ export class AuthService {
     }
 
     const user = await this.usersService.create(
-      { email: dto.email, password: dto.password },
+      { 
+        email: dto.email, 
+        password: dto.password,
+        firstName: dto.firstName,  // Default empty string for now
+        lastName: dto.lastName    // Default empty string for now
+      },
       groupId,
     );
 

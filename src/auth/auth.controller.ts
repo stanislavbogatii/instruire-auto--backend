@@ -3,26 +3,33 @@ import {
   Post,
   Body,
   UnauthorizedException,
+  Get,
+  UseGuards,
 } from '@nestjs/common';
 import { AuthService } from './auth.service';
 import { LoginAuthDto } from './dto/login-auth.dto';
 import { RegisterAuthDto } from './dto/register-auth.dto';
+import { Session } from 'src/common/session.decorator';
+
 import {
   ApiTags,
   ApiOperation,
   ApiResponse,
   ApiBody,
+  ApiBearerAuth,
 } from '@nestjs/swagger';
 
-import { RequestResetPasswordDto } from  './dto/request-reset-password.dto';
+import { RequestResetPasswordDto } from './dto/request-reset-password.dto';
 import { ResetPasswordDto } from './dto/reset-password-dto';
+import { AuthGuard } from '@nestjs/passport';
+import { User } from '@prisma/client';
 
 @ApiTags('auth')
 @Controller('auth')
 export class AuthController {
   constructor(
     private readonly authService: AuthService,
-  ) {}
+  ) { }
 
   @Post('login')
   @ApiOperation({ summary: 'Log in and receive a JWT' })
@@ -40,6 +47,7 @@ export class AuthController {
   @ApiBody({ type: RegisterAuthDto })
   @ApiResponse({ status: 201, description: 'User created and token returned.' })
   async register(@Body() dto: RegisterAuthDto) {
+    console.log(dto)
     return this.authService.register(dto);
   }
 
@@ -60,5 +68,15 @@ export class AuthController {
   async resetPassword(@Body() dto: ResetPasswordDto) {
     await this.authService.resetPassword(dto);
     return { message: 'Password has been reset successfully.' };
+  }
+
+
+  @Get('me')
+  @ApiOperation({ summary: 'Get user session' })
+  @ApiResponse({ status: 200, description: 'User session.' })
+  @ApiBearerAuth('access-token')
+  @UseGuards(AuthGuard('jwt'))
+  async getMe(@Session() session: User) {
+    return session;
   }
 }

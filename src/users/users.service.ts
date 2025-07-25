@@ -11,7 +11,7 @@ export class UsersService {
 
   /** Create a new user, hashing password and stripping hash from return */
   async create(dto: CreateUserDto, groupId?: number) {
-    const { email, password } = dto;
+    const { email, password, firstName, lastName } = dto;
 
     const exists = await this.prisma.user.findUnique({ where: { email } });
     if (exists) {
@@ -21,7 +21,13 @@ export class UsersService {
     const hash = await bcrypt.hash(password, 10);
 
     const user = await this.prisma.user.create({
-      data: { email, hash, groupId },
+      data: { 
+        email,
+        hash, 
+        firstName,
+        lastName,
+        groupId 
+      },
     });
 
     const { hash: _, ...rest } = user;
@@ -34,10 +40,13 @@ export class UsersService {
       select: {
         id: true,
         email: true,
+        firstName: true,
+        lastName: true,
         role: true,
         createdAt: true,
         updatedAt: true,
-      },
+        groupId: true
+      }
     });
     return users;
   }

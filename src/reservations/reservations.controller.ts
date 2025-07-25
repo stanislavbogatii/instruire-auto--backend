@@ -1,7 +1,9 @@
 import {
   Body,
   Controller,
+  Delete,
   Get,
+  HttpStatus,
   Param,
   ParseIntPipe,
   Patch,
@@ -21,7 +23,7 @@ import {
 } from '@nestjs/swagger';
 import { AuthGuard } from '@nestjs/passport';
 import { Session } from 'src/common/session.decorator';
-import { User } from 'generated/prisma';
+import { User } from '@prisma/client';
 
 @ApiTags('reservations')
 @ApiBearerAuth('access-token') 
@@ -66,4 +68,16 @@ export class ReservationsController {
   ) {
     return await this.reservationsService.update(id, dto);
   }
+
+  @Delete(':id')
+  @ApiOperation({ summary: "Delete reservation" })
+  @ApiParam({ name: 'id', type: Number })
+  @ApiResponse({ status: HttpStatus.NO_CONTENT, description: 'Reservation success deleted' })
+  @ApiResponse({ status: HttpStatus.NOT_FOUND, description: "Reservation not found"})
+  async delete(
+    @Param('id', ParseIntPipe) id: number
+  ) {
+    await this.reservationsService.delete(id);
+  }
+
 }
