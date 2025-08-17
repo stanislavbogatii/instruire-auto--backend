@@ -15,6 +15,7 @@ import { MailModule } from './mail/mail.module';
 import { ReservationsModule } from './reservations/reservations.module';
 import { CarsModule } from './cars/cars.module';
 import { InstructorsGroupModule } from './instructors-group/instructors-group.module';
+import { NotificationsModule } from './notifications/notifications.module';
 
 @Module({
   imports: [
@@ -25,6 +26,7 @@ import { InstructorsGroupModule } from './instructors-group/instructors-group.mo
     GroupsModule,
     CarsModule,
     InstructorsGroupModule,
+    NotificationsModule,
     ConfigModule.forRoot({
       isGlobal: true,
       envFilePath: '.env',

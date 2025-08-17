@@ -25,6 +25,21 @@ export class MailService {
       context: {
         resetLink,
       },
-    })
+    });
+  }
+
+  async sendReservationConfirmation(to: string, context: {
+    firstName: string;
+    instructorName: string;
+    startTime: string;
+    sector: string;
+    confirmationUrl: string;
+  }) {
+    await this.mailer.sendMail({
+      to,
+      subject: 'Confirm Your Driving Lesson for Tomorrow',
+      template: 'reservation-confirmation',
+      context,
+    });
   }
 }

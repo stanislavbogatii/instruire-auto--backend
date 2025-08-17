@@ -50,6 +50,7 @@ model Reservation {
   gearbox           String?         @default("")
   privateMessage    String?         @default("")
   color             String?         @default("")
+  isConfirmed       Boolean         @default(false)
   createdAt         DateTime        @default(now())
   instructor        Instructor      @relation(fields: [instructorId], references: [id])
   user              User           @relation(fields: [userId], references: [id])
