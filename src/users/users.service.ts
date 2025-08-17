@@ -76,7 +76,7 @@ export class UsersService {
       throw new NotFoundException(`User with id=${id} not found`);
     }
 
-    const data: { email?: string; hash?: string; phone?: string; privateMessage?: string } = {};  // Add phone to type
+    const data: { email?: string; hash?: string; phone?: string; privateMessage?: string; groupId?: number } = {};  // Add phone to type
     // 2) If updating email, check conflict
     if (dto.email && dto.email !== user.email) {
       const conflict = await this.prisma.user.findUnique({

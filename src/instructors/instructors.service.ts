@@ -30,11 +30,22 @@ export class InstructorsService {
     });
   }
 
-  async findAll() {
-    return await this.prisma.instructor.findMany();
+  async findAll(includeInactive = false) {
+    return await this.prisma.instructor.findMany({
+      where: includeInactive ? {} : { isActive: true }
+    });
   }
 
   async findOne(id: number) {
+    const inst = await this.prisma.instructor.findUnique({ 
+      where: { id } 
+    });
+    if (!inst) throw new NotFoundException(`Instructor ${id} not found`);
+    if (!inst.isActive) throw new ConflictException(`Instructor ${id} is inactive`);
+    return inst;
+  }
+  
+  async findOneWithInactive(id: number) {
     const inst = await this.prisma.instructor.findUnique({ where: { id } });
     if (!inst) throw new NotFoundException(`Instructor ${id} not found`);
     return inst;
@@ -60,7 +71,28 @@ export class InstructorsService {
   }
 
   async remove(id: number) {
-    await this.findOne(id);
-    return this.prisma.instructor.delete({ where: { id } });
+    const instructor = await this.prisma.instructor.findUnique({
+      where: { id },
+    });
+    if (!instructor) {
+      throw new NotFoundException(`Instructor #${id} not found`);
+    }
+    return this.prisma.instructor.update({
+      where: { id },
+      data: { isActive: false }
+    });
+  }
+
+  async reactivate(id: number) {
+    const instructor = await this.prisma.instructor.findUnique({
+      where: { id },
+    });
+    if (!instructor) {
+      throw new NotFoundException(`Instructor #${id} not found`);
+    }
+    return this.prisma.instructor.update({
+      where: { id },
+      data: { isActive: true }
+    });
   }
 }

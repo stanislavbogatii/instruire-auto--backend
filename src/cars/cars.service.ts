@@ -1,28 +1,24 @@
-import { Injectable } from '@nestjs/common';
+import { Injectable, ConflictException } from '@nestjs/common';
 import { PrismaService } from '../prisma/prisma.service';
+import { CommonService } from '../common/common.service';
 import { CreateCarDto } from './dto/create-car.dto';
 import { UpdateCarDto } from './dto/update-car.dto';
 
 @Injectable()
 export class CarsService {
-  constructor(private prisma: PrismaService) {}
+  constructor(
+    private prisma: PrismaService,
+    private commonService: CommonService
+  ) {}
 
   async create(createCarDto: CreateCarDto) {
     try {
       const { instructorId, plateNumber } = createCarDto;
       console.log('Creating car with data:', { plateNumber, instructorId });
 
-      // If instructorId is provided, verify that the instructor exists
+      // If instructorId is provided, verify that the instructor exists and is active
       if (instructorId) {
-        console.log('Checking instructor existence:', instructorId);
-        const instructor = await this.prisma.instructor.findUnique({
-          where: { id: instructorId },
-        });
-        console.log('Instructor found:', instructor);
-        
-        if (!instructor) {
-          throw new Error(`Instructor with ID ${instructorId} not found`);
-        }
+        await this.commonService.validateActiveInstructor(instructorId);
       }
 
       // Create the car with required plateNumber

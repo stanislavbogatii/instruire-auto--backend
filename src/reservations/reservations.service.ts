@@ -49,18 +49,53 @@ export class ReservationsService {
         }
       }
 
+      // Find a car for this instructor that isn't reserved at this time
+      const availableCar = await this.prisma.$transaction(async (prisma) => {
+        const cars = await prisma.car.findMany({
+          where: { instructorId }
+        });
+
+        for (const car of cars) {
+          const existingReservation = await prisma.reservation.findFirst({
+            where: {
+              startTime,
+              carId: car.id
+            }
+          });
+
+          if (!existingReservation) {
+            return car;  // Return the first available car
+          }
+        }
+        
+        return null;  // No available cars found
+      });
+
+      console.log('Found available car:', availableCar);
+
+      // Create the reservation with the car if available
       const reservation = await this.prisma.reservation.create({
         data: {
           userId,
-          startTime,
           instructorId,
-          sector: item.sector,
-          gearbox: item.gearbox,
-          privateMessage: item.privateMessage,
-          color: item.color,  // Add this line
+          startTime,
+          sector: item.sector || '',
+          gearbox: item.gearbox || '',
+          privateMessage: item.privateMessage || '',
+          color: item.color || '',
+          ...(availableCar ? { carId: availableCar.id } : {})
         },
         include: {
-          instructor: true
+          instructor: true,
+          user: {
+            select: {
+              id: true,
+              email: true,
+              firstName: true,
+              lastName: true,
+              phone: true
+            }
+          }
         }
       });
       created.push(reservation);
@@ -98,7 +133,8 @@ export class ReservationsService {
         color: dto.color,  // Add this line
       },
       include: {
-        instructor: true
+        instructor: true,
+        car: true
       }
     });
   }
@@ -121,6 +157,12 @@ export class ReservationsService {
       },
       include: {
         instructor: true,
+        car: {
+          select: {
+            id: true,
+            plateNumber: true
+          }
+        },
         user: {
           select: {
             id: true,
