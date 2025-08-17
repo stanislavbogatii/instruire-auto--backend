@@ -14,6 +14,8 @@ model User {
   hash         String
   firstName    String?       @default("")
   lastName     String?       @default("")
+  phone        String?       @default("")
+  privateMessage String?     @default("")
   role         Role          @default(USER)
   groupId      Int?
   createdAt    DateTime      @default(now())
@@ -38,16 +40,31 @@ model Group {
 }
 
 model Reservation {
-  id           Int        @id @default(autoincrement())
-  userId       Int
-  instructorId Int
-  startTime    DateTime
-  createdAt    DateTime   @default(now())
-  instructor   Instructor @relation(fields: [instructorId], references: [id])
-  user         User       @relation(fields: [userId], references: [id])
+  id             Int        @id @default(autoincrement())
+  userId         Int
+  instructorId   Int
+  startTime      DateTime
+  sector         String?    @default("")
+  gearbox        String?    @default("")
+  privateMessage String?    @default("")
+  color          String?    @default("")  // Add this line
+  createdAt      DateTime   @default(now())
+  instructor     Instructor @relation(fields: [instructorId], references: [id])
+  user           User       @relation(fields: [userId], references: [id])
 
   @@index([instructorId], map: "Reservation_instructorId_fkey")
   @@index([userId], map: "Reservation_userId_fkey")
+}
+
+model Car {
+  id          Int         @id @default(autoincrement())
+  plateNumber String      @unique
+  instructor  Instructor? @relation(fields: [instructorId], references: [id])
+  instructorId Int?
+  createdAt   DateTime    @default(now())
+  updatedAt   DateTime    @updatedAt
+
+  @@index([instructorId], map: "Car_instructorId_fkey")
 }
 
 model Instructor {
@@ -55,8 +72,10 @@ model Instructor {
   firstName    String
   lastName     String
   phone        String
+  sector       String?      @default("") 
   groups       Group[]
   reservations Reservation[]
+  cars         Car[]
 }
 
 enum Role {

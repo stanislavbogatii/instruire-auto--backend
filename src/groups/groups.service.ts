@@ -27,23 +27,47 @@ export class GroupsService {
     }
   }
 
-  async findByToken(token: string) {
-    const group = await this.prisma.group.findUnique({
-      where: { token },
-    });
-    if (!group) throw new NotFoundException(`Group with token=${token} not found`);
-    return group;
-  }
-
   /** List all groups */
   findAll() {
-    return this.prisma.group.findMany();
+    return this.prisma.group.findMany({
+      include: {
+        instructor: {
+          select: {
+            sector: true
+          }
+        }
+      }
+    });
   }
 
   /** Get one or 404 */
   async findOne(id: number) {
-    const group = await this.prisma.group.findUnique({ where: { id } });
+    const group = await this.prisma.group.findUnique({ 
+      where: { id },
+      include: {
+        instructor: {
+          select: {
+            sector: true
+          }
+        }
+      }
+    });
     if (!group) throw new NotFoundException(`Group ${id} not found`);
+    return group;
+  }
+
+  async findByToken(token: string) {
+    const group = await this.prisma.group.findUnique({
+      where: { token },
+      include: {
+        instructor: {
+          select: {
+            sector: true
+          }
+        }
+      }
+    });
+    if (!group) throw new NotFoundException(`Group with token=${token} not found`);
     return group;
   }
 

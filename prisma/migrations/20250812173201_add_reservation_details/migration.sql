@@ -1,0 +1,4 @@
+-- AlterTable
+ALTER TABLE `Reservation` ADD COLUMN `gearbox` VARCHAR(191) NULL DEFAULT '',
+    ADD COLUMN `privateMessage` VARCHAR(191) NULL DEFAULT '',
+    ADD COLUMN `sector` VARCHAR(191) NULL DEFAULT '';

@@ -54,14 +54,16 @@ export class ReservationsService {
           userId,
           startTime,
           instructorId,
+          sector: item.sector,
+          gearbox: item.gearbox,
+          privateMessage: item.privateMessage,
+          color: item.color,  // Add this line
         },
         include: {
-          instructor: true // Include instructor details in response
+          instructor: true
         }
       });
-
-      if (reservation)
-        created.push(reservation);
+      created.push(reservation);
     }
     return created;
   }
@@ -78,12 +80,26 @@ export class ReservationsService {
   }
 
   async update(id: number, dto: UpdateReservationDto) {
-    return await this.prisma.reservation.update({
+    const reservation = await this.prisma.reservation.findUnique({
+      where: { id },
+    });
+    if (!reservation) {
+      throw new NotFoundException(`Reservation #${id} not found`);
+    }
+
+    return this.prisma.reservation.update({
       where: { id },
       data: {
-        ...(dto.startTime && { startTime: new Date(dto.startTime) }),
-        ...(dto.instructorId && { instructorId: dto.instructorId }),
+        startTime: dto.startTime ? new Date(dto.startTime) : undefined,
+        instructorId: dto.instructorId,
+        sector: dto.sector,
+        gearbox: dto.gearbox,
+        privateMessage: dto.privateMessage,
+        color: dto.color,  // Add this line
       },
+      include: {
+        instructor: true
+      }
     });
   }
 
@@ -96,5 +112,25 @@ export class ReservationsService {
     await this.prisma.reservation.delete({
       where: {id}
     })
+  }
+
+  async getReservationsByUser(userId: number) {
+    return this.prisma.reservation.findMany({
+      where: {
+        userId
+      },
+      include: {
+        instructor: true,
+        user: {
+          select: {
+            id: true,
+            email: true,
+            firstName: true,
+            lastName: true,
+            phone: true
+          }
+        }
+      }
+    });
   }
 }

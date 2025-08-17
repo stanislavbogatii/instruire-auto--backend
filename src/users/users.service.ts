@@ -11,7 +11,7 @@ export class UsersService {
 
   /** Create a new user, hashing password and stripping hash from return */
   async create(dto: CreateUserDto, groupId?: number) {
-    const { email, password, firstName, lastName } = dto;
+    const { email, password, firstName, lastName, phone, privateMessage } = dto;  // Add phone to destructuring
 
     const exists = await this.prisma.user.findUnique({ where: { email } });
     if (exists) {
@@ -26,6 +26,8 @@ export class UsersService {
         hash, 
         firstName,
         lastName,
+        phone,     // Add phone field
+        privateMessage,  // Add this line
         groupId 
       },
     });
@@ -43,6 +45,8 @@ export class UsersService {
         firstName: true,
         lastName: true,
         role: true,
+        phone: true,
+        privateMessage: true,
         createdAt: true,
         updatedAt: true,
         groupId: true
@@ -72,7 +76,7 @@ export class UsersService {
       throw new NotFoundException(`User with id=${id} not found`);
     }
 
-    const data: { email?: string; hash?: string } = {};
+    const data: { email?: string; hash?: string; phone?: string; privateMessage?: string } = {};  // Add phone to type
     // 2) If updating email, check conflict
     if (dto.email && dto.email !== user.email) {
       const conflict = await this.prisma.user.findUnique({
@@ -88,6 +92,15 @@ export class UsersService {
 
     if (dto.password) {
       data.hash = await bcrypt.hash(dto.password, 10);
+    }
+
+    // Add phone to update data if provided
+    if (dto.phone !== undefined) {
+      data.phone = dto.phone;
+    }
+
+    if (dto.privateMessage !== undefined) {
+      data.privateMessage = dto.privateMessage;
     }
 
     const updated = await this.prisma.user.update({
@@ -107,5 +120,26 @@ export class UsersService {
     });
     const { hash: _, ...rest } = deleted;
     return rest;
+  }
+
+  async getUsersByGroup(groupId: number) {
+    return this.prisma.user.findMany({
+      where: {
+        groupId
+      },
+      select: {
+        id: true,
+        email: true,
+        firstName: true,
+        lastName: true,
+        role: true,
+        groupId: true,
+        group: true,
+        phone: true,
+        privateMessage: true,
+        createdAt: true,
+        updatedAt: true
+      }
+    });
   }
 }

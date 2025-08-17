@@ -80,4 +80,15 @@ export class ReservationsController {
     await this.reservationsService.delete(id);
   }
 
+  @Get('user/:userId')
+  @ApiOperation({ summary: 'Get all reservations for a specific user' })
+  @ApiParam({ name: 'userId', type: Number })
+  @ApiResponse({ 
+    status: 200, 
+    description: 'List of reservations for the user'
+  })
+  @ApiResponse({ status: 404, description: 'User not found' })
+  async getReservationsByUser(@Param('userId', ParseIntPipe) userId: number) {
+    return this.reservationsService.getReservationsByUser(userId);
+  }
 }

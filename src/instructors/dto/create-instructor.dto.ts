@@ -1,4 +1,4 @@
-import { IsNotEmpty, MaxLength } from 'class-validator';
+import { IsNotEmpty, MaxLength, IsString, IsOptional } from 'class-validator';
 import { ApiProperty } from '@nestjs/swagger';
 
 export class CreateInstructorDto {
@@ -16,4 +16,13 @@ export class CreateInstructorDto {
   @IsNotEmpty()
   @MaxLength(20)
   phone: string;
+
+  @ApiProperty({ 
+    example: 'Botanica', 
+    description: 'Preferred teaching sector',
+    required: false 
+  })
+  @IsString()
+  @IsOptional()
+  sector?: string;
 }

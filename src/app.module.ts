@@ -13,6 +13,7 @@ import { MailerModule } from '@nestjs-modules/mailer';
 import { join } from 'path';
 import { MailModule } from './mail/mail.module';
 import { ReservationsModule } from './reservations/reservations.module';
+import { CarsModule } from './cars/cars.module';
 
 @Module({
   imports: [
@@ -21,6 +22,7 @@ import { ReservationsModule } from './reservations/reservations.module';
     PrismaModule,
     InstructorsModule,
     GroupsModule,
+    CarsModule,
     ConfigModule.forRoot({
       isGlobal: true,
       envFilePath: '.env',

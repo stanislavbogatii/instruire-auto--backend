@@ -23,6 +23,7 @@ import {
 import { AuthGuard } from '@nestjs/passport';
 import { Session } from 'src/common/session.decorator';
 import { Role, User } from '@prisma/client';
+import { UserResponseDto } from './dto/user-response.dto'; // Import the UserResponseDto
 
 @ApiTags('users')
 @Controller('users')
@@ -73,5 +74,17 @@ export class UsersController {
   @ApiResponse({ status: 404, description: 'User not found.' })
   remove(@Param('id', ParseIntPipe) id: number) {
     return this.usersService.remove(id);
+  }
+
+  @Get('group/:groupId')
+  @ApiOperation({ summary: 'Get all users in a group' })
+  @ApiParam({ name: 'groupId', type: Number })
+  @ApiResponse({ 
+    status: 200, 
+    description: 'List of users in the group',
+    type: [UserResponseDto]  // Use the DTO instead of User
+  })
+  async getUsersByGroup(@Param('groupId', ParseIntPipe) groupId: number) {
+    return this.usersService.getUsersByGroup(groupId);
   }
 }

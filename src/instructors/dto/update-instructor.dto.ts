@@ -1,6 +1,7 @@
 import { PartialType } from '@nestjs/mapped-types';
 import { CreateInstructorDto } from './create-instructor.dto';
-import { ApiPropertyOptional } from '@nestjs/swagger';
+import { ApiPropertyOptional, ApiProperty } from '@nestjs/swagger';
+import { IsString, IsOptional } from 'class-validator';
 
 export class UpdateInstructorDto extends PartialType(CreateInstructorDto) {
   @ApiPropertyOptional({ description: 'First name' })
@@ -11,4 +12,13 @@ export class UpdateInstructorDto extends PartialType(CreateInstructorDto) {
 
   @ApiPropertyOptional({ description: 'Phone number' })
   phone?: string;
+
+  @ApiProperty({
+    example: 'Botanica',
+    description: 'Preferred teaching sector',
+    required: false,
+  })
+  @IsString()
+  @IsOptional()
+  sector?: string;
 }
