@@ -4,29 +4,61 @@ import {
   ConflictException,
 } from '@nestjs/common';
 import { PrismaService } from '../prisma/prisma.service';
+import { UsersService } from '../users/users.service';
 import { CreateInstructorDto } from './dto/create-instructor.dto';
 import { UpdateInstructorDto } from './dto/update-instructor.dto';
+import { Role } from '@prisma/client';
 
 @Injectable()
 export class InstructorsService {
-  constructor(private prisma: PrismaService) {}
+  constructor(
+    private prisma: PrismaService,
+    private usersService: UsersService,
+  ) {}
 
   async create(createInstructorDto: CreateInstructorDto) {
-    const { firstName, lastName, phone, sector } = createInstructorDto;
+    const { firstName, lastName, phone, email, password, sector } = createInstructorDto;
 
-    // optional: check duplicate phone?
-    const exists = await this.prisma.instructor.findFirst({
+    // Check if phone is already in use
+    const existsPhone = await this.prisma.instructor.findFirst({
       where: { phone },
     });
-    if (exists) throw new ConflictException('Phone already in use');
+    if (existsPhone) throw new ConflictException('Phone already in use');
 
+    // Check if email is already in use
+    const existsEmail = await this.prisma.user.findFirst({
+      where: { email },
+    });
+    if (existsEmail) throw new ConflictException('Email already in use');
+
+    // Create user account for the instructor
+    const user = await this.usersService.create({
+      email,
+      password,
+      firstName,
+      lastName,
+    }, undefined, Role.INSTRUCTOR);
+
+    // Create instructor profile linked to the user
     return this.prisma.instructor.create({
       data: {
         firstName,
         lastName,
         phone,
-        sector, // Add sector field
+        sector,
+        userId: user.id,
       },
+      include: {
+        user: {
+          select: {
+            id: true,
+            email: true,
+            firstName: true,
+            lastName: true,
+            role: true,
+          }
+        }
+      }
     });
   }
 
@@ -93,6 +125,33 @@ export class InstructorsService {
     return this.prisma.instructor.update({
       where: { id },
       data: { isActive: true }
+    });
+  }
+
+  async getInstructorReservations(instructorId: number, completed: boolean = false) {
+    const instructor = await this.findOne(instructorId);
+    
+    const now = new Date();
+    
+    return this.prisma.reservation.findMany({
+      where: {
+        instructorId: instructor.id,
+        startTime: completed ? { lt: now } : { gte: now }
+      },
+      include: {
+        user: {
+          select: {
+            id: true,
+            firstName: true,
+            lastName: true,
+            email: true,
+            phone: true,
+          }
+        }
+      },
+      orderBy: {
+        startTime: completed ? 'desc' : 'asc'
+      }
     });
   }
 }

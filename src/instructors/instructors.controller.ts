@@ -61,4 +61,20 @@ export class InstructorsController {
   remove(@Param('id', ParseIntPipe) id: number) {
     return this.instructorsService.remove(id);
   }
+
+  @Get(':id/reservations')
+  @ApiOperation({ summary: 'Get upcoming reservations for an instructor' })
+  @ApiParam({ name: 'id', type: Number })
+  @ApiResponse({ status: 200, description: 'List of upcoming reservations.' })
+  getUpcomingReservations(@Param('id', ParseIntPipe) id: number) {
+    return this.instructorsService.getInstructorReservations(id, false);
+  }
+
+  @Get(':id/reservations/completed')
+  @ApiOperation({ summary: 'Get completed reservations for an instructor' })
+  @ApiParam({ name: 'id', type: Number })
+  @ApiResponse({ status: 200, description: 'List of completed reservations.' })
+  getCompletedReservations(@Param('id', ParseIntPipe) id: number) {
+    return this.instructorsService.getInstructorReservations(id, true);
+  }
 }

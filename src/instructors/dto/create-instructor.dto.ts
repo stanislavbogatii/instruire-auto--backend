@@ -1,4 +1,4 @@
-import { IsNotEmpty, MaxLength, IsString, IsOptional } from 'class-validator';
+import { IsNotEmpty, MaxLength, IsString, IsOptional, IsEmail } from 'class-validator';
 import { ApiProperty } from '@nestjs/swagger';
 
 export class CreateInstructorDto {
@@ -16,6 +16,16 @@ export class CreateInstructorDto {
   @IsNotEmpty()
   @MaxLength(20)
   phone: string;
+
+  @ApiProperty({ example: 'instructor@example.com', description: 'Email address for login' })
+  @IsNotEmpty()
+  @IsEmail()
+  email: string;
+
+  @ApiProperty({ example: 'password123', description: 'Password for login' })
+  @IsNotEmpty()
+  @MaxLength(100)
+  password: string;
 
   @ApiProperty({ 
     example: 'Botanica', 

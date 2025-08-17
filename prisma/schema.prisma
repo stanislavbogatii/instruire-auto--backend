@@ -18,12 +18,15 @@ model User {
   privateMessage String?     @default("")
   role         Role          @default(USER)
   groupId      Int?
+  userId       Int?          @unique
   createdAt    DateTime      @default(now())
   updatedAt    DateTime      @updatedAt
   reservations Reservation[]
   group        Group?        @relation(fields: [groupId], references: [id])
+  instructorProfile Instructor? @relation("UserInstructor")
 
   @@index([groupId], map: "User_groupId_fkey")
+  @@index([userId], map: "User_userId_fkey")
 }
 
 model Group {
@@ -91,17 +94,21 @@ model Instructor {
   phone            String
   sector           String?           @default("") 
   isActive         Boolean           @default(true)
+  userId           Int?              @unique
   instructorsGroup InstructorsGroup? @relation(fields: [instructorsGroupId], references: [id])
   instructorsGroupId Int?
+  user             User?             @relation("UserInstructor", fields: [userId], references: [id])
   groups           Group[]
   reservations     Reservation[]
   cars             Car[]
 
   @@index([instructorsGroupId])
+  @@index([userId], map: "Instructor_userId_fkey")
 }
 
 enum Role {
   USER
   MANAGER
   ADMIN
+  INSTRUCTOR
 }
