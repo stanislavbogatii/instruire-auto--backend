@@ -74,6 +74,16 @@ export class ReservationsService {
       console.log('Found available car:', availableCar);
 
       // Create the reservation with the car if available
+      // If instructorsGroupId is provided, verify it exists
+      if (item.instructorsGroupId) {
+        const group = await this.prisma.instructorsGroup.findUnique({
+          where: { id: item.instructorsGroupId }
+        });
+        if (!group) {
+          throw new BadRequestException(`Instructors group ${item.instructorsGroupId} not found`);
+        }
+      }
+
       const reservation = await this.prisma.reservation.create({
         data: {
           userId,
@@ -83,10 +93,12 @@ export class ReservationsService {
           gearbox: item.gearbox || '',
           privateMessage: item.privateMessage || '',
           color: item.color || '',
+          instructorsGroupId: item.instructorsGroupId || null,
           ...(availableCar ? { carId: availableCar.id } : {})
         },
         include: {
           instructor: true,
+          instructorsGroup: true,
           user: {
             select: {
               id: true,

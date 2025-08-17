@@ -40,23 +40,26 @@ model Group {
 }
 
 model Reservation {
-  id             Int        @id @default(autoincrement())
-  userId         Int
-  instructorId   Int
-  carId          Int?
-  startTime      DateTime
-  sector         String?    @default("")
-  gearbox        String?    @default("")
-  privateMessage String?    @default("")
-  color          String?    @default("")
-  createdAt      DateTime   @default(now())
-  instructor     Instructor @relation(fields: [instructorId], references: [id])
-  user           User       @relation(fields: [userId], references: [id])
-  car            Car?       @relation(fields: [carId], references: [id])
+  id                Int              @id @default(autoincrement())
+  userId            Int
+  instructorId      Int
+  carId             Int?
+  instructorsGroupId Int?
+  startTime         DateTime
+  sector            String?         @default("")
+  gearbox           String?         @default("")
+  privateMessage    String?         @default("")
+  color             String?         @default("")
+  createdAt         DateTime        @default(now())
+  instructor        Instructor      @relation(fields: [instructorId], references: [id])
+  user              User           @relation(fields: [userId], references: [id])
+  car               Car?           @relation(fields: [carId], references: [id])
+  instructorsGroup  InstructorsGroup? @relation(fields: [instructorsGroupId], references: [id])
 
   @@index([instructorId], map: "Reservation_instructorId_fkey")
   @@index([userId], map: "Reservation_userId_fkey")
   @@index([carId], map: "Reservation_carId_fkey")
+  @@index([instructorsGroupId])
 }
 
 model Car {
@@ -71,16 +74,29 @@ model Car {
   @@index([instructorId], map: "Car_instructorId_fkey")
 }
 
-model Instructor {
+model InstructorsGroup {
   id           Int           @id @default(autoincrement())
-  firstName    String
-  lastName     String
-  phone        String
-  sector       String?      @default("") 
-  isActive     Boolean      @default(true)
-  groups       Group[]
+  name         String
+  createdAt    DateTime      @default(now())
+  updatedAt    DateTime      @updatedAt
+  instructors  Instructor[]
   reservations Reservation[]
-  cars         Car[]
+}
+
+model Instructor {
+  id                Int               @id @default(autoincrement())
+  firstName        String
+  lastName         String
+  phone            String
+  sector           String?           @default("") 
+  isActive         Boolean           @default(true)
+  instructorsGroup InstructorsGroup? @relation(fields: [instructorsGroupId], references: [id])
+  instructorsGroupId Int?
+  groups           Group[]
+  reservations     Reservation[]
+  cars             Car[]
+
+  @@index([instructorsGroupId])
 }
 
 enum Role {

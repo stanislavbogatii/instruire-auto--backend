@@ -14,6 +14,7 @@ import { join } from 'path';
 import { MailModule } from './mail/mail.module';
 import { ReservationsModule } from './reservations/reservations.module';
 import { CarsModule } from './cars/cars.module';
+import { InstructorsGroupModule } from './instructors-group/instructors-group.module';
 
 @Module({
   imports: [
@@ -23,6 +24,7 @@ import { CarsModule } from './cars/cars.module';
     InstructorsModule,
     GroupsModule,
     CarsModule,
+    InstructorsGroupModule,
     ConfigModule.forRoot({
       isGlobal: true,
       envFilePath: '.env',

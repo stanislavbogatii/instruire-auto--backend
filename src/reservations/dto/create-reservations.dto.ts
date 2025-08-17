@@ -46,6 +46,15 @@ class ReservationItemDto {
   @IsString()
   @IsOptional()
   color?: string;
+
+  @ApiPropertyOptional({
+    example: 1,
+    description: 'Instructors Group ID'
+  })
+  @IsNumber()
+  @IsOptional()
+  @Type(() => Number)
+  instructorsGroupId?: number;
 }
 
 export class CreateReservationsDto {
