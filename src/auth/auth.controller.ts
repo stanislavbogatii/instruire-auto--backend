@@ -22,7 +22,9 @@ import {
 import { RequestResetPasswordDto } from './dto/request-reset-password.dto';
 import { ResetPasswordDto } from './dto/reset-password-dto';
 import { AuthGuard } from '@nestjs/passport';
-import { User } from '@prisma/client';
+import { Role, User } from '@prisma/client';
+import { plainToInstance } from 'class-transformer';
+import { SessionDto } from './dto/session.dto';
 
 @ApiTags('auth')
 @Controller('auth')
@@ -77,6 +79,6 @@ export class AuthController {
   @ApiBearerAuth('access-token')
   @UseGuards(AuthGuard('jwt'))
   async getMe(@Session() session: User) {
-    return session;
+    return plainToInstance(SessionDto, session, { excludeExtraneousValues: true });
   }
 }

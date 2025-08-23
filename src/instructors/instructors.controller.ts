@@ -45,6 +45,15 @@ export class InstructorsController {
     return this.instructorsService.findOne(id);
   }
 
+  @Get(':id')
+  @ApiOperation({ summary: 'Get an instructor by user ID' })
+  @ApiParam({ name: 'id', type: Number })
+  @ApiResponse({ status: 200, description: 'The instructor.' })
+  @ApiResponse({ status: 404, description: 'Not found.' })
+  findOneByUserId(@Param('id', ParseIntPipe) id: number) {
+    return this.instructorsService.findOneByUserId(id);
+  }
+
   @Patch(':id')
   @ApiOperation({ summary: 'Update an instructor' })
   @ApiParam({ name: 'id', type: Number })

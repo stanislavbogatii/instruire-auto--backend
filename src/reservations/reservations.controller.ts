@@ -8,6 +8,7 @@ import {
   ParseIntPipe,
   Patch,
   Post,
+  Query,
   UseGuards,
 } from '@nestjs/common';
 import { ReservationsService } from './reservations.service';
@@ -20,14 +21,20 @@ import {
   ApiResponse,
   ApiBody,
   ApiParam,
+  ApiOkResponse,
+  getSchemaPath,
 } from '@nestjs/swagger';
 import { AuthGuard } from '@nestjs/passport';
 import { Session } from 'src/common/session.decorator';
 import { User } from '@prisma/client';
+import { plainToInstance } from 'class-transformer';
+import { group } from 'console';
+import { ReservationDto } from './dto/reservation.dto';
+import { BusyReservationResponse } from './dto/ busy-reservation.dto';
 
 @ApiTags('reservations')
-@ApiBearerAuth('access-token') 
-@UseGuards(AuthGuard('jwt'))
+// @ApiBearerAuth('access-token') 
+// @UseGuards(AuthGuard('jwt'))
 @Controller('reservations')
 export class ReservationsController {
   constructor(private reservationsService: ReservationsService) {}
@@ -50,12 +57,28 @@ export class ReservationsController {
     return this.reservationsService.getUserReservations(session.id);
   }
 
-  @Get('all')
-  @ApiOperation({ summary: 'Get all reservations (admin)' })
-  @ApiResponse({ status: 200, description: 'List of all reservations' })
-  async findAll() {
-    return await this.reservationsService.findAll();
+  @Get('busy-reservation')
+  @ApiResponse({ status: 200})
+  async getBusyReservations(
+    @Query('days') days: string,
+    @Query('gearbox') gearbox: string,
+    @Query('sector') sector: string,
+    @Query('type') type: "single" | "group",
+  ): Promise<BusyReservationResponse | null> {
+    const minFreeDays = parseInt(days, 10) || 15;
+    return await this.reservationsService.findBusyReservation(minFreeDays, gearbox, sector, type);
   }
+
+  @Get('all')
+  @ApiOperation({ summary: 'Get all reservations' })
+  @ApiResponse({ status: 200, description: 'List of all reservations' })
+  async findAll(
+    @Session() session: User
+  ) {
+    const reservations = await this.reservationsService.findAll();
+    return plainToInstance(ReservationDto, reservations, { groups: [session.role] });
+  }
+
 
   @Patch(':id')
   @ApiOperation({ summary: 'Update a reservation by ID' })

@@ -45,7 +45,7 @@ model Group {
 model Reservation {
   id                Int              @id @default(autoincrement())
   userId            Int
-  instructorId      Int
+  instructorId      Int?
   carId             Int?
   instructorsGroupId Int?
   startTime         DateTime
@@ -55,7 +55,7 @@ model Reservation {
   color             String?         @default("")
   isConfirmed       Boolean         @default(false)
   createdAt         DateTime        @default(now())
-  instructor        Instructor      @relation(fields: [instructorId], references: [id])
+  instructor        Instructor?      @relation(fields: [instructorId], references: [id])
   user              User           @relation(fields: [userId], references: [id])
   car               Car?           @relation(fields: [carId], references: [id])
   instructorsGroup  InstructorsGroup? @relation(fields: [instructorsGroupId], references: [id])
@@ -69,6 +69,7 @@ model Reservation {
 model Car {
   id          Int         @id @default(autoincrement())
   plateNumber String      @unique
+  gearbox     String?     
   instructor  Instructor? @relation(fields: [instructorId], references: [id])
   instructorId Int?
   createdAt   DateTime    @default(now())
@@ -79,12 +80,13 @@ model Car {
 }
 
 model InstructorsGroup {
-  id           Int           @id @default(autoincrement())
+  id           Int             @id @default(autoincrement())
   name         String
-  createdAt    DateTime      @default(now())
-  updatedAt    DateTime      @updatedAt
+  createdAt    DateTime        @default(now())
+  updatedAt    DateTime        @updatedAt
   instructors  Instructor[]
   reservations Reservation[]
+  sector       String?         @default("")
 }
 
 model Instructor {
@@ -112,3 +114,5 @@ enum Role {
   ADMIN
   INSTRUCTOR
 }
+
+

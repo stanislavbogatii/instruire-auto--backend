@@ -1,4 +1,4 @@
-import { IsString, IsNotEmpty } from 'class-validator';
+import { IsString, IsNotEmpty, IsOptional } from 'class-validator';
 import { ApiProperty } from '@nestjs/swagger';
 
 export class CreateInstructorsGroupDto {
@@ -6,4 +6,9 @@ export class CreateInstructorsGroupDto {
   @IsString()
   @IsNotEmpty()
   name: string;
+
+  @ApiProperty({ example: 'Botanica' })
+  @IsString()
+  @IsOptional()
+  sector?: string;
 }

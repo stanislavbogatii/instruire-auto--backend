@@ -11,6 +11,14 @@ export class CreateCarDto {
   @IsNotEmpty()
   plateNumber: string;
 
+  @ApiProperty({
+    description: "Car gearbox (manual / automat)",
+    example: "manual"
+  })
+  @IsString()
+  @IsNotEmpty()
+  gearbox: string;
+
   @ApiPropertyOptional({
     description: 'The ID of the instructor assigned to this car',
     example: 1

@@ -16,14 +16,13 @@ export class CarsService {
       const { instructorId, plateNumber } = createCarDto;
       console.log('Creating car with data:', { plateNumber, instructorId });
 
-      // If instructorId is provided, verify that the instructor exists and is active
       if (instructorId) {
         await this.commonService.validateActiveInstructor(instructorId);
       }
 
-      // Create the car with required plateNumber
       const carData = {
         plateNumber: createCarDto.plateNumber,
+        gearbox: createCarDto.gearbox,
         ...(instructorId ? { instructorId } : {})
       };
 

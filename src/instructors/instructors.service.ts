@@ -39,7 +39,6 @@ export class InstructorsService {
       lastName,
     }, undefined, Role.INSTRUCTOR);
 
-    // Create instructor profile linked to the user
     return this.prisma.instructor.create({
       data: {
         firstName,
@@ -73,6 +72,15 @@ export class InstructorsService {
       where: { id } 
     });
     if (!inst) throw new NotFoundException(`Instructor ${id} not found`);
+    if (!inst.isActive) throw new ConflictException(`Instructor ${id} is inactive`);
+    return inst;
+  }
+
+  async findOneByUserId(id: number) {
+    const inst = await this.prisma.instructor.findUnique({ 
+      where: { userId: id } 
+    });
+    if (!inst) throw new NotFoundException(`Instructor with userId: ${id} not found`);
     if (!inst.isActive) throw new ConflictException(`Instructor ${id} is inactive`);
     return inst;
   }
