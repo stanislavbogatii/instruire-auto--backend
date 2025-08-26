@@ -8,11 +8,11 @@ class ReservationItemDto {
   @IsDateString()
   startTime: string;
 
-  @ApiProperty({ example: 1, description: 'Instructor ID (optional - will be assigned randomly if not provided)', required: false })
-  @IsOptional()
-  @Type(() => Number)
-  @IsNumber()
-  instructorId?: number;
+  // @ApiProperty({ example: 1, description: 'Instructor ID (optional - will be assigned randomly if not provided)', required: false })
+  // @IsOptional()
+  // @Type(() => Number)
+  // @IsNumber()
+  // instructorId?: number;
 
   @ApiPropertyOptional({ 
     example: 'Botanica', 
@@ -47,6 +47,17 @@ class ReservationItemDto {
   @IsOptional()
   color?: string;
 
+  // @ApiPropertyOptional({
+  //   example: 1,
+  //   description: 'Instructors Group ID'
+  // })
+  // @IsNumber()
+  // @IsOptional()
+  // @Type(() => Number)
+  // instructorsGroupId?: number;
+}
+
+export class CreateReservationsDto {
   @ApiPropertyOptional({
     example: 1,
     description: 'Instructors Group ID'
@@ -55,9 +66,14 @@ class ReservationItemDto {
   @IsOptional()
   @Type(() => Number)
   instructorsGroupId?: number;
-}
 
-export class CreateReservationsDto {
+
+  @ApiProperty({ example: 1, description: 'Instructor ID (optional - will be assigned randomly if not provided)', required: false })
+  @IsOptional()
+  @Type(() => Number)
+  @IsNumber()
+  instructorId?: number;
+
   @ApiProperty({ type: [ReservationItemDto] })
   @IsArray()
   @ValidateNested({ each: true })

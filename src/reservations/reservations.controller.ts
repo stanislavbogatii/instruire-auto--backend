@@ -2,6 +2,7 @@ import {
   Body,
   Controller,
   Delete,
+  ForbiddenException,
   Get,
   HttpStatus,
   Param,
@@ -26,7 +27,7 @@ import {
 } from '@nestjs/swagger';
 import { AuthGuard } from '@nestjs/passport';
 import { Session } from 'src/common/session.decorator';
-import { User } from '@prisma/client';
+import { Role, User } from '@prisma/client';
 import { plainToInstance } from 'class-transformer';
 import { group } from 'console';
 import { ReservationDto } from './dto/reservation.dto';
@@ -54,7 +55,15 @@ export class ReservationsController {
   @ApiOperation({ summary: 'Get current user reservations' })
   @ApiResponse({ status: 200, description: 'List of reservations for current user' })
   async getMine(@Session() session: User) {
-    return this.reservationsService.getUserReservations(session.id);
+    return this.reservationsService.getReservationsByUserId(session.id);
+  }
+
+  @Get('instructor')
+  @ApiOperation({ summary: 'Get current instructor reservations' })
+  @ApiResponse({ status: 200, description: 'List of reservations for current instructor' })
+  async getMineForInstructor(@Session() session: User) {
+    if (session.role !== Role.INSTRUCTOR) throw new ForbiddenException("This user is not instructor");
+    return this.reservationsService.getReservationsByInstructorId(session.id);
   }
 
   @Get('busy-reservation')
@@ -111,7 +120,19 @@ export class ReservationsController {
     description: 'List of reservations for the user'
   })
   @ApiResponse({ status: 404, description: 'User not found' })
-  async getReservationsByUser(@Param('userId', ParseIntPipe) userId: number) {
-    return this.reservationsService.getReservationsByUser(userId);
+  async getReservationsByUserId(@Param('userId', ParseIntPipe) userId: number) {
+    return this.reservationsService.getReservationsByUserId(userId);
+  }
+
+  @Get('instructor/:instructorId')
+  @ApiOperation({ summary: 'Get all reservations for a specific instructor' })
+  @ApiParam({ name: 'instructorId', type: Number })
+  @ApiResponse({ 
+    status: 200, 
+    description: 'List of reservations for the instructor'
+  })
+  @ApiResponse({ status: 404, description: 'User not found' })
+  async getReservationsByInstructorId(@Param('userId', ParseIntPipe) instructorId: number) {
+    return this.reservationsService.getReservationsByInstructorId(instructorId);
   }
 }

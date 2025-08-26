@@ -23,98 +23,145 @@ export class ReservationsService {
 
   async createReservations(userId: number, dto: CreateReservationsDto) {
     const created: any = [];
-    for (const item of dto.reservations) {
-      let instructorId = item.instructorId;
-      let instructorsGroupId = item.instructorsGroupId;
-      const startTime = new Date(item.startTime);
+    let instructorId = dto.instructorId;
+    let instructorsGroupId = dto.instructorsGroupId;
 
-      if (instructorId) {
-        const existingReservation = await this.prisma.reservation.findFirst({
-          where: {
-            instructorId,
-            startTime
-          }
-        });
-
-        if (existingReservation) {
-          throw new BadRequestException(`Instructor ${instructorId} is not available at ${startTime}`);
-        }
-      }
-      else if (instructorsGroupId) {
-        const existingReservation = await this.prisma.reservation.findFirst({
-          where: {
-            instructorsGroupId,
-            startTime
-          }
-        });
-
-        if (existingReservation) {
-          throw new BadRequestException(`Instructor ${instructorId} is not available at ${startTime}`);
-        }
-      }
-
-      // const availableCar = await this.prisma.$transaction(async (prisma) => {
-      //   const cars = await prisma.car.findMany({
-      //     where: { instructorId }
-      //   });
-
-      //   for (const car of cars) {
-      //     const existingReservation = await prisma.reservation.findFirst({
-      //       where: {
-      //         startTime,
-      //         carId: car.id
-      //       }
-      //     });
-
-      //     if (!existingReservation) {
-      //       return car;  // Return the first available car
-      //     }
-      //   }
-        
-      //   return null;  // No available cars found
-      // });
-
-      // console.log('Found available car:', availableCar);
-
-      // Create the reservation with the car if available
-      // If instructorsGroupId is provided, verify it exists
-      if (item.instructorsGroupId) {
-        const group = await this.prisma.instructorsGroup.findUnique({
-          where: { id: item.instructorsGroupId }
-        });
-        if (!group) {
-          throw new BadRequestException(`Instructors group ${item.instructorsGroupId} not found`);
-        }
-      }
-
-      const reservation = await this.prisma.reservation.create({
-        data: {
-          userId,
-          instructorId,
-          startTime,
-          sector: item.sector || '',
-          gearbox: item.gearbox || '',
-          privateMessage: item.privateMessage || '',
-          color: item.color || '',
-          instructorsGroupId: item.instructorsGroupId || null,
-          // ...(availableCar ? { carId: availableCar.id } : {})
-        },
-        include: {
-          instructor: true,
-          instructorsGroup: true,
-          user: {
-            select: {
-              id: true,
-              email: true,
-              firstName: true,
-              lastName: true,
-              phone: true
-            }
-          }
+    if (instructorsGroupId) {
+      const instructors = await this.prisma.instructor.findMany({
+        where: {
+          isActive: true,
+          instructorsGroupId
         }
       });
-      created.push(reservation);
+
+      if (!instructors.length) {
+        throw new NotFoundException("Instructors in this group not found");
+      }
+
+      let instructorIndex = 0;
+
+      for (const item of dto.reservations) {
+        const startTime = new Date(item.startTime);
+
+        let assignedInstructor: Instructor | null = null;
+        let tries = 0;
+
+        while (!assignedInstructor && tries < instructors.length) {
+          const currentInstructor = instructors[instructorIndex % instructors.length];
+
+          const existing = await this.prisma.reservation.findFirst({
+            where: {
+              instructorId: currentInstructor.id,
+              startTime
+            }
+          });
+
+          if (!existing) {
+            assignedInstructor = currentInstructor;
+          } else {
+            instructorIndex++;
+            tries++;
+          }
+        }
+
+        if (!assignedInstructor) {
+          throw new BadRequestException(
+            `No available instructor at ${startTime.toISOString()}`
+          );
+        }
+
+        const reservation = await this.prisma.reservation.create({
+          data: {
+            userId,
+            instructorId: assignedInstructor.id,
+            startTime,
+            sector: item.sector || '',
+            gearbox: item.gearbox || '',
+            privateMessage: item.privateMessage || '',
+            color: item.color || '',
+            instructorsGroupId,
+          },
+          include: {
+            instructor: true,
+            instructorsGroup: true,
+            user: {
+              select: {
+                id: true,
+                email: true,
+                firstName: true,
+                lastName: true,
+                phone: true
+              }
+            }
+          }
+        });
+
+        created.push(reservation);
+        instructorIndex++; 
+      }
+    } else if (instructorId) {
+      const instructor = await this.prisma.instructor.findFirst({
+        where: {
+          id: instructorId
+        }
+      });
+      if (!instructor) throw new NotFoundException("Instructor not found");
+      const startTimes = dto.reservations.map(r => new Date(r.startTime));
+
+      const existingReservations = await this.prisma.reservation.findMany({
+        where: {
+          instructorId,
+          startTime: {
+            in: startTimes,
+          },
+        },
+        select: {
+          startTime: true,
+        },
+      });
+
+      if (existingReservations.length > 0) {
+        const conflictTimes = existingReservations.map(r => r.startTime.toISOString());
+        throw new BadRequestException(
+          `Instructor ${instructorId} is already reserved at: ${conflictTimes.join(', ')}`
+        );
+      }
+
+      for (const item of dto.reservations) {
+        const startTime = new Date(item.startTime);
+        const reservation = await this.prisma.reservation.create({
+          data: {
+            userId,
+            instructorId: instructorId,
+            startTime,
+            sector: item.sector || '',
+            gearbox: item.gearbox || '',
+            privateMessage: item.privateMessage || '',
+            color: item.color || '',
+            instructorsGroupId: null,
+          },
+          include: {
+            instructor: true,
+            instructorsGroup: true,
+            user: {
+              select: {
+                id: true,
+                email: true,
+                firstName: true,
+                lastName: true,
+                phone: true
+              }
+            }
+          }
+        });
+
+        created.push(reservation);
+      }
     }
+
+
+
+
     return created;
   }
 
@@ -122,11 +169,37 @@ export class ReservationsService {
     return await this.prisma.reservation.findMany({
       where: { userId },
       orderBy: { startTime: 'asc' },
+      include: {
+        instructor: {
+          select: {
+            phone: true,
+            firstName: true,
+            lastName: true
+          }
+        }
+      }
     });
   }
 
   async findAll() {
-    return await this.prisma.reservation.findMany();
+    return await this.prisma.reservation.findMany({
+      include: {
+        instructor: {
+          select: {
+            phone: true,
+            firstName: true,
+            lastName: true
+          }
+        },
+        user: {
+          select: {
+            phone: true,
+            firstName: true,
+            lastName: true
+          }
+        }
+      }
+    });
   }
 
   async update(id: number, dto: UpdateReservationDto) {
@@ -145,7 +218,7 @@ export class ReservationsService {
         sector: dto.sector,
         gearbox: dto.gearbox,
         privateMessage: dto.privateMessage,
-        color: dto.color,  // Add this line
+        color: dto.color,  
       },
       include: {
         instructor: true,
@@ -165,13 +238,20 @@ export class ReservationsService {
     })
   }
 
-  async getReservationsByUser(userId: number) {
+  async getReservationsByUserId(userId: number) {
     return this.prisma.reservation.findMany({
       where: {
         userId
       },
       include: {
-        instructor: true,
+        instructor: {
+          select: {
+            id: true,
+            phone: true,
+            firstName: true,
+            lastName: true
+          }
+        },
         car: {
           select: {
             id: true,
@@ -191,137 +271,183 @@ export class ReservationsService {
     });
   }
 
-
-async findBusyReservation(
-  minFreeDays: number,
-  gearbox: string,
-  sector: string,
-  type: string
-) {
-  const today = new Date();
-  const threeMonthsLater = new Date();
-  threeMonthsLater.setMonth(today.getMonth() + 3);
-
-  if (type === 'group') {
-    const groups = await this.prisma.instructorsGroup.findMany({
+  async getReservationsByInstructorId(instructorId: number) {
+    return this.prisma.reservation.findMany({
       where: {
-        sector,
-        instructors: {
-          some: {
-            cars: {
-              some: { gearbox }
-            },
-            isActive: true
-          }
-        }
+        instructorId
       },
       include: {
-        reservations: {
-          where: {
-            startTime: {
-              gte: today,
-              lte: threeMonthsLater
-            }
+        instructor: {
+          select: {
+            id: true,
+            phone: true,
+            firstName: true,
+            lastName: true
           }
         },
-        instructors: {
-          include: { cars: true }
-        }
-      }
-    }) as (InstructorsGroup & { 
-      reservations: Reservation[]; 
-      instructors: (Instructor & {cars: Car[]})[]
-    })[];
-
-    const freeGroups = groups.filter(group => {
-      const freeDays = this.countFreeDays(group.reservations, today, threeMonthsLater);
-      return freeDays >= minFreeDays;
-    });
-
-    if (freeGroups.length === 0) return null;
-
-    const randomIndex = Math.floor(Math.random() * freeGroups.length);
-    const randomGroup = freeGroups[randomIndex];
-
-    const reservations = randomGroup.reservations.map(r => ({
-      id: r.id,
-      startTime: r.startTime
-    }));
-
-    return {
-      groupId: randomGroup.id,
-      reservations
-    };
-  }
-
-  // Поиск по индивидуальным инструкторам (как у тебя было)
-  const instructors = await this.prisma.instructor.findMany({
-    where: {
-      isActive: true,
-      sector,
-      cars: {
-        some: { gearbox }
-      }
-    },
-    include: {
-      reservations: {
-        where: {
-          startTime: {
-            gte: today,
-            lte: threeMonthsLater
+        car: {
+          select: {
+            id: true,
+            plateNumber: true
+          }
+        },
+        user: {
+          select: {
+            id: true,
+            email: true,
+            firstName: true,
+            lastName: true,
+            phone: true
           }
         }
-      },
-      cars: true
-    }
-  }) as (Instructor & { reservations: Reservation[]; cars: Car[] })[];
+      }
+    });
+  }
 
-  const freeInstructors = instructors.filter(instructor => {
-    const freeDays = this.countFreeDays(instructor.reservations, today, threeMonthsLater);
-    return freeDays >= minFreeDays;
-  });
+  async findBusyReservation( 
+    minFreeDays: number, 
+    gearbox: string, 
+    sector: string,  
+    type: string 
+  ) { 
+    const today = new Date(); 
+    const threeMonthsLater = new Date(); 
+    threeMonthsLater.setMonth(today.getMonth() + 3); 
+    if (type === 'group') { 
+      const groups = await this.prisma.instructorsGroup.findMany({ 
+        where: { 
+          sector, 
+          instructors: { 
+            some: { 
+              cars: { 
+                some: { gearbox } 
+              }, 
+              isActive: true 
+            } 
+          } 
+        }, 
+        include: { 
+          reservations: { 
+            where: { 
+              startTime: { 
+                gte: today, 
+                lte: threeMonthsLater 
+              } 
+            } 
+          }, 
+          instructors: { 
+            include: { 
+              cars: true,
+              reservations: {
+                where: { 
+                  startTime: { 
+                    gte: today, 
+                    lte: threeMonthsLater 
+                  } 
+                }
+              }
+            } 
+          } 
+        } 
+      }) as (InstructorsGroup & {  
+        reservations: Reservation[];  
+        instructors: (Instructor & {cars: Car[]; reservations: Reservation[]})[] 
+      })[]; 
+      // Фильтруем группы, у которых есть хотя бы один инструктор с нужной коробкой
+      const validGroups = groups.filter(group => 
+        group.instructors.some(instructor => 
+          instructor.isActive && 
+          instructor.cars.some(car => car.gearbox === gearbox)
+        )
+      );
+      if (validGroups.length === 0) return null;
 
-  if (freeInstructors.length === 0) return null;
+      // Находим группу с наименьшим количеством резерваций среди всех инструкторов
+      let leastBusyGroup = validGroups[0];
+      let minTotalReservations = this.countTotalGroupReservations(validGroups[0]);
 
-  const randomIndex = Math.floor(Math.random() * freeInstructors.length);
-  const randomInstructor = freeInstructors[randomIndex];
-
-  const reservations = randomInstructor.reservations.map(r => ({
-    id: r.id,
-    startTime: r.startTime
-  }));
-
-  return {
-    instructorId: randomInstructor.id,
-    reservations
-  };
-}
-
-  private countFreeDays(reservations: Reservation[], start: Date, end: Date): number {
-    const reservedByDate: Record<string, Set<string>> = {};
-
-    for (const r of reservations) {
-      const date = r.startTime.toISOString().split('T')[0];
-      const time = r.startTime.toISOString().substring(11, 16);
-
-      if (!reservedByDate[date]) reservedByDate[date] = new Set();
-      reservedByDate[date].add(time);
-    }
-
-    let freeDaysCount = 0;
-
-    const current = new Date(start);
-    while (current <= end) {
-      const dayStr = current.toISOString().split('T')[0];
-      const reservedSlots = reservedByDate[dayStr] ?? new Set();
-
-      if (reservedSlots.size < this.dailySlots.length) {
-        freeDaysCount++;
+      for (let i = 1; i < validGroups.length; i++) {
+        const totalReservations = this.countTotalGroupReservations(validGroups[i]);
+        if (totalReservations < minTotalReservations) {
+          minTotalReservations = totalReservations;
+          leastBusyGroup = validGroups[i];
+        }
       }
 
-      current.setDate(current.getDate() + 1);
-    }
+      // Собираем все резервации группы (и групповые, и индивидуальные инструкторов)
+      const allGroupReservations = [
+        ...leastBusyGroup.reservations,
+        ...leastBusyGroup.instructors.flatMap(instructor => instructor.reservations)
+      ];
 
-    return freeDaysCount;
+      const reservations = allGroupReservations.map(r => ({ 
+        id: r.id, 
+        startTime: r.startTime 
+      })); 
+      return { 
+        groupId: leastBusyGroup.id, 
+        reservations 
+      }; 
+    } 
+  
+    // Поиск самого незанятого индивидуального инструктора
+    const instructors = await this.prisma.instructor.findMany({ 
+      where: { 
+        isActive: true, 
+        sector, 
+        cars: { 
+          some: { gearbox } 
+        } 
+      }, 
+      include: { 
+        reservations: { 
+          where: { 
+            startTime: { 
+              gte: today, 
+              lte: threeMonthsLater 
+            } 
+          } 
+        }, 
+        cars: true 
+      } 
+    }) as (Instructor & { reservations: Reservation[]; cars: Car[] })[]; 
+
+    if (instructors.length === 0) return null;
+
+    // Находим инструктора с наименьшим количеством резерваций
+    let leastBusyInstructor = instructors[0];
+    let minReservations = instructors[0].reservations.length;
+
+    for (let i = 1; i < instructors.length; i++) {
+      if (instructors[i].reservations.length < minReservations) {
+        minReservations = instructors[i].reservations.length;
+        leastBusyInstructor = instructors[i];
+      }
+    }
+  
+    const reservations = leastBusyInstructor.reservations.map(r => ({ 
+      id: r.id, 
+      startTime: r.startTime 
+    })); 
+  
+    return { 
+      instructorId: leastBusyInstructor.id, 
+      reservations 
+    }; 
+  } 
+
+  private countTotalGroupReservations(group: InstructorsGroup & {  
+    reservations: Reservation[];  
+    instructors: (Instructor & {cars: Car[]; reservations: Reservation[]})[] 
+  }): number {
+    // Считаем групповые резервации + резервации всех инструкторов группы
+    const groupReservations = group.reservations.length;
+    const instructorsReservations = group.instructors.reduce((total, instructor) => {
+      return total + instructor.reservations.length;
+    }, 0);
+    
+    return groupReservations + instructorsReservations;
   }
+
+
 }
