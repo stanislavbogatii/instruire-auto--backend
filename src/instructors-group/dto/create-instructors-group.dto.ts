@@ -11,4 +11,8 @@ export class CreateInstructorsGroupDto {
   @IsString()
   @IsOptional()
   sector?: string;
+
+  @ApiProperty({example: 0})
+  @IsOptional()
+  order?: number
 }

@@ -33,8 +33,8 @@ import { ReservationDto } from './dto/reservation.dto';
 import { BusyReservationResponse } from './dto/ busy-reservation.dto';
 
 @ApiTags('reservations')
-// @ApiBearerAuth('access-token') 
-// @UseGuards(AuthGuard('jwt'))
+@ApiBearerAuth('access-token') 
+@UseGuards(AuthGuard('jwt'))
 @Controller('reservations')
 export class ReservationsController {
   constructor(private reservationsService: ReservationsService) {}

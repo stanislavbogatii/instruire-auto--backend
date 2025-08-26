@@ -28,29 +28,7 @@ export class ReservationsService {
       let instructorsGroupId = item.instructorsGroupId;
       const startTime = new Date(item.startTime);
 
-      if (!instructorId) {
-        // Find all instructors that don't have reservations at the given time
-        const availableInstructors = await this.prisma.instructor.findMany({
-          where: {
-            NOT: {
-              reservations: {
-                some: {
-                  startTime
-                }
-              }
-            }
-          }
-        });
-
-        if (availableInstructors.length === 0) {
-          throw new BadRequestException(`No available instructors for time ${startTime}`);
-        }
-
-        // Select a random instructor from available ones
-        const randomIndex = Math.floor(Math.random() * availableInstructors.length);
-        instructorId = availableInstructors[randomIndex].id;
-      } 
-      else if (instructorId) {
+      if (instructorId) {
         const existingReservation = await this.prisma.reservation.findFirst({
           where: {
             instructorId,

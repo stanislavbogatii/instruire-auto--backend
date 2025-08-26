@@ -6,4 +6,8 @@ export class UpdateInstructorsGroupDto {
   @IsString()
   @IsOptional()
   name?: string;
+
+  @ApiPropertyOptional({example: 0})
+  @IsOptional()
+  order?: number
 }
