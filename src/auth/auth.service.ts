@@ -43,6 +43,7 @@ export class AuthService {
     const user = await this.usersService.create(
       { 
         email: dto.email, 
+        phone: dto.phone,
         password: dto.password,
         firstName: dto.firstName,  // Default empty string for now
         lastName: dto.lastName    // Default empty string for now

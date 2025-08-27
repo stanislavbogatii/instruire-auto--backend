@@ -34,6 +34,7 @@ export class InstructorsService {
     // Create user account for the instructor
     const user = await this.usersService.create({
       email,
+      phone,
       password,
       firstName,
       lastName,

@@ -12,6 +12,10 @@ export class RegisterAuthDto  {
   @MinLength(6)
   password: string;
 
+  @ApiProperty()
+  @IsNotEmpty()
+  phone: string;
+
   @ApiProperty({ example: 'Alice', description: 'User first name' })
   @IsNotEmpty()
   @IsString()
