@@ -37,7 +37,7 @@ export class InstructorsGroupService {
   }
 
   async update(id: number, updateInstructorsGroupDto: UpdateInstructorsGroupDto) {
-    await this.findOne(id); // Check if exists
+    await this.findOne(id); 
 
     return this.prisma.instructorsGroup.update({
       where: { id },

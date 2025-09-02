@@ -19,26 +19,24 @@ export class InstructorsService {
   async create(createInstructorDto: CreateInstructorDto) {
     const { firstName, lastName, phone, email, password, sector } = createInstructorDto;
 
-    // Check if phone is already in use
     const existsPhone = await this.prisma.instructor.findFirst({
       where: { phone },
     });
     if (existsPhone) throw new ConflictException('Phone already in use');
 
-    // Check if email is already in use
     const existsEmail = await this.prisma.user.findFirst({
       where: { email },
     });
     if (existsEmail) throw new ConflictException('Email already in use');
 
-    // Create user account for the instructor
     const user = await this.usersService.create({
       email,
       phone,
       password,
+      role: Role.INSTRUCTOR,
       firstName,
       lastName,
-    }, undefined, Role.INSTRUCTOR);
+    }, undefined);
 
     return this.prisma.instructor.create({
       data: {

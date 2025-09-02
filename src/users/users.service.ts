@@ -9,14 +9,14 @@ import { User, Role } from '@prisma/client';
 export class UsersService {
   constructor(private prisma: PrismaService) {}
 
-  /** Create a new user, hashing password and stripping hash from return */
-  async create(dto: CreateUserDto, groupId?: number, role?: Role) {
-    const { email, password, firstName, lastName, phone, privateMessage } = dto;  // Add phone to destructuring
+  async create(dto: CreateUserDto, groupId?: number) {
+    const { email, password, firstName, lastName, phone, privateMessage } = dto;  
 
     const exists = await this.prisma.user.findUnique({ where: { email } });
     if (exists) {
       throw new ConflictException('Email already in use');
     }
+    const role: Role = dto.role || Role.USER; 
 
     const hash = await bcrypt.hash(password, 10);
 
@@ -26,9 +26,9 @@ export class UsersService {
         hash, 
         firstName,
         lastName,
-        phone,     // Add phone field
-        privateMessage,  // Add this line
-        role: role || Role.USER,
+        phone,     
+        privateMessage,  
+        role,
         groupId 
       },
     });

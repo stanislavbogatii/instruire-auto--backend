@@ -5,6 +5,8 @@ import { UpdateReservationDto } from './dto/update-reservation.dto';
 import { ApiTags } from '@nestjs/swagger';
 import { Car, Instructor, InstructorsGroup, Reservation } from '@prisma/client';
 import { start } from 'repl';
+import { BusyReservationResponse } from './dto/ busy-reservation.dto';
+import { group } from 'console';
 
 @Injectable()
 export class ReservationsService {
@@ -304,12 +306,64 @@ export class ReservationsService {
     });
   }
 
+  async findBusyReservationByInstructorId(instructor_id: number): Promise<BusyReservationResponse | null> {
+    const instructor = await this.prisma.instructor.findFirst({
+      where: {
+        id: instructor_id
+      },
+      include: {
+        reservations: true
+      }
+    }) as (Instructor & { reservations: Reservation[] });
+    if (!instructor) {
+      throw new NotFoundException(`Instructor with id ${instructor_id} not found`);
+    }
+    return {
+      instructorId: instructor.id,
+      reservations: instructor.reservations
+    }
+  }
+
+  async findBusyReservationByInstructorsGroupId(instructors_group_id: number): Promise<BusyReservationResponse | null> {
+    const instructorsGroup = await this.prisma.instructorsGroup.findFirst({where: {id: instructors_group_id}});
+    if (!instructorsGroup) {
+      throw new NotFoundException(`Instructors group with id ${instructors_group_id} not found`);
+    }
+    const instructors = await this.prisma.instructor.findMany({
+      where: {
+        isActive: true,
+        instructorsGroupId: instructors_group_id,
+      },
+      include: {
+        reservations: true
+      }
+    }) as (Instructor & { reservations: Reservation[]; cars: Car[] })[];
+    if (instructors.length < 1) {
+      throw new BadRequestException("Not found instructors in group with id ${instructors_group_id}");
+    }
+
+
+    const allGroupReservations = [
+      ...instructors.flatMap(instructor => instructor.reservations)
+    ];
+
+    const reservations = allGroupReservations.map(r => ({ 
+      id: r.id, 
+      startTime: r.startTime 
+    })); 
+
+    return { 
+      groupId: instructors_group_id, 
+      reservations 
+    }; 
+  }
+
   async findBusyReservation( 
     minFreeDays: number, 
     gearbox: string, 
     sector: string,  
-    type: string 
-  ) { 
+    type: string,
+  ): Promise<BusyReservationResponse | null> { 
     const today = new Date(); 
     const threeMonthsLater = new Date(); 
     threeMonthsLater.setMonth(today.getMonth() + 3); 
@@ -327,14 +381,6 @@ export class ReservationsService {
           } 
         }, 
         include: { 
-          reservations: { 
-            where: { 
-              startTime: { 
-                gte: today, 
-                lte: threeMonthsLater 
-              } 
-            } 
-          }, 
           instructors: { 
             include: { 
               cars: true,
@@ -353,7 +399,6 @@ export class ReservationsService {
         reservations: Reservation[];  
         instructors: (Instructor & {cars: Car[]; reservations: Reservation[]})[] 
       })[]; 
-      // Фильтруем группы, у которых есть хотя бы один инструктор с нужной коробкой
       const validGroups = groups.filter(group => 
         group.instructors.some(instructor => 
           instructor.isActive && 
@@ -362,7 +407,6 @@ export class ReservationsService {
       );
       if (validGroups.length === 0) return null;
 
-      // Находим группу с наименьшим количеством резерваций среди всех инструкторов
       let leastBusyGroup = validGroups[0];
       let minTotalReservations = this.countTotalGroupReservations(validGroups[0]);
 
@@ -374,9 +418,7 @@ export class ReservationsService {
         }
       }
 
-      // Собираем все резервации группы (и групповые, и индивидуальные инструкторов)
       const allGroupReservations = [
-        ...leastBusyGroup.reservations,
         ...leastBusyGroup.instructors.flatMap(instructor => instructor.reservations)
       ];
 
@@ -390,7 +432,6 @@ export class ReservationsService {
       }; 
     } 
   
-    // Поиск самого незанятого индивидуального инструктора
     const instructors = await this.prisma.instructor.findMany({ 
       where: { 
         isActive: true, 
@@ -414,7 +455,6 @@ export class ReservationsService {
 
     if (instructors.length === 0) return null;
 
-    // Находим инструктора с наименьшим количеством резерваций
     let leastBusyInstructor = instructors[0];
     let minReservations = instructors[0].reservations.length;
 
@@ -440,13 +480,11 @@ export class ReservationsService {
     reservations: Reservation[];  
     instructors: (Instructor & {cars: Car[]; reservations: Reservation[]})[] 
   }): number {
-    // Считаем групповые резервации + резервации всех инструкторов группы
-    const groupReservations = group.reservations.length;
     const instructorsReservations = group.instructors.reduce((total, instructor) => {
       return total + instructor.reservations.length;
     }, 0);
     
-    return groupReservations + instructorsReservations;
+    return instructorsReservations;
   }
 
 

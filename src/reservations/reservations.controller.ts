@@ -1,4 +1,5 @@
 import {
+  BadRequestException,
   Body,
   Controller,
   Delete,
@@ -75,7 +76,38 @@ export class ReservationsController {
     @Query('type') type: "single" | "group",
   ): Promise<BusyReservationResponse | null> {
     const minFreeDays = parseInt(days, 10) || 15;
-    return await this.reservationsService.findBusyReservation(minFreeDays, gearbox, sector, type);
+    return await this.reservationsService.findBusyReservation(
+      minFreeDays, 
+      gearbox, 
+      sector, 
+      type,
+    );
+  }
+
+  @Get('busy-reservation/instructor/:instructor_id')
+  @ApiResponse({ status: 200})
+  async getBusyReservationsForByInstructorId(
+    @Param('instructor_id', ParseIntPipe) instructor_id: number,
+  ): Promise<BusyReservationResponse | null> {
+    if (!instructor_id) {
+      throw new BadRequestException("instructor_id cannot be null");
+    }
+    return await this.reservationsService.findBusyReservationByInstructorId(
+      instructor_id,
+    );
+  }
+
+  @Get('busy-reservation/instructors-group/:instructors_group_id')
+  @ApiResponse({ status: 200})
+  async getBusyReservationsForByInstructorsGroupId(
+    @Param('instructors_group_id', ParseIntPipe) instructors_group_id: number,
+  ): Promise<BusyReservationResponse | null> {
+    if (!instructors_group_id) {
+      throw new BadRequestException("instructors_group_id cannot be null");
+    }
+    return await this.reservationsService.findBusyReservationByInstructorsGroupId(
+      instructors_group_id
+    );
   }
 
   @Get('all')

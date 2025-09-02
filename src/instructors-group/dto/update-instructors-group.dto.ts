@@ -7,7 +7,12 @@ export class UpdateInstructorsGroupDto {
   @IsOptional()
   name?: string;
 
+  @ApiPropertyOptional({ example: 'Botanica' })
+  @IsString()
+  @IsOptional()
+  sector?: string;
+
   @ApiPropertyOptional({example: 0})
   @IsOptional()
-  order?: number
+  order?: number;
 }
