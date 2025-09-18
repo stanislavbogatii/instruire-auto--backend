@@ -17,6 +17,10 @@ export class CreateInstructorDto {
   @MaxLength(20)
   phone: string;
 
+  @ApiProperty({example: "20X30"})
+  @IsOptional()
+  order?: string
+
   @ApiProperty({ example: 'instructor@example.com', description: 'Email address for login' })
   @IsNotEmpty()
   @IsEmail()

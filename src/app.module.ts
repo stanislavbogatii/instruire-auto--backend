@@ -18,6 +18,7 @@ import { CarsModule } from './cars/cars.module';
 import { InstructorsGroupModule } from './instructors-group/instructors-group.module';
 import { NotificationsModule } from './notifications/notifications.module';
 import { BackupModule } from './backup/backup.module';
+import { ExamsModule } from './exams/exams.module';
 
 @Module({
   imports: [
@@ -30,6 +31,7 @@ import { BackupModule } from './backup/backup.module';
     InstructorsGroupModule,
     NotificationsModule,
     BackupModule,
+    ExamsModule,
     ScheduleModule.forRoot(),
     ConfigModule.forRoot({
       isGlobal: true,

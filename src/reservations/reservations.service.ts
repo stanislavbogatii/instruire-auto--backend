@@ -2,6 +2,7 @@ import { Injectable, NotFoundException, BadRequestException } from '@nestjs/comm
 import { PrismaService } from 'src/prisma/prisma.service';
 import { CreateReservationsDto } from './dto/create-reservations.dto';
 import { UpdateReservationDto } from './dto/update-reservation.dto';
+import { HistoryService } from './history.service';
 import { ApiTags } from '@nestjs/swagger';
 import { Car, Instructor, InstructorsGroup, Reservation } from '@prisma/client';
 import { start } from 'repl';
@@ -10,7 +11,10 @@ import { group } from 'console';
 
 @Injectable()
 export class ReservationsService {
-  constructor(private prisma: PrismaService) {}
+  constructor(
+    private prisma: PrismaService,
+    private historyService: HistoryService
+  ) {}
   private readonly dailySlots = [
     '07:00',
     '08:30',
@@ -98,45 +102,113 @@ export class ReservationsService {
           }
         });
 
+        try {
+          await this.historyService.createHistoryRecord(
+            reservation.id,
+            'CREATE' as any, 
+            reservation,
+            userId
+          );
+        } catch (error) {
+          console.warn('Failed to create history record:', error.message);
+        }
+
         created.push(reservation);
         instructorIndex++; 
       }
     } else if (instructorId) {
       const instructor = await this.prisma.instructor.findFirst({
-        where: {
-          id: instructorId
-        }
+        where: { id: instructorId },
       });
       if (!instructor) throw new NotFoundException("Instructor not found");
-      const startTimes = dto.reservations.map(r => new Date(r.startTime));
 
-      const existingReservations = await this.prisma.reservation.findMany({
-        where: {
-          instructorId,
-          startTime: {
-            in: startTimes,
-          },
-        },
-        select: {
-          startTime: true,
-        },
+      const reservations = dto.reservations || [];
+      if (reservations.length === 0) return []; 
+
+      const startTimes = reservations.map(r => new Date(r.startTime));
+
+      const N = Math.min(7, reservations.length);
+
+      const userReservationsCount = await this.prisma.reservation.count({
+        where: { userId },
       });
 
-      if (existingReservations.length > 0) {
-        const conflictTimes = existingReservations.map(r => r.startTime.toISOString());
-        throw new BadRequestException(
-          `Instructor ${instructorId} is already reserved at: ${conflictTimes.join(', ')}`
-        );
+      const allCiocana = reservations.every(r => ((r.sector || '').toLowerCase() === 'ciocana'));
+
+      let botanicaInstructor: Instructor | null = null;
+      if (userReservationsCount === 0 && allCiocana && N > 0) {
+        const firstNStartTimes = startTimes.slice(0, N);
+
+        botanicaInstructor = await this.prisma.instructor.findFirst({
+          where: {
+            sector: 'Botanica',
+            reservations: {
+              none: {
+                startTime: { in: firstNStartTimes },
+              },
+            },
+          },
+        });
+
+        if (!botanicaInstructor) {
+          throw new BadRequestException(
+            `No available Botanica instructor found for first ${N} reservations`
+          );
+        }
       }
 
-      for (const item of dto.reservations) {
+      const ciocanaTimes = botanicaInstructor ? startTimes.slice(N) : startTimes;
+      if (ciocanaTimes.length > 0) {
+        const existingCiocana = await this.prisma.reservation.findMany({
+          where: {
+            instructorId,
+            startTime: { in: ciocanaTimes },
+          },
+          select: { startTime: true },
+        });
+
+        if (existingCiocana.length > 0) {
+          const conflictTimes = existingCiocana.map(r => r.startTime.toISOString());
+          throw new BadRequestException(
+            `Instructor ${instructorId} is already reserved at: ${conflictTimes.join(', ')}`
+          );
+        }
+      }
+
+      if (botanicaInstructor) {
+        const existingBotanica = await this.prisma.reservation.findMany({
+          where: {
+            instructorId: botanicaInstructor.id,
+            startTime: { in: startTimes.slice(0, N) },
+          },
+          select: { startTime: true },
+        });
+        if (existingBotanica.length > 0) {
+          const conflictTimes = existingBotanica.map(r => r.startTime.toISOString());
+          throw new BadRequestException(
+            `Botanica instructor ${botanicaInstructor.id} is already reserved at: ${conflictTimes.join(', ')}`
+          );
+        }
+      }
+
+
+      for (const [index, item] of reservations.entries()) {
         const startTime = new Date(item.startTime);
+
+        let usedInstructorId = instructorId;
+        let usedSector = item.sector || '';
+
+        if (botanicaInstructor && index < N) {
+          usedInstructorId = botanicaInstructor.id;
+          usedSector = 'Botanica';
+        }
+
         const reservation = await this.prisma.reservation.create({
           data: {
             userId,
-            instructorId: instructorId,
+            instructorId: usedInstructorId,
             startTime,
-            sector: item.sector || '',
+            sector: usedSector,
             gearbox: item.gearbox || '',
             privateMessage: item.privateMessage || '',
             color: item.color || '',
@@ -151,14 +223,28 @@ export class ReservationsService {
                 email: true,
                 firstName: true,
                 lastName: true,
-                phone: true
-              }
-            }
-          }
+                phone: true,
+              },
+            },
+          },
         });
+
+        try {
+          await this.historyService.createHistoryRecord(
+            reservation.id,
+            'CREATE' as any,
+            reservation,
+            userId
+          );
+        } catch (error) {
+          console.warn('Failed to create history record:', error?.message ?? error);
+        }
 
         created.push(reservation);
       }
+
+      return created;
+
     }
 
 
@@ -204,15 +290,15 @@ export class ReservationsService {
     });
   }
 
-  async update(id: number, dto: UpdateReservationDto) {
-    const reservation = await this.prisma.reservation.findUnique({
+  async update(id: number, dto: UpdateReservationDto, changedBy?: number) {
+    const oldReservation = await this.prisma.reservation.findUnique({
       where: { id },
     });
-    if (!reservation) {
+    if (!oldReservation) {
       throw new NotFoundException(`Reservation #${id} not found`);
     }
 
-    return this.prisma.reservation.update({
+    const updatedReservation = await this.prisma.reservation.update({
       where: { id },
       data: {
         startTime: dto.startTime ? new Date(dto.startTime) : undefined,
@@ -227,17 +313,113 @@ export class ReservationsService {
         car: true
       }
     });
+
+    // Create history record for the update
+    try {
+      await this.historyService.createHistoryRecord(
+        id,
+        'UPDATE' as any, // We'll fix this enum issue later
+        updatedReservation,
+        changedBy,
+        oldReservation
+      );
+    } catch (error) {
+      console.warn('Failed to create history record:', error.message);
+    }
+
+    return updatedReservation;
   }
 
 
-  async delete(id: number) {
+  async delete(id: number, changedBy?: number) {
     const reservation = await this.prisma.reservation.findUnique({ where: { id } });
     if (!reservation) {
       throw new NotFoundException(`Reservation with id=${id} not found`);
     }
+
+    // Create history record for the deletion before deleting
+    try {
+      await this.historyService.createHistoryRecord(
+        id,
+        'DELETE' as any, // We'll fix this enum issue later
+        reservation,
+        changedBy
+      );
+    } catch (error) {
+      console.warn('Failed to create history record:', error.message);
+    }
+
     await this.prisma.reservation.delete({
       where: {id}
-    })
+    });
+  }
+
+  async confirmReservation(id: number, changedBy?: number) {
+    const oldReservation = await this.prisma.reservation.findUnique({
+      where: { id },
+    });
+    if (!oldReservation) {
+      throw new NotFoundException(`Reservation #${id} not found`);
+    }
+
+    const updatedReservation = await this.prisma.reservation.update({
+      where: { id },
+      data: { isConfirmed: true },
+      include: {
+        instructor: true,
+        car: true,
+        user: true
+      }
+    });
+
+    // Create history record for the confirmation
+    try {
+      await this.historyService.createHistoryRecord(
+        id,
+        'CONFIRM' as any,
+        updatedReservation,
+        changedBy,
+        oldReservation
+      );
+    } catch (error) {
+      console.warn('Failed to create history record:', error.message);
+    }
+
+    return updatedReservation;
+  }
+
+  async unconfirmReservation(id: number, changedBy?: number) {
+    const oldReservation = await this.prisma.reservation.findUnique({
+      where: { id },
+    });
+    if (!oldReservation) {
+      throw new NotFoundException(`Reservation #${id} not found`);
+    }
+
+    const updatedReservation = await this.prisma.reservation.update({
+      where: { id },
+      data: { isConfirmed: false },
+      include: {
+        instructor: true,
+        car: true,
+        user: true
+      }
+    });
+
+    // Create history record for the unconfirmation
+    try {
+      await this.historyService.createHistoryRecord(
+        id,
+        'UNCONFIRM' as any,
+        updatedReservation,
+        changedBy,
+        oldReservation
+      );
+    } catch (error) {
+      console.warn('Failed to create history record:', error.message);
+    }
+
+    return updatedReservation;
   }
 
   async getReservationsByUserId(userId: number) {

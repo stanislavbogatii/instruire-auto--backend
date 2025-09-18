@@ -17,7 +17,7 @@ export class InstructorsService {
   ) {}
 
   async create(createInstructorDto: CreateInstructorDto) {
-    const { firstName, lastName, phone, email, password, sector } = createInstructorDto;
+    const { firstName, lastName, phone, email, password, sector, order } = createInstructorDto;
 
     const existsPhone = await this.prisma.instructor.findFirst({
       where: { phone },

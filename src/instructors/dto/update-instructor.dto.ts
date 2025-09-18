@@ -21,4 +21,8 @@ export class UpdateInstructorDto extends PartialType(CreateInstructorDto) {
   @IsString()
   @IsOptional()
   sector?: string;
+
+  @ApiProperty({example: "20X30"})
+  @IsOptional()
+  order?: string
 }
