@@ -1,0 +1,331 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider          = "mysql"
+  url               = env("DATABASE_URL")
+  shadowDatabaseUrl = env("SHADOW_DATABASE_URL")
+}
+
+model User {
+  id           Int           @id @default(autoincrement())
+  email        String        @unique
+  hash         String
+  firstName    String?       @default("")
+  lastName     String?       @default("")
+  phone        String?       @default("")
+  privateMessage String?     @default("")
+  role         Role          @default(USER)
+  groupId      Int?
+  userId       Int?          @unique
+  createdAt    DateTime      @default(now())
+  updatedAt    DateTime      @updatedAt
+  reservations Reservation[]
+  reservationHistory ReservationHistory[]
+  changedReservations ReservationHistory[] @relation("ChangedByUser")
+  group        Group?        @relation(fields: [groupId], references: [id])
+  instructorProfile Instructor? @relation("UserInstructor")
+  studentTickets StudentTicket[]
+  exams        Exam[]
+  examPermissions StudentExamPermission[]
+
+  @@index([groupId], map: "User_groupId_fkey")
+  @@index([userId], map: "User_userId_fkey")
+}
+
+model Group {
+  id           Int         @id @default(autoincrement())
+  name         String
+  token        String      @unique
+  instructorId Int?
+  createdAt    DateTime    @default(now())
+  updatedAt    DateTime    @updatedAt
+  instructor   Instructor? @relation(fields: [instructorId], references: [id])
+  users        User[]
+
+  @@index([instructorId], map: "Group_instructorId_fkey")
+}
+
+model Reservation {
+  id                Int              @id @default(autoincrement())
+  userId            Int
+  instructorId      Int?
+  carId             Int?
+  instructorsGroupId Int?
+  startTime         DateTime
+  sector            String?         @default("")
+  gearbox           String?         @default("")
+  privateMessage    String?         @default("")
+  color             String?         @default("")
+  isConfirmed       Boolean         @default(false)
+  createdAt         DateTime        @default(now())
+  updatedAt         DateTime        @default(now()) @updatedAt
+  instructor        Instructor?      @relation(fields: [instructorId], references: [id])
+  user              User           @relation(fields: [userId], references: [id])
+  car               Car?           @relation(fields: [carId], references: [id])
+  instructorsGroup  InstructorsGroup? @relation(fields: [instructorsGroupId], references: [id])
+  history           ReservationHistory[]
+
+  @@index([instructorId], map: "Reservation_instructorId_fkey")
+  @@index([userId], map: "Reservation_userId_fkey")
+  @@index([carId], map: "Reservation_carId_fkey")
+  @@index([instructorsGroupId])
+}
+
+model ReservationHistory {
+  id                Int              @id @default(autoincrement())
+  reservationId     Int
+  userId            Int
+  instructorId      Int?
+  carId             Int?
+  instructorsGroupId Int?
+  startTime         DateTime
+  sector            String?         @default("")
+  gearbox           String?         @default("")
+  privateMessage    String?         @default("")
+  color             String?         @default("")
+  isConfirmed       Boolean         @default(false)
+  action            HistoryAction
+  changedBy         Int?            // User ID who made the change
+  changedFields     Json?           // JSON object containing the changed fields and their old/new values
+  createdAt         DateTime        @default(now())
+  
+  reservation       Reservation     @relation(fields: [reservationId], references: [id], onDelete: Cascade)
+  user              User           @relation(fields: [userId], references: [id])
+  instructor        Instructor?     @relation(fields: [instructorId], references: [id])
+  car               Car?           @relation(fields: [carId], references: [id])
+  instructorsGroup  InstructorsGroup? @relation(fields: [instructorsGroupId], references: [id])
+  changedByUser     User?          @relation("ChangedByUser", fields: [changedBy], references: [id])
+
+  @@index([reservationId], map: "ReservationHistory_reservationId_fkey")
+  @@index([userId], map: "ReservationHistory_userId_fkey")
+  @@index([instructorId], map: "ReservationHistory_instructorId_fkey")
+  @@index([carId], map: "ReservationHistory_carId_fkey")
+  @@index([instructorsGroupId])
+  @@index([changedBy], map: "ReservationHistory_changedBy_fkey")
+}
+
+model Car {
+  id          Int         @id @default(autoincrement())
+  plateNumber String      @unique
+  gearbox     String?     
+  instructor  Instructor? @relation(fields: [instructorId], references: [id])
+  instructorId Int?
+  createdAt   DateTime    @default(now())
+  updatedAt   DateTime    @updatedAt
+  reservations Reservation[]
+  reservationHistory ReservationHistory[]
+
+  @@index([instructorId], map: "Car_instructorId_fkey")
+}
+
+model InstructorsGroup {
+  id           Int             @id @default(autoincrement())
+  name         String
+  order        Int             @default(0)
+  createdAt    DateTime        @default(now())
+  updatedAt    DateTime        @updatedAt
+  instructors  Instructor[]
+  reservations Reservation[]
+  reservationHistory ReservationHistory[]
+  sector       String?         @default("")
+}
+
+model Instructor {
+  id                Int               @id @default(autoincrement())
+  firstName        String
+  lastName         String
+  phone            String
+  order            String?
+  sector           String?           @default("") 
+  isActive         Boolean           @default(true)
+  userId           Int?              @unique
+  instructorsGroup InstructorsGroup? @relation(fields: [instructorsGroupId], references: [id])
+  instructorsGroupId Int?
+  user             User?             @relation("UserInstructor", fields: [userId], references: [id])
+  groups           Group[]
+  reservations     Reservation[]
+  reservationHistory ReservationHistory[]
+  cars             Car[]
+  exams            Exam[]
+  examPermissions  StudentExamPermission[]
+
+  @@index([instructorsGroupId])
+  @@index([userId], map: "Instructor_userId_fkey")
+}
+
+enum Role {
+  USER
+  MANAGER
+  ADMIN
+  INSTRUCTOR
+}
+
+enum HistoryAction {
+  CREATE
+  UPDATE
+  DELETE
+  CONFIRM
+  UNCONFIRM
+}
+
+model Question {
+  id          Int      @id @default(autoincrement())
+  text        String   @db.Text
+  image       String?  // Image URL or path if exists
+  answers     String   @db.Text // JSON array of possible answers
+  correctAnswer Int    // Index of the correct answer
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+  ticketQuestions TicketQuestion[]
+  examQuestions ExamQuestion[]
+  studentTicketAnswers StudentTicketAnswer[]
+}
+
+model Ticket {
+  id          Int      @id @default(autoincrement())
+  name        String   // Ticket name/identifier
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+  questions   TicketQuestion[]
+  studentTickets StudentTicket[]
+  examTickets ExamTicket[]
+}
+
+model TicketQuestion {
+  id         Int      @id @default(autoincrement())
+  ticketId   Int
+  questionId Int
+  order      Int      // Order of question in ticket
+  ticket     Ticket   @relation(fields: [ticketId], references: [id], onDelete: Cascade)
+  question   Question @relation(fields: [questionId], references: [id], onDelete: Cascade)
+
+  @@unique([ticketId, questionId])
+  @@index([ticketId])
+  @@index([questionId])
+}
+
+model StudentTicket {
+  id           Int      @id @default(autoincrement())
+  userId       Int
+  ticketId     Int
+  status       PracticeStatus @default(NOT_STARTED) // Practice progress status
+  score        Int?     // Number of correct answers in this practice
+  totalQuestions Int?   // Total questions in this practice session
+  lastQuestionIndex Int? // Last question attempted (for resuming)
+  completedAt  DateTime? // When practice was completed
+  startedAt    DateTime? // When practice was first started
+  user         User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  ticket       Ticket   @relation(fields: [ticketId], references: [id], onDelete: Cascade)
+  answers      StudentTicketAnswer[] // Individual answers for each question
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+
+  @@unique([userId, ticketId])
+  @@index([userId])
+  @@index([ticketId])
+}
+
+model StudentTicketAnswer {
+  id              Int           @id @default(autoincrement())
+  studentTicketId Int
+  questionId      Int
+  selectedAnswer  Int?          // Student's selected answer index
+  isCorrect       Boolean?      // Whether the answer was correct
+  answeredAt      DateTime?     // When this question was answered
+  order           Int           // Question order in the practice session
+  studentTicket   StudentTicket @relation(fields: [studentTicketId], references: [id], onDelete: Cascade)
+  question        Question      @relation(fields: [questionId], references: [id], onDelete: Cascade)
+  createdAt       DateTime      @default(now())
+  updatedAt       DateTime      @updatedAt
+
+  @@unique([studentTicketId, questionId])
+  @@index([studentTicketId])
+  @@index([questionId])
+}
+
+model Exam {
+  id            Int          @id @default(autoincrement())
+  userId        Int
+  instructorId  Int?
+  status        ExamStatus   @default(IN_PROGRESS)
+  score         Int?         // Number of correct answers
+  totalQuestions Int         @default(0)
+  passScore     Int          @default(22) // Minimum score to pass (out of 26 typically)
+  startedAt     DateTime     @default(now())
+  completedAt   DateTime?
+  timeLimit     Int          @default(30) // Time limit in minutes
+  attemptNumber Int          @default(1) // Which attempt this is for the student
+  user          User         @relation(fields: [userId], references: [id], onDelete: Cascade)
+  instructor    Instructor?  @relation(fields: [instructorId], references: [id])
+  questions     ExamQuestion[]
+  examTickets   ExamTicket[]
+
+  @@index([userId])
+  @@index([instructorId])
+}
+
+model ExamTicket {
+  id       Int    @id @default(autoincrement())
+  examId   Int
+  ticketId Int
+  exam     Exam   @relation(fields: [examId], references: [id], onDelete: Cascade)
+  ticket   Ticket @relation(fields: [ticketId], references: [id], onDelete: Cascade)
+
+  @@unique([examId, ticketId])
+  @@index([examId])
+  @@index([ticketId])
+}
+
+model ExamQuestion {
+  id           Int      @id @default(autoincrement())
+  examId       Int
+  questionId   Int
+  selectedAnswer Int?   // Student's selected answer
+  isCorrect    Boolean?
+  answeredAt   DateTime?
+  order        Int      // Order of question in exam
+  image        String?  // Optional image URL or path for the exam question
+  exam         Exam     @relation(fields: [examId], references: [id], onDelete: Cascade)
+  question     Question @relation(fields: [questionId], references: [id], onDelete: Cascade)
+
+  @@unique([examId, questionId])
+  @@index([examId])
+  @@index([questionId])
+}
+
+model StudentExamPermission {
+  id           Int      @id @default(autoincrement())
+  userId       Int
+  instructorId Int
+  isActive     Boolean  @default(true)
+  validUntil   DateTime
+  maxAttempts  Int      @default(3)
+  usedAttempts Int      @default(0)
+  user         User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  instructor   Instructor @relation(fields: [instructorId], references: [id], onDelete: Cascade)
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+
+  @@unique([userId, instructorId])
+  @@index([userId])
+  @@index([instructorId])
+}
+
+enum ExamStatus {
+  IN_PROGRESS
+  COMPLETED
+  FAILED
+  EXPIRED
+}
+
+enum PracticeStatus {
+  NOT_STARTED
+  IN_PROGRESS
+  COMPLETED
+  PASSED
+  FAILED
+}
+
+
