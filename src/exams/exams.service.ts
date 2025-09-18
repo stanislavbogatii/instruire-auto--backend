@@ -12,7 +12,9 @@ import {
   SubmitAnswerDto, 
   CreateStudentPermissionDto,
   BulkCreateStudentPermissionDto,
-  ReactivateStudentDto
+  ReactivateStudentDto,
+  StartPracticeDto,
+  SubmitPracticeAnswerDto
 } from './dto/exam.dto';
 import { TicketsService } from './tickets.service';
 import { Cron, CronExpression } from '@nestjs/schedule';
@@ -204,10 +206,11 @@ export class ExamsService {
       let questionOrder = 1;
       for (const ticket of tickets) {
         await tx.examQuestion.createMany({
-          data: ticket.questions.map(question => ({
+          data: ticket.questions.map(ticketQuestion => ({
             examId: exam.id,
-            questionId: question.id,
+            questionId: ticketQuestion.question.id,
             order: questionOrder++,
+            image: ticketQuestion.question.image, // Copy image from the original question
           })),
         });
       }
@@ -250,7 +253,7 @@ export class ExamsService {
       questions: exam.questions.map(eq => ({
         id: eq.question.id,
         text: eq.question.text,
-        image: eq.question.image,
+        image: (eq as any).image || eq.question.image, // Prioritize ExamQuestion image, fallback to Question image
         answers: JSON.parse(eq.question.answers),
         order: eq.order,
         selectedAnswer: eq.selectedAnswer,
@@ -308,6 +311,7 @@ export class ExamsService {
         selectedAnswer: submitAnswerDto.selectedAnswer,
         isCorrect,
         answeredAt: new Date(),
+        ...(submitAnswerDto.image && { image: submitAnswerDto.image }), // Update image if provided
       },
     });
 
@@ -519,5 +523,267 @@ export class ExamsService {
     for (const exam of expiredExams) {
       await this.expireExam(exam.id);
     }
+  }
+
+  // ================================
+  // PRACTICE MODE METHODS
+  // ================================
+
+  async startPractice(userId: number, startPracticeDto: StartPracticeDto) {
+    const { ticketId } = startPracticeDto;
+
+    // Verify ticket exists
+    const ticket = await this.prisma.ticket.findUnique({
+      where: { id: ticketId },
+      include: {
+        questions: {
+          include: { question: true },
+          orderBy: { order: 'asc' },
+        },
+      },
+    });
+
+    if (!ticket) {
+      throw new NotFoundException('Practice ticket not found');
+    }
+
+    // Check if user already has a practice session for this ticket
+    const existingPractice = await this.prisma.studentTicket.findUnique({
+      where: {
+        userId_ticketId: { userId, ticketId },
+      },
+      include: {
+        answers: {
+          include: { question: true },
+          orderBy: { order: 'asc' },
+        },
+      },
+    });
+
+    if (existingPractice) {
+      // Return existing practice session
+      return this.getPracticeDetails(existingPractice.id);
+    }
+
+    // Create new practice session
+    const practiceSession = await this.prisma.$transaction(async (tx) => {
+      const session = await tx.studentTicket.create({
+        data: {
+          userId,
+          ticketId,
+          status: 'IN_PROGRESS',
+          totalQuestions: ticket.questions.length,
+          startedAt: new Date(),
+          lastQuestionIndex: 0,
+        },
+      });
+
+      // Create answer placeholders for all questions
+      await tx.studentTicketAnswer.createMany({
+        data: ticket.questions.map((tq, index) => ({
+          studentTicketId: session.id,
+          questionId: tq.question.id,
+          order: index + 1,
+        })),
+      });
+
+      return session;
+    });
+
+    return this.getPracticeDetails(practiceSession.id);
+  }
+
+  async getPracticeDetails(studentTicketId: number) {
+    const practice = await this.prisma.studentTicket.findUnique({
+      where: { id: studentTicketId },
+      include: {
+        ticket: true,
+        answers: {
+          include: { question: true },
+          orderBy: { order: 'asc' },
+        },
+      },
+    });
+
+    if (!practice) {
+      throw new NotFoundException('Practice session not found');
+    }
+
+    return {
+      id: practice.id,
+      ticketName: practice.ticket.name,
+      status: practice.status,
+      score: practice.score,
+      totalQuestions: practice.totalQuestions,
+      lastQuestionIndex: practice.lastQuestionIndex,
+      startedAt: practice.startedAt,
+      completedAt: practice.completedAt,
+      questions: practice.answers.map(answer => ({
+        id: answer.question.id,
+        text: answer.question.text,
+        image: answer.question.image,
+        answers: JSON.parse(answer.question.answers),
+        order: answer.order,
+        selectedAnswer: answer.selectedAnswer,
+        isCorrect: answer.isCorrect,
+        isAnswered: answer.selectedAnswer !== null,
+      })),
+    };
+  }
+
+  async submitPracticeAnswer(
+    userId: number,
+    studentTicketId: number,
+    submitAnswerDto: SubmitPracticeAnswerDto,
+  ) {
+    const practice = await this.prisma.studentTicket.findFirst({
+      where: {
+        id: studentTicketId,
+        userId,
+        status: 'IN_PROGRESS',
+      },
+    });
+
+    if (!practice) {
+      throw new NotFoundException('Active practice session not found');
+    }
+
+    // Find the answer record
+    const answerRecord = await this.prisma.studentTicketAnswer.findFirst({
+      where: {
+        studentTicketId,
+        questionId: submitAnswerDto.questionId,
+      },
+      include: { question: true },
+    });
+
+    if (!answerRecord) {
+      throw new NotFoundException('Question not found in this practice session');
+    }
+
+    // Check if answer is correct
+    const isCorrect = answerRecord.question.correctAnswer === submitAnswerDto.selectedAnswer;
+
+    // Update the answer
+    await this.prisma.studentTicketAnswer.update({
+      where: { id: answerRecord.id },
+      data: {
+        selectedAnswer: submitAnswerDto.selectedAnswer,
+        isCorrect,
+        answeredAt: new Date(),
+      },
+    });
+
+    // Update practice progress
+    const answeredCount = await this.prisma.studentTicketAnswer.count({
+      where: {
+        studentTicketId,
+        selectedAnswer: { not: null },
+      },
+    });
+
+    const updatedPractice = await this.prisma.studentTicket.update({
+      where: { id: studentTicketId },
+      data: {
+        lastQuestionIndex: Math.max(practice.lastQuestionIndex || 0, answerRecord.order),
+      },
+    });
+
+    // Check if practice is completed
+    if (answeredCount === practice.totalQuestions) {
+      await this.completePractice(studentTicketId);
+    }
+
+    return {
+      isCorrect,
+      correctAnswer: answerRecord.question.correctAnswer,
+      progress: {
+        answered: answeredCount,
+        total: practice.totalQuestions,
+        isCompleted: answeredCount === practice.totalQuestions,
+      },
+    };
+  }
+
+  async completePractice(studentTicketId: number) {
+    // Calculate score
+    const correctAnswers = await this.prisma.studentTicketAnswer.count({
+      where: {
+        studentTicketId,
+        isCorrect: true,
+      },
+    });
+
+    const practice = await this.prisma.studentTicket.findUnique({
+      where: { id: studentTicketId },
+    });
+
+    if (!practice) {
+      throw new NotFoundException('Practice session not found');
+    }
+
+    // Determine status based on score (assuming 70% pass rate)
+    const passThreshold = Math.ceil((practice.totalQuestions || 0) * 0.7);
+    const status = correctAnswers >= passThreshold ? 'PASSED' : 'FAILED';
+
+    return this.prisma.studentTicket.update({
+      where: { id: studentTicketId },
+      data: {
+        status,
+        score: correctAnswers,
+        completedAt: new Date(),
+      },
+    });
+  }
+
+  async getUserPracticeHistory(userId: number, page: number = 1, limit: number = 10) {
+    const skip = (page - 1) * limit;
+
+    const [practices, total] = await Promise.all([
+      this.prisma.studentTicket.findMany({
+        where: { userId },
+        skip,
+        take: limit,
+        orderBy: { updatedAt: 'desc' },
+        include: {
+          ticket: true,
+        },
+      }),
+      this.prisma.studentTicket.count({ where: { userId } }),
+    ]);
+
+    return {
+      data: practices.map(practice => ({
+        id: practice.id,
+        ticketName: practice.ticket.name,
+        status: practice.status,
+        score: practice.score,
+        totalQuestions: practice.totalQuestions,
+        startedAt: practice.startedAt,
+        completedAt: practice.completedAt,
+        lastQuestionIndex: practice.lastQuestionIndex,
+      })),
+      pagination: {
+        page,
+        limit,
+        total,
+        totalPages: Math.ceil(total / limit),
+      },
+    };
+  }
+
+  async getPracticesByTicket(userId: number, ticketId: number) {
+    return this.prisma.studentTicket.findUnique({
+      where: {
+        userId_ticketId: { userId, ticketId },
+      },
+      include: {
+        ticket: true,
+        answers: {
+          include: { question: true },
+          orderBy: { order: 'asc' },
+        },
+      },
+    });
   }
 }

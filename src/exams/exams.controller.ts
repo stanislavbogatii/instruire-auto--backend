@@ -22,6 +22,8 @@ import {
   CreateStudentPermissionDto,
   BulkCreateStudentPermissionDto,
   ReactivateStudentDto,
+  StartPracticeDto,
+  SubmitPracticeAnswerDto,
 } from './dto/exam.dto';
 import { CreateQuestionDto, UpdateQuestionDto } from './dto/question.dto';
 import { CreateTicketDto, UpdateTicketDto } from './dto/ticket.dto';
@@ -220,5 +222,60 @@ export class ExamsController {
       req.user.id,
       reactivateDto,
     );
+  }
+
+  // ================================
+  // PRACTICE MODE ENDPOINTS
+  // ================================
+
+  @Post('practice')
+  @ApiOperation({ summary: 'Start or resume practice session for a ticket' })
+  @ApiBearerAuth('access-token')
+  @UseGuards(AuthGuard('jwt'))
+  startPractice(@Request() req, @Body() startPracticeDto: StartPracticeDto) {
+    return this.examsService.startPractice(req.user.id, startPracticeDto);
+  }
+
+  @Get('practice/:id')
+  @ApiOperation({ summary: 'Get practice session details' })
+  @ApiBearerAuth('access-token')
+  @UseGuards(AuthGuard('jwt'))
+  getPracticeDetails(@Param('id', ParseIntPipe) id: number) {
+    return this.examsService.getPracticeDetails(id);
+  }
+
+  @Post('practice/:id/answers')
+  @ApiOperation({ summary: 'Submit answer for a practice question' })
+  @ApiBearerAuth('access-token')
+  @UseGuards(AuthGuard('jwt'))
+  submitPracticeAnswer(
+    @Param('id', ParseIntPipe) id: number,
+    @Request() req,
+    @Body() submitAnswerDto: SubmitPracticeAnswerDto,
+  ) {
+    return this.examsService.submitPracticeAnswer(req.user.id, id, submitAnswerDto);
+  }
+
+  @Get('practice/history/my')
+  @ApiOperation({ summary: 'Get my practice history' })
+  @ApiBearerAuth('access-token')
+  @UseGuards(AuthGuard('jwt'))
+  getMyPracticeHistory(
+    @Request() req,
+    @Query('page', ParseIntPipe) page: number = 1,
+    @Query('limit', ParseIntPipe) limit: number = 10,
+  ) {
+    return this.examsService.getUserPracticeHistory(req.user.id, page, limit);
+  }
+
+  @Get('practice/ticket/:ticketId')
+  @ApiOperation({ summary: 'Get practice session for specific ticket' })
+  @ApiBearerAuth('access-token')
+  @UseGuards(AuthGuard('jwt'))
+  getPracticeByTicket(
+    @Request() req,
+    @Param('ticketId', ParseIntPipe) ticketId: number,
+  ) {
+    return this.examsService.getPracticesByTicket(req.user.id, ticketId);
   }
 }

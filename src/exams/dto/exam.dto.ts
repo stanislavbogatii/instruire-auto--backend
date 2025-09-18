@@ -1,4 +1,4 @@
-import { IsArray, IsDateString, IsInt, IsOptional, Min } from 'class-validator';
+import { IsArray, IsDateString, IsInt, IsOptional, IsString, Min } from 'class-validator';
 import { ApiProperty } from '@nestjs/swagger';
 
 export class CreateExamDto {
@@ -28,6 +28,11 @@ export class SubmitAnswerDto {
   @IsInt()
   @Min(0)
   selectedAnswer: number;
+
+  @ApiProperty({ description: 'Optional image for this specific exam question', required: false })
+  @IsOptional()
+  @IsString()
+  image?: string;
 }
 
 export class CreateStudentPermissionDto {
@@ -78,4 +83,21 @@ export class ReactivateStudentDto {
   @ApiProperty({ description: 'Reset attempts to 0', required: false, default: true })
   @IsOptional()
   resetAttempts?: boolean;
+}
+
+export class StartPracticeDto {
+  @ApiProperty({ description: 'Ticket ID to practice' })
+  @IsInt()
+  ticketId: number;
+}
+
+export class SubmitPracticeAnswerDto {
+  @ApiProperty({ description: 'Question ID' })
+  @IsInt()
+  questionId: number;
+
+  @ApiProperty({ description: 'Selected answer index (0-based)' })
+  @IsInt()
+  @Min(0)
+  selectedAnswer: number;
 }

@@ -180,6 +180,7 @@ model Question {
   updatedAt   DateTime @updatedAt
   ticketQuestions TicketQuestion[]
   examQuestions ExamQuestion[]
+  studentTicketAnswers StudentTicketAnswer[]
 }
 
 model Ticket {
@@ -209,16 +210,39 @@ model StudentTicket {
   id           Int      @id @default(autoincrement())
   userId       Int
   ticketId     Int
-  lastAnswer   Int?     // Last selected answer for statistics
-  answeredAt   DateTime?
+  status       PracticeStatus @default(NOT_STARTED) // Practice progress status
+  score        Int?     // Number of correct answers in this practice
+  totalQuestions Int?   // Total questions in this practice session
+  lastQuestionIndex Int? // Last question attempted (for resuming)
+  completedAt  DateTime? // When practice was completed
+  startedAt    DateTime? // When practice was first started
   user         User     @relation(fields: [userId], references: [id], onDelete: Cascade)
   ticket       Ticket   @relation(fields: [ticketId], references: [id], onDelete: Cascade)
+  answers      StudentTicketAnswer[] // Individual answers for each question
   createdAt    DateTime @default(now())
   updatedAt    DateTime @updatedAt
 
   @@unique([userId, ticketId])
   @@index([userId])
   @@index([ticketId])
+}
+
+model StudentTicketAnswer {
+  id              Int           @id @default(autoincrement())
+  studentTicketId Int
+  questionId      Int
+  selectedAnswer  Int?          // Student's selected answer index
+  isCorrect       Boolean?      // Whether the answer was correct
+  answeredAt      DateTime?     // When this question was answered
+  order           Int           // Question order in the practice session
+  studentTicket   StudentTicket @relation(fields: [studentTicketId], references: [id], onDelete: Cascade)
+  question        Question      @relation(fields: [questionId], references: [id], onDelete: Cascade)
+  createdAt       DateTime      @default(now())
+  updatedAt       DateTime      @updatedAt
+
+  @@unique([studentTicketId, questionId])
+  @@index([studentTicketId])
+  @@index([questionId])
 }
 
 model Exam {
@@ -262,6 +286,7 @@ model ExamQuestion {
   isCorrect    Boolean?
   answeredAt   DateTime?
   order        Int      // Order of question in exam
+  image        String?  // Optional image URL or path for the exam question
   exam         Exam     @relation(fields: [examId], references: [id], onDelete: Cascade)
   question     Question @relation(fields: [questionId], references: [id], onDelete: Cascade)
 
@@ -293,6 +318,14 @@ enum ExamStatus {
   COMPLETED
   FAILED
   EXPIRED
+}
+
+enum PracticeStatus {
+  NOT_STARTED
+  IN_PROGRESS
+  COMPLETED
+  PASSED
+  FAILED
 }
 
 
