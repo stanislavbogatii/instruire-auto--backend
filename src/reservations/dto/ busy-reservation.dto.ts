@@ -1,6 +1,7 @@
 // Ответ для обычного инструктора
 export interface InstructorResponse {
   instructorId: number;
+  total_instructors: number;
   reservations: {
     id: number;
     startTime: Date;
@@ -10,6 +11,7 @@ export interface InstructorResponse {
 // Ответ для группы
 export interface GroupResponse {
   groupId: number;
+  total_instructors: number;
   reservations: {
     id: number;
     startTime: Date;

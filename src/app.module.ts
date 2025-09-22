@@ -19,6 +19,7 @@ import { InstructorsGroupModule } from './instructors-group/instructors-group.mo
 import { NotificationsModule } from './notifications/notifications.module';
 import { BackupModule } from './backup/backup.module';
 import { ExamsModule } from './exams/exams.module';
+import { ImagesModule } from './images/images.module';
 
 @Module({
   imports: [
@@ -32,6 +33,7 @@ import { ExamsModule } from './exams/exams.module';
     NotificationsModule,
     BackupModule,
     ExamsModule,
+    ImagesModule,
     ScheduleModule.forRoot(),
     ConfigModule.forRoot({
       isGlobal: true,

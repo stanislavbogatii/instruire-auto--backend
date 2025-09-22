@@ -502,6 +502,7 @@ export class ReservationsService {
     }
     return {
       instructorId: instructor.id,
+      total_instructors: 1,
       reservations: instructor.reservations
     }
   }
@@ -535,7 +536,8 @@ export class ReservationsService {
     })); 
 
     return { 
-      groupId: instructors_group_id, 
+      groupId: instructors_group_id,
+      total_instructors: instructors.length,
       reservations 
     }; 
   }
@@ -609,7 +611,11 @@ export class ReservationsService {
         startTime: r.startTime 
       })); 
       return { 
-        groupId: leastBusyGroup.id, 
+        groupId: leastBusyGroup.id,
+        total_instructors: leastBusyGroup.instructors.filter(instructor => 
+          instructor.isActive && 
+          instructor.cars.some(car => car.gearbox === gearbox)
+        ).length,
         reservations 
       }; 
     } 
@@ -653,7 +659,8 @@ export class ReservationsService {
     })); 
   
     return { 
-      instructorId: leastBusyInstructor.id, 
+      instructorId: leastBusyInstructor.id,
+      total_instructors: instructors.length,
       reservations 
     }; 
   } 

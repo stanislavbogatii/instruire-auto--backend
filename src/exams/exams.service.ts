@@ -7,6 +7,7 @@ import {
 import { PrismaService } from '../prisma/prisma.service';
 import { MailService } from '../mail/mail.service';
 import { PdfService } from './pdf.service';
+import { ImageService } from '../common/image.service';
 import { 
   CreateExamDto, 
   SubmitAnswerDto, 
@@ -33,6 +34,7 @@ export class ExamsService {
     private ticketsService: TicketsService,
     private mailService: MailService,
     private pdfService: PdfService,
+    private imageService: ImageService,
   ) {}
 
   async createStudentPermission(
@@ -622,6 +624,7 @@ export class ExamsService {
         id: answer.question.id,
         text: answer.question.text,
         image: answer.question.image,
+        imageUrl: this.imageService.getImageUrl(answer.question.image), // Add full image URL
         answers: JSON.parse(answer.question.answers),
         order: answer.order,
         selectedAnswer: answer.selectedAnswer,

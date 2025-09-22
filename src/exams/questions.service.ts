@@ -1,10 +1,14 @@
 import { Injectable, NotFoundException } from '@nestjs/common';
 import { PrismaService } from '../prisma/prisma.service';
+import { ImageService } from '../common/image.service';
 import { CreateQuestionDto, UpdateQuestionDto } from './dto/question.dto';
 
 @Injectable()
 export class QuestionsService {
-  constructor(private prisma: PrismaService) {}
+  constructor(
+    private prisma: PrismaService,
+    private imageService: ImageService,
+  ) {}
 
   async create(createQuestionDto: CreateQuestionDto) {
     return this.prisma.question.create({
@@ -33,6 +37,7 @@ export class QuestionsService {
       data: questions.map(q => ({
         ...q,
         answers: JSON.parse(q.answers),
+        imageUrl: this.imageService.getImageUrl(q.image), // Add full image URL
       })),
       pagination: {
         page,
@@ -55,6 +60,7 @@ export class QuestionsService {
     return {
       ...question,
       answers: JSON.parse(question.answers),
+      imageUrl: this.imageService.getImageUrl(question.image), // Add full image URL
     };
   }
 

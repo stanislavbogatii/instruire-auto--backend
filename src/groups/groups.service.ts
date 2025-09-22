@@ -71,16 +71,39 @@ export class GroupsService {
     return group;
   }
 
-  /** Update name only */
+  /** Update group (name, instructor, and/or token) */
   async update(id: number, dto: UpdateGroupDto) {
     await this.findOne(id);
+    
     if (dto.instructorId === undefined) {
       throw new BadRequestException('instructorId is required');
     }
+    
     await this.instructorsService.findOne(dto.instructorId);
+
+    // Prepare update data
+    const updateData: any = {
+      name: dto.name,
+      instructorId: dto.instructorId,
+    };
+
+    // If token is provided, validate it's unique
+    if (dto.token !== undefined) {
+      // Check if token is already taken by another group
+      const existingGroup = await this.prisma.group.findUnique({
+        where: { token: dto.token },
+      });
+      
+      if (existingGroup && existingGroup.id !== id) {
+        throw new ConflictException(`Token '${dto.token}' is already in use by another group`);
+      }
+      
+      updateData.token = dto.token;
+    }
+
     return this.prisma.group.update({
       where: { id },
-      data: { name: dto.name, instructorId: dto.instructorId },
+      data: updateData,
     });
   }
 
