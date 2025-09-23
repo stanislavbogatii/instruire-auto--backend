@@ -27,6 +27,19 @@ export class ReservationsService {
     '19:30',
   ];
 
+  async createReservationsForUser(userId: number, dto: CreateReservationsDto) {
+    // Validate that the target user exists
+    const targetUser = await this.prisma.user.findUnique({
+      where: { id: userId },
+    });
+
+    if (!targetUser) {
+      throw new NotFoundException(`User with ID ${userId} not found`);
+    }
+
+    return this.createReservations(userId, dto);
+  }
+
   async createReservations(userId: number, dto: CreateReservationsDto) {
     const created: any = [];
     let instructorId = dto.instructorId;

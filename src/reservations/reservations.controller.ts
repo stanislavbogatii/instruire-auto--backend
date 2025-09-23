@@ -16,6 +16,7 @@ import {
 import { ReservationsService } from './reservations.service';
 import { HistoryService } from './history.service';
 import { CreateReservationsDto } from './dto/create-reservations.dto';
+import { CreateReservationsForUserDto } from './dto/create-reservations-for-user.dto';
 import { UpdateReservationDto } from './dto/update-reservation.dto';
 import {
   ApiTags,
@@ -56,6 +57,37 @@ export class ReservationsController {
     @Session() session: User
   ) {
     return this.reservationsService.createReservations(session.id, dto);
+  }
+
+  @Post('for-user')
+  @ApiOperation({ 
+    summary: 'Create multiple reservations for a selected user', 
+    description: 'Allows admins, managers, and instructors to create multiple reservations for any user. Requires ADMIN, MANAGER, or INSTRUCTOR role.'
+  })
+  @ApiBody({ type: CreateReservationsForUserDto })
+  @ApiResponse({ 
+    status: 201, 
+    description: 'Reservations created successfully for the selected user',
+    type: [ReservationDto]
+  })
+  @ApiResponse({ 
+    status: 403, 
+    description: 'Forbidden - Only admins, managers, and instructors can create reservations for other users' 
+  })
+  @ApiResponse({ 
+    status: 404, 
+    description: 'User not found or instructor not available at specified times' 
+  })
+  async createForUser(
+    @Body() dto: CreateReservationsForUserDto, 
+    @Session() session: User
+  ) {
+    // Check if current user has permission to create reservations for others
+    if (session.role !== Role.ADMIN && session.role !== Role.MANAGER && session.role !== Role.INSTRUCTOR) {
+      throw new ForbiddenException("Only admins, managers, and instructors can create reservations for other users");
+    }
+    
+    return this.reservationsService.createReservationsForUser(dto.userId, dto);
   }
 
   @Get()
