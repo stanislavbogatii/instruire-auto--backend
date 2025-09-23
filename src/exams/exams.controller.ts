@@ -134,6 +134,8 @@ export class ExamsController {
   // Student permissions (Instructor endpoints)
   @Post('permissions/student')
   @ApiOperation({ summary: 'Grant exam permission to a student' })
+  @ApiBearerAuth('access-token')
+  @UseGuards(AuthGuard('jwt'))
   createStudentPermission(
     @Request() req,
     @Body() createPermissionDto: CreateStudentPermissionDto,
@@ -146,6 +148,8 @@ export class ExamsController {
 
   @Post('permissions/students/bulk')
   @ApiOperation({ summary: 'Grant exam permission to multiple students' })
+  @ApiBearerAuth('access-token')
+  @UseGuards(AuthGuard('jwt'))
   bulkCreateStudentPermissions(
     @Request() req,
     @Body() bulkCreateDto: BulkCreateStudentPermissionDto,
@@ -159,6 +163,8 @@ export class ExamsController {
   // Student exam endpoints
   @Post()
   @ApiOperation({ summary: 'Start a new exam for the current student' })
+  @ApiBearerAuth('access-token')
+  @UseGuards(AuthGuard('jwt'))
   createExam(@Request() req, @Body() createExamDto: CreateExamDto) {
     return this.examsService.createExam(req.user.id, createExamDto);
   }
@@ -171,6 +177,8 @@ export class ExamsController {
 
   @Post(':id/answers')
   @ApiOperation({ summary: 'Submit an answer for a question in the exam' })
+  @ApiBearerAuth('access-token')
+  @UseGuards(AuthGuard('jwt'))
   submitAnswer(
     @Param('id', ParseIntPipe) id: number,
     @Request() req,
@@ -182,6 +190,8 @@ export class ExamsController {
   // History endpoints
   @Get('history/student')
   @ApiOperation({ summary: 'Get student exam history' })
+  @ApiBearerAuth('access-token')
+  @UseGuards(AuthGuard('jwt'))
   getStudentHistory(
     @Request() req,
     @Query('page', ParseIntPipe) page: number = 1,
@@ -192,6 +202,8 @@ export class ExamsController {
 
   @Get('history/instructor')
   @ApiOperation({ summary: 'Get instructor exam history (all students)' })
+  @ApiBearerAuth('access-token')
+  @UseGuards(AuthGuard('jwt'))
   getInstructorHistory(
     @Request() req,
     @Query('page', ParseIntPipe) page: number = 1,
@@ -206,6 +218,8 @@ export class ExamsController {
 
   @Get('permissions/my-status')
   @ApiOperation({ summary: 'Get current user exam permission status' })
+  @ApiBearerAuth('access-token')
+  @UseGuards(AuthGuard('jwt'))
   async getMyPermissionStatus(@Request() req) {
     return this.examsService.getStudentPermissionStatus(req.user.id);
   }
@@ -213,6 +227,8 @@ export class ExamsController {
   // Manager endpoints
   @Post('reactivate')
   @ApiOperation({ summary: 'Reactivate a student for exams (Manager only)' })
+  @ApiBearerAuth('access-token')
+  @UseGuards(AuthGuard('jwt'))
   reactivateStudent(
     @Request() req,
     @Body() reactivateDto: ReactivateStudentDto,
