@@ -11,7 +11,7 @@ import {
   Request,
   ParseIntPipe,
 } from '@nestjs/common';
-import { ApiTags, ApiOperation, ApiBearerAuth } from '@nestjs/swagger';
+import { ApiTags, ApiOperation, ApiBearerAuth, ApiQuery } from '@nestjs/swagger';
 import { AuthGuard } from '@nestjs/passport';
 import { ExamsService } from './exams.service';
 import { QuestionsService } from './questions.service';
@@ -94,14 +94,21 @@ export class ExamsController {
   }
 
   @Get('tickets')
-  @ApiOperation({ summary: 'Get all tickets with pagination' })
+  @ApiOperation({ summary: 'Get all tickets with pagination and optional type filtering' })
+  @ApiQuery({ 
+    name: 'type', 
+    required: false, 
+    enum: ['EXAM', 'PRACTICE'],
+    description: 'Filter tickets by type (EXAM or PRACTICE). Defaults to EXAM if not specified.'
+  })
   @ApiBearerAuth('access-token')
   @UseGuards(AuthGuard('jwt'))
   findAllTickets(
     @Query('page', ParseIntPipe) page: number = 1,
     @Query('limit', ParseIntPipe) limit: number = 20,
+    @Query('type') type?: 'EXAM' | 'PRACTICE',
   ) {
-    return this.ticketsService.findAll(page, limit);
+    return this.ticketsService.findAll(page, limit, type);
   }
 
   @Get('tickets/:id')

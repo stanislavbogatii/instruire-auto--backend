@@ -3,133 +3,147 @@ import * as fs from 'fs';
 
 const prisma = new PrismaClient();
 
-interface AnswerData {
+interface QuestionData {
   bilet: number;
   question_number: number;
-  correctAnswer: number;
+  correct_answer: number;
+  question: {
+    ro: string;
+    ru?: string;
+  };
+  answers: Array<{
+    ro: string;
+    ru?: string;
+  }>;
+}
+
+interface JsonData {
+  questions: QuestionData[];
 }
 
 async function updateCorrectAnswers() {
   try {
-    console.log('🔄 Starting to update correct answers...');
+    console.log('🔄 Starting correct answer update process...\n');
 
-    // Read the answers.json file
-    const answersData: AnswerData[] = JSON.parse(
-      fs.readFileSync('/var/www/instruire-auto--backend/answers.json', 'utf8')
-    );
+    // Step 1: Read the JSON file
+    console.log('📖 Reading JSON file...');
+    const jsonContent = fs.readFileSync('/var/www/instruire-auto--backend/instruire_auto_json.json', 'utf-8');
+    const data: JsonData = JSON.parse(jsonContent);
+    
+    console.log(`📝 Loaded ${data.questions.length} questions from JSON file`);
 
-    console.log(`📝 Found ${answersData.length} answers to process`);
+    // Step 2: Get all tickets and questions from database
+    console.log('🗄️  Fetching database data...');
+    const tickets = await prisma.ticket.findMany({
+      include: {
+        questions: {
+          include: {
+            question: true
+          },
+          orderBy: {
+            order: 'asc'
+          }
+        }
+      },
+      orderBy: {
+        name: 'asc'
+      }
+    });
+
+    console.log(`📊 Found ${tickets.length} tickets in database`);
 
     let updatedCount = 0;
+    let skippedCount = 0;
     let errorCount = 0;
 
-    // Process each answer
-    for (const answerEntry of answersData) {
-      try {
-        const { bilet, question_number, correctAnswer } = answerEntry;
-        
-        // Find the ticket by name
-        const ticketName = `Practice Bilet ${bilet}`;
-        const ticket = await prisma.ticket.findFirst({
-          where: { name: ticketName }
-        });
+    // Step 3: Process each ticket
+    for (const ticket of tickets) {
+      // Extract ticket number from name (e.g., "Bilet 1" -> 1)
+      const ticketMatch = ticket.name.match(/Bilet (\d+)/);
+      if (!ticketMatch) {
+        console.log(`⚠️  Skipping ticket "${ticket.name}" - invalid name format`);
+        continue;
+      }
 
-        if (!ticket) {
-          console.error(`❌ Ticket not found: ${ticketName}`);
-          errorCount++;
-          continue;
-        }
+      const ticketNumber = parseInt(ticketMatch[1]);
+      console.log(`\n🎫 Processing ${ticket.name} (${ticket.questions.length} questions)`);
 
-        // Find the question by ticket and order
-        const ticketQuestion = await prisma.ticketQuestion.findFirst({
-          where: {
-            ticketId: ticket.id,
-            order: question_number
+      // Step 4: Process each question in the ticket
+      for (const ticketQuestion of ticket.questions) {
+        try {
+          // Find corresponding question in JSON data
+          const jsonQuestion = data.questions.find(q => 
+            q.bilet === ticketNumber && 
+            q.question_number === ticketQuestion.order
+          );
+
+          if (!jsonQuestion) {
+            console.log(`  ⚠️  No JSON data found for Bilet ${ticketNumber}, Question ${ticketQuestion.order}`);
+            skippedCount++;
+            continue;
           }
-        });
 
-        if (!ticketQuestion) {
-          console.error(`❌ Question not found: Ticket ${ticketName}, Order ${question_number}`);
+          // Update the correct answer if it's different
+          const currentCorrectAnswer = ticketQuestion.question.correctAnswer;
+          const newCorrectAnswer = jsonQuestion.correct_answer;
+
+          if (currentCorrectAnswer !== newCorrectAnswer) {
+            await prisma.question.update({
+              where: { id: ticketQuestion.question.id },
+              data: { correctAnswer: newCorrectAnswer }
+            });
+
+            console.log(`  ✅ Updated Q${ticketQuestion.order}: ${currentCorrectAnswer} → ${newCorrectAnswer}`);
+            updatedCount++;
+          } else {
+            console.log(`  ✓ Q${ticketQuestion.order}: Already correct (${currentCorrectAnswer})`);
+          }
+
+        } catch (error) {
+          console.error(`  ❌ Error updating Q${ticketQuestion.order}:`, error.message);
           errorCount++;
-          continue;
         }
-
-        // Update the question with the correct answer
-        // Note: Converting from 1-based to 0-based indexing
-        const correctAnswerIndex = correctAnswer - 1;
-
-        await prisma.question.update({
-          where: { id: ticketQuestion.questionId },
-          data: { correctAnswer: correctAnswerIndex }
-        });
-
-        updatedCount++;
-
-        // Log progress every 50 updates
-        if (updatedCount % 50 === 0) {
-          console.log(`✅ Updated ${updatedCount} questions...`);
-        }
-
-      } catch (error) {
-        console.error(`❌ Error processing bilet ${answerEntry.bilet}, question ${answerEntry.question_number}:`, error);
-        errorCount++;
       }
     }
 
-    console.log('\n🎉 Update completed!');
+    console.log('\n📋 Final Summary:');
     console.log(`✅ Successfully updated: ${updatedCount} questions`);
-    console.log(`❌ Errors encountered: ${errorCount} questions`);
+    console.log(`⏭️  Skipped: ${skippedCount} questions (no JSON match)`);
+    console.log(`❌ Errors: ${errorCount} questions`);
+    console.log(`📊 Total processed: ${updatedCount + skippedCount + errorCount} questions`);
 
-    // Verify some updates
-    console.log('\n🔍 Verification - checking some updated questions:');
-    
-    const verificationSamples = [
-      { bilet: 1, question_number: 1, expectedAnswer: 4 },
-      { bilet: 1, question_number: 2, expectedAnswer: 2 },
-      { bilet: 2, question_number: 1, expectedAnswer: 5 },
-      { bilet: 42, question_number: 24, expectedAnswer: answersData.find(a => a.bilet === 42 && a.question_number === 24)?.correctAnswer }
-    ];
+    // Step 5: Verification - check a few random questions
+    console.log('\n🔍 Verification - Random sample check:');
+    const sampleQuestions = await prisma.$queryRaw`
+      SELECT q.id, q.text, q.correctAnswer, t.name as ticketName, tq.\`order\`
+      FROM Question q
+      JOIN TicketQuestion tq ON tq.questionId = q.id
+      JOIN Ticket t ON t.id = tq.ticketId
+      ORDER BY RAND()
+      LIMIT 5
+    ` as any[];
 
-    for (const sample of verificationSamples) {
-      if (!sample.expectedAnswer) continue;
+    for (const q of sampleQuestions) {
+      const ticketNumber = parseInt(q.ticketName.match(/Bilet (\d+)/)?.[1] || '0');
+      const jsonQ = data.questions.find(jq => 
+        jq.bilet === ticketNumber && 
+        jq.question_number === q.order
+      );
       
-      const ticket = await prisma.ticket.findFirst({
-        where: { name: `Practice Bilet ${sample.bilet}` }
-      });
-      
-      if (ticket) {
-        const ticketQuestion = await prisma.ticketQuestion.findFirst({
-          where: { ticketId: ticket.id, order: sample.question_number },
-          include: { question: true }
-        });
-        
-        if (ticketQuestion) {
-          const expected = sample.expectedAnswer - 1; // Convert to 0-based
-          const actual = ticketQuestion.question.correctAnswer;
-          const status = expected === actual ? '✅' : '❌';
-          console.log(`${status} Bilet ${sample.bilet}, Q${sample.question_number}: Expected ${expected}, Got ${actual}`);
-        }
-      }
+      const status = jsonQ && jsonQ.correct_answer === q.correctAnswer ? '✅' : '❌';
+      console.log(`  ${status} ${q.ticketName} Q${q.order}: DB=${q.correctAnswer}, JSON=${jsonQ?.correct_answer || 'N/A'}`);
     }
+
+    console.log('\n🎯 Update completed successfully!');
 
   } catch (error) {
-    console.error('💥 Fatal error:', error);
+    console.error('❌ Error during update process:', error);
+    throw error;
   } finally {
     await prisma.$disconnect();
   }
 }
 
-// Run the update
-if (require.main === module) {
-  updateCorrectAnswers()
-    .then(() => {
-      console.log('✅ Update script completed');
-      process.exit(0);
-    })
-    .catch((error) => {
-      console.error('💥 Update script failed:', error);
-      process.exit(1);
-    });
-}
-
-export { updateCorrectAnswers };
+// Run the update immediately
+console.log('🚀 Starting correct answer update based on instruire_auto_json.json\n');
+updateCorrectAnswers().catch(console.error);

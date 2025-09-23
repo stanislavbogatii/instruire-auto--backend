@@ -170,6 +170,7 @@ model Question {
 model Ticket {
   id             Int              @id @default(autoincrement())
   name           String
+  type           QuestionType     @default(EXAM)
   createdAt      DateTime         @default(now())
   updatedAt      DateTime         @updatedAt
   examTickets    ExamTicket[]
@@ -325,4 +326,9 @@ enum PracticeStatus {
   COMPLETED
   PASSED
   FAILED
+}
+
+enum QuestionType {
+  EXAM
+  PRACTICE
 }

@@ -36,11 +36,17 @@ export class TicketsService {
     });
   }
 
-  async findAll(page: number = 1, limit: number = 20) {
+  async findAll(page: number = 1, limit: number = 20, type?: 'EXAM' | 'PRACTICE') {
     const skip = (page - 1) * limit;
+    
+    // Build where clause - if type is provided, filter by it, otherwise default to EXAM
+    const whereClause = {
+      type: type || 'EXAM'
+    };
     
     const [tickets, total] = await Promise.all([
       this.prisma.ticket.findMany({
+        where: whereClause,
         skip,
         take: limit,
         orderBy: { createdAt: 'desc' },
@@ -54,7 +60,9 @@ export class TicketsService {
           },
         },
       }),
-      this.prisma.ticket.count(),
+      this.prisma.ticket.count({
+        where: whereClause
+      }),
     ]);
 
     return {
@@ -69,8 +77,10 @@ export class TicketsService {
   }
 
   async findOne(id: number) {
-    const ticket = await this.prisma.ticket.findUnique({
-      where: { id },
+    const ticket = await this.prisma.ticket.findFirst({
+      where: { 
+        id
+      },
       include: {
         questions: {
           include: {

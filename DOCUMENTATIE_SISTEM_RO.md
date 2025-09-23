@@ -18,9 +18,11 @@ Acesta este un sistem complet de management pentru școala de șoferi **Instruir
 
 #### 🎯 **Sistem de Examene și Practică**
 - **Baza de întrebări**: 1008 întrebări de examen cu imagini
-- **Bilete de practică**: 42 de bilete (B1-B42) pentru antrenament
+- **Bilete de examen**: 42 de bilete (B1-B42) pentru examene oficiale
+- **Bilete de practică**: Sistem separat de bilete pentru antrenament
 - **Examene oficiale**: Sistem complet de examinare cu permisiuni
 - **Progres tracking**: Urmărirea detaliată a progresului studenților
+- **Tipuri bilete**: Separare clară între EXAM și PRACTICE prin parametrul `type`
 
 #### 🔐 **Sistem de Autentificare**
 - **JWT Authentication**: Securitate avansată cu token-uri
@@ -31,8 +33,9 @@ Acesta este un sistem complet de management pentru școala de șoferi **Instruir
 
 ## Structura API-ului
 
-**Base URL**: `http://localhost:3000/api`
+**Base URL**: `http://localhost:8888/api`
 **Autentificare**: Bearer Token (JWT)
+**Documentație Swagger**: `http://localhost:8888/api-docs`
 
 ---
 
@@ -161,6 +164,27 @@ Acesta este un sistem complet de management pentru școala de șoferi **Instruir
 ### **GET /reservations/user/:userId**
 **Descriere**: Rezervările unui utilizator specific
 
+### **GET /reservations/instructor/:instructorId**
+**Descriere**: Rezervările unui instructor specific
+
+### **GET /reservations/:id/history**
+**Descriere**: Istoricul modificărilor pentru o rezervare specifică
+
+### **GET /reservations/history/user/:userId**
+**Descriere**: Istoricul rezervărilor pentru un utilizator specific
+
+### **GET /reservations/history/instructor/:instructorId**
+**Descriere**: Istoricul rezervărilor pentru un instructor specific
+
+### **GET /reservations/history/my**
+**Descriere**: Istoricul rezervărilor pentru utilizatorul autentificat
+
+### **PATCH /reservations/:id/confirm**
+**Descriere**: Confirmarea unei rezervări
+
+### **PATCH /reservations/:id/unconfirm**
+**Descriere**: Anularea confirmării unei rezervări
+
 ---
 
 ## 🎯 Examene și Practică (`/exams`)
@@ -194,6 +218,22 @@ Acesta este un sistem complet de management pentru școala de șoferi **Instruir
 
 #### **GET /exams/tickets**
 **Descriere**: Lista toate biletele de practică/examen
+**Query Parameters**:
+- `page` (number, optional): Numărul paginii (default: 1)
+- `limit` (number, optional): Numărul de bilete per pagină (default: 20)
+- `type` (string, optional): Tipul biletelor - `EXAM` sau `PRACTICE` (default: EXAM)
+
+**Exemple de utilizare**:
+```javascript
+// Bilete de examen (default)
+GET /exams/tickets?page=1&limit=10
+
+// Bilete de examen explicit
+GET /exams/tickets?page=1&limit=10&type=EXAM
+
+// Bilete de practică
+GET /exams/tickets?page=1&limit=10&type=PRACTICE
+```
 
 #### **POST /exams/tickets**
 **Descriere**: Creare bilet nou
@@ -370,6 +410,14 @@ Acesta este un sistem complet de management pentru școala de șoferi **Instruir
 - `PASSED` - Promovată
 - `FAILED` - Nepromovată
 
+### **Status Bilete**
+- `EXAM` - Bilete pentru examene oficiale
+- `PRACTICE` - Bilete pentru practică/antrenament
+
+### **Tipuri Bilete (QuestionType)**
+- `EXAM` - Bilete de examen oficial (42 bilete: B1-B42)
+- `PRACTICE` - Bilete de practică pentru antrenament
+
 ### **Status Examen**
 - `IN_PROGRESS` - În desfășurare
 - `COMPLETED` - Finalizat cu succes
@@ -403,11 +451,23 @@ const headers = {
 
 ### **3. Începere Practică**
 ```javascript
-// Start practică pentru biletul B1
+// Start practică pentru biletul B1 (EXAM)
 const practice = await fetch('/api/exams/practice', {
   method: 'POST',
   headers,
   body: JSON.stringify({ ticketId: 1 })
+});
+
+// Obținere bilete de practică
+const practiceTickets = await fetch('/api/exams/tickets?type=PRACTICE', {
+  method: 'GET',
+  headers
+});
+
+// Obținere bilete de examen (default)
+const examTickets = await fetch('/api/exams/tickets', {
+  method: 'GET',
+  headers
 });
 ```
 
@@ -452,22 +512,45 @@ await fetch(`/api/exams/practice/${practiceId}/answers`, {
 
 Sistemul este gândit pentru integrare cu aplicații frontend moderne (React, Vue, Angular). Toate endpoint-urile returnează JSON și respectă standardele REST API.
 
-**Exemplu React Hook:**
+**Exemplu React Hook pentru Bilete cu Tipuri:**
 ```javascript
-const usePractice = (ticketId) => {
-  const [practice, setPractice] = useState(null);
+const useTickets = (type = 'EXAM') => {
+  const [tickets, setTickets] = useState([]);
+  const [loading, setLoading] = useState(false);
   
-  const startPractice = async () => {
-    const response = await fetch('/api/exams/practice', {
-      method: 'POST',
-      headers: { 'Authorization': `Bearer ${token}` },
-      body: JSON.stringify({ ticketId })
-    });
-    const data = await response.json();
-    setPractice(data);
+  const fetchTickets = async (page = 1, limit = 20) => {
+    setLoading(true);
+    try {
+      const response = await fetch(`/api/exams/tickets?page=${page}&limit=${limit}&type=${type}`, {
+        headers: { 'Authorization': `Bearer ${token}` }
+      });
+      const data = await response.json();
+      setTickets(data.data);
+    } catch (error) {
+      console.error('Error fetching tickets:', error);
+    } finally {
+      setLoading(false);
+    }
   };
   
-  return { practice, startPractice };
+  useEffect(() => {
+    fetchTickets();
+  }, [type]);
+  
+  return { tickets, loading, fetchTickets };
+};
+
+// Utilizare
+const ExamTickets = () => {
+  const { tickets: examTickets } = useTickets('EXAM');
+  const { tickets: practiceTickets } = useTickets('PRACTICE');
+  
+  return (
+    <div>
+      <h2>Bilete Examen: {examTickets.length}</h2>
+      <h2>Bilete Practică: {practiceTickets.length}</h2>
+    </div>
+  );
 };
 ```
 
@@ -487,9 +570,28 @@ const usePractice = (ticketId) => {
 
 Sistemul include:
 - **Logging complet** al acțiunilor utilizatorilor
-- **Istoric rezervări** cu tracking al modificărilor
+- **Istoric rezervări** cu tracking al modificărilor (ReservationHistory)
 - **Progres practică** cu statistici detaliate
 - **Backup automat** al bazei de date
+- **Separare bilete** - sistem dual EXAM/PRACTICE pentru flexibilitate maximă
+
+---
+
+## 🆕 Actualizări Recente
+
+### **Versiunea 2.1 (Septembrie 2025)**
+- ✅ **Parametru tip bilete**: Adăugat parametrul `type` la endpoint-ul `/api/exams/tickets`
+- ✅ **Separare EXAM/PRACTICE**: Biletele pot fi filtrate între examene oficiale și practică
+- ✅ **Backward compatibility**: Compatibilitate cu aplicațiile existente (default: EXAM)
+- ✅ **Documentație Swagger**: Actualizată cu noile funcționalități
+- ✅ **Istoric rezervări**: Sistem complet de tracking al modificărilor
+- ✅ **Confirmare rezervări**: Endpoint-uri dedicate pentru confirmare/anulare
+
+### **Îmbunătățiri Tehnice**
+- **Database Schema**: Adăugat enum `QuestionType` cu valori EXAM/PRACTICE
+- **API Enhancement**: Endpoint `/api/exams/tickets` suportă parametrul `type`
+- **Type Safety**: Validare TypeScript pentru tipurile de bilete
+- **Query Optimization**: Filtrare optimizată la nivel de bază de date
 
 ---
 
