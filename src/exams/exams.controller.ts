@@ -173,6 +173,12 @@ export class ExamsController {
   @ApiBearerAuth('access-token')
   @UseGuards(AuthGuard('jwt'))
   createExam(@Request() req, @Body() createExamDto: CreateExamDto) {
+    console.log('=== EXAM CREATION DEBUG ===');
+    console.log('User ID from token:', req.user.id);
+    console.log('User email:', req.user.email);
+    console.log('CreateExamDto:', createExamDto);
+    console.log('=== END DEBUG ===');
+    
     return this.examsService.createExam(req.user.id, createExamDto);
   }
 

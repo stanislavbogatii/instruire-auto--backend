@@ -2,10 +2,6 @@ import { IsArray, IsDateString, IsInt, IsOptional, IsString, Min } from 'class-v
 import { ApiProperty } from '@nestjs/swagger';
 
 export class CreateExamDto {
-  @ApiProperty({ description: 'Student user ID' })
-  @IsInt()
-  userId: number;
-
   @ApiProperty({ description: 'Time limit in minutes', required: false, default: 30 })
   @IsOptional()
   @IsInt()
@@ -40,6 +36,10 @@ export class CreateStudentPermissionDto {
   @IsInt()
   userId: number;
 
+  @ApiProperty({ description: 'Instructor ID who grants the permission' })
+  @IsInt()
+  instructorId: number;
+
   @ApiProperty({ description: 'Permission valid until this date' })
   @IsDateString()
   validUntil: string;
@@ -60,6 +60,10 @@ export class BulkCreateStudentPermissionDto {
   @IsInt({ each: true })
   userIds: number[];
 
+  @ApiProperty({ description: 'Instructor ID who grants the permissions' })
+  @IsInt()
+  instructorId: number;
+
   @ApiProperty({ description: 'Permission valid until this date' })
   @IsDateString()
   validUntil: string;
@@ -75,6 +79,10 @@ export class ReactivateStudentDto {
   @ApiProperty({ description: 'Student user ID' })
   @IsInt()
   userId: number;
+
+  @ApiProperty({ description: 'Instructor ID performing the reactivation' })
+  @IsInt()
+  instructorId: number;
 
   @ApiProperty({ description: 'New valid until date' })
   @IsDateString()

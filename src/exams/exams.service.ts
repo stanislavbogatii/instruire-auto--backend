@@ -95,6 +95,7 @@ export class ExamsService {
       bulkCreateDto.userIds.map(userId =>
         this.createStudentPermission(instructorId, {
           userId,
+          instructorId,
           validUntil: bulkCreateDto.validUntil,
           maxAttempts: bulkCreateDto.maxAttempts,
         }),
@@ -161,78 +162,133 @@ export class ExamsService {
   }
 
   async createExam(userId: number, createExamDto: CreateExamDto) {
-    await this.checkStudentCanTakeExam(userId);
+    try {
+      console.log('=== CREATEEXAM SERVICE DEBUG ===');
+      console.log('User ID:', userId);
+      console.log('DTO:', createExamDto);
+      
+      await this.checkStudentCanTakeExam(userId);
+      console.log('✅ Student permission check passed');
 
-    // Get student's previous exams to avoid repeating tickets
-    const previousExams = await this.prisma.exam.findMany({
-      where: { userId },
-      include: { examTickets: true },
-    });
-
-    const usedTicketIds = previousExams.flatMap(exam => 
-      exam.examTickets.map(et => et.ticketId)
-    );
-
-    // Get 2 random tickets that haven't been used before
-    const tickets = await this.ticketsService.getRandomTickets(2, usedTicketIds);
-
-    if (tickets.length < 2) {
-      throw new BadRequestException('Not enough available tickets for exam');
-    }
-
-    // Get current attempt number
-    const attemptNumber = previousExams.length + 1;
-
-    return this.prisma.$transaction(async (tx) => {
-      // Create exam
-      const exam = await tx.exam.create({
-        data: {
-          userId,
-          status: ExamStatus.IN_PROGRESS,
-          timeLimit: createExamDto.timeLimit || 30,
-          passScore: createExamDto.passScore || 22,
-          attemptNumber,
-          totalQuestions: tickets.reduce((sum, ticket) => sum + ticket.questions.length, 0),
-        },
+      // Get student's previous exams to avoid repeating tickets
+      const previousExams = await this.prisma.exam.findMany({
+        where: { userId },
+        include: { examTickets: true },
       });
+      console.log('Previous exams count:', previousExams.length);
 
-      // Associate tickets with exam
-      await tx.examTicket.createMany({
-        data: tickets.map(ticket => ({
-          examId: exam.id,
-          ticketId: ticket.id,
-        })),
-      });
+      const usedTicketIds = previousExams.flatMap(exam => 
+        exam.examTickets.map(et => et.ticketId)
+      );
+      console.log('Used ticket IDs:', usedTicketIds);
 
-      // Create exam questions from tickets
-      let questionOrder = 1;
-      for (const ticket of tickets) {
-        await tx.examQuestion.createMany({
-          data: ticket.questions.map(ticketQuestion => ({
+      // Get 2 random tickets that haven't been used before
+      console.log('Getting random tickets...');
+      const tickets = await this.ticketsService.getRandomTickets(2, usedTicketIds);
+      console.log('Retrieved tickets count:', tickets.length);
+
+      if (tickets.length < 2) {
+        throw new BadRequestException('Not enough available tickets for exam');
+      }
+      console.log('✅ Tickets validation passed');
+
+      // Get current attempt number
+      const attemptNumber = previousExams.length + 1;
+      console.log('Starting database transaction...');
+
+      return this.prisma.$transaction(async (tx) => {
+        // Create exam
+        const exam = await tx.exam.create({
+          data: {
+            userId,
+            status: ExamStatus.IN_PROGRESS,
+            timeLimit: createExamDto.timeLimit || 30,
+            passScore: createExamDto.passScore || 22,
+            attemptNumber,
+            totalQuestions: tickets.reduce((sum, ticket) => sum + ticket.questions.length, 0),
+          },
+        });
+        console.log('✅ Exam created with ID:', exam.id);
+
+        // Associate tickets with exam
+        await tx.examTicket.createMany({
+          data: tickets.map(ticket => ({
             examId: exam.id,
-            questionId: ticketQuestion.question.id,
-            order: questionOrder++,
-            image: ticketQuestion.question.image, // Copy image from the original question
+            ticketId: ticket.id,
           })),
         });
-      }
+        console.log('✅ Exam tickets associated');
 
-      // Update permission attempts
-      await tx.studentExamPermission.updateMany({
-        where: {
-          userId,
-          isActive: true,
-        },
-        data: {
-          usedAttempts: { increment: 1 },
-        },
+        // Create exam questions from tickets
+        let questionOrder = 1;
+        for (const ticket of tickets) {
+          await tx.examQuestion.createMany({
+            data: ticket.questions.map(ticketQuestion => ({
+              examId: exam.id,
+              questionId: ticketQuestion.question.id,
+              order: questionOrder++,
+              image: ticketQuestion.question.image, // Copy image from the original question
+            })),
+          });
+        }
+        console.log('✅ Exam questions created');
+
+        // Update permission attempts
+        await tx.studentExamPermission.updateMany({
+          where: {
+            userId,
+            isActive: true,
+          },
+          data: {
+            usedAttempts: { increment: 1 },
+          },
+        });
+        console.log('✅ Student permissions updated');
+
+        // Get exam details within the same transaction
+        const examDetails = await tx.exam.findUnique({
+          where: { id: exam.id },
+          include: {
+            user: true,
+            questions: {
+              include: {
+                question: true,
+              },
+              orderBy: { order: 'asc' },
+            },
+          },
+        });
+
+        console.log('✅ Exam details fetched from transaction');
+
+        if (!examDetails) {
+          throw new Error('Failed to fetch created exam details');
+        }
+
+        return {
+          ...examDetails,
+          questions: examDetails.questions.map(eq => ({
+            id: eq.question.id,
+            text: eq.question.text,
+            image: (eq as any).image || eq.question.image,
+            answers: JSON.parse(eq.question.answers),
+            order: eq.order,
+            selectedAnswer: eq.selectedAnswer,
+            isAnswered: eq.selectedAnswer !== null,
+          })),
+        };
       });
-
-      return this.getExamDetails(exam.id);
-    });
+    } catch (error) {
+      console.log('❌ Error in createExam:', error.message);
+      console.log('Error stack:', error.stack);
+      throw error;
+    }
   }
 
   async getExamDetails(examId: number) {
+    console.log('=== GETEXAMDETAILS DEBUG ===');
+    console.log('Looking for exam ID:', examId);
+    
     const exam = await this.prisma.exam.findUnique({
       where: { id: examId },
       include: {
@@ -246,9 +302,12 @@ export class ExamsService {
       },
     });
 
+    console.log('Found exam:', exam ? 'YES' : 'NO');
     if (!exam) {
+      console.log('❌ Exam not found in database for ID:', examId);
       throw new NotFoundException('Exam not found');
     }
+    console.log('✅ Exam found successfully');
 
     return {
       ...exam,
