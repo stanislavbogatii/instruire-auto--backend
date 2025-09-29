@@ -229,16 +229,20 @@ export class ExamsController {
   }
 
   @Get('history/instructor')
-  @ApiOperation({ summary: 'Get instructor exam history (all students)' })
+  @ApiOperation({ 
+    summary: 'Get exam history for managed students',
+    description: 'Available for INSTRUCTOR, MANAGER, and ADMIN roles. Returns exam history for students under their supervision.'
+  })
   @ApiBearerAuth('access-token')
-  @UseGuards(AuthGuard('jwt'))
+  @UseGuards(AuthGuard('jwt'), RolesGuard)
+  @Roles(Role.INSTRUCTOR, Role.MANAGER, Role.ADMIN)
   getInstructorHistory(
     @Request() req,
     @Query('page', ParseIntPipe) page: number = 1,
     @Query('limit', ParseIntPipe) limit: number = 10,
   ) {
-    return this.examsService.getInstructorExamHistory(
-      req.user.instructorProfile?.id,
+    return this.examsService.getExamHistoryByRole(
+      req.user,
       page,
       limit,
     );
@@ -254,16 +258,19 @@ export class ExamsController {
 
   // Manager endpoints
   @Post('reactivate')
-  @ApiOperation({ summary: 'Reactivate a student for exams (Manager only)' })
+  @ApiOperation({ 
+    summary: 'Reactivate a student for exams',
+    description: 'Available for MANAGER and ADMIN roles. Allows reactivating exam permissions for students.'
+  })
   @ApiBearerAuth('access-token')
-  @UseGuards(AuthGuard('jwt'))
+  @UseGuards(AuthGuard('jwt'), RolesGuard)
+  @Roles(Role.MANAGER, Role.ADMIN)
   reactivateStudent(
     @Request() req,
     @Body() reactivateDto: ReactivateStudentDto,
   ) {
-    return this.examsService.reactivateStudent(
-      req.user.instructorProfile?.id,
-      req.user.id,
+    return this.examsService.reactivateStudentByRole(
+      req.user,
       reactivateDto,
     );
   }

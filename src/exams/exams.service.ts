@@ -612,6 +612,109 @@ export class ExamsService {
     };
   }
 
+  /**
+   * Get exam history based on user role - works for INSTRUCTOR, MANAGER, and ADMIN
+   */
+  async getExamHistoryByRole(user: any, page: number = 1, limit: number = 10) {
+    const contextId = this.userContextService.getUserContextId(user);
+    
+    if (!contextId) {
+      throw new ForbiddenException('Unable to determine user context for exam history');
+    }
+
+    const skip = (page - 1) * limit;
+
+    // Build query based on user role
+    let whereCondition: any;
+    
+    switch (user.role) {
+      case 'INSTRUCTOR':
+        // Instructors can use both the legacy instructorId field and the new granterId system
+        whereCondition = {
+          user: {
+            examPermissions: {
+              some: {
+                OR: [
+                  { instructorId: contextId }, // Legacy instructor field
+                  { 
+                    granterId: contextId,
+                    granterType: 'INSTRUCTOR'
+                  }
+                ]
+              },
+            },
+          },
+        };
+        break;
+        
+      case 'MANAGER':
+        // Managers see exams for students they granted permissions to
+        whereCondition = {
+          user: {
+            examPermissions: {
+              some: { 
+                granterId: contextId,
+                granterType: 'MANAGER'
+              },
+            },
+          },
+        };
+        break;
+        
+      case 'ADMIN':
+        // Admins see exams for students they granted permissions to
+        whereCondition = {
+          user: {
+            examPermissions: {
+              some: { 
+                granterId: contextId,
+                granterType: 'ADMIN'
+              },
+            },
+          },
+        };
+        break;
+        
+      default:
+        throw new ForbiddenException('Role not authorized to view exam history');
+    }
+
+    const [exams, total] = await Promise.all([
+      this.prisma.exam.findMany({
+        where: whereCondition,
+        skip,
+        take: limit,
+        orderBy: { startedAt: 'desc' },
+        include: {
+          user: {
+            select: {
+              id: true,
+              email: true,
+              firstName: true,
+              lastName: true,
+            }
+          },
+          examTickets: {
+            include: { ticket: true },
+          },
+        },
+      }),
+      this.prisma.exam.count({
+        where: whereCondition,
+      }),
+    ]);
+
+    return {
+      data: exams,
+      pagination: {
+        page,
+        limit,
+        total,
+        totalPages: Math.ceil(total / limit),
+      },
+    };
+  }
+
   async reactivateStudent(
     instructorId: number,
     managerId: number,
@@ -646,7 +749,67 @@ export class ExamsService {
         isActive: true,
         validUntil: new Date(reactivateDto.validUntil),
         usedAttempts: reactivateDto.resetAttempts ? 0 : permission.usedAttempts,
+        // updatedAt: new Date(),
       },
+    });
+  }
+
+  /**
+   * Reactivate student exam permissions - works for MANAGER and ADMIN roles
+   */
+  async reactivateStudentByRole(
+    user: any,
+    reactivateDto: ReactivateStudentDto,
+  ) {
+    const contextId = this.userContextService.getUserContextId(user);
+    
+    if (!contextId) {
+      throw new ForbiddenException('Unable to determine user context');
+    }
+
+    // Verify the user has the appropriate role
+    if (!['MANAGER', 'ADMIN'].includes(user.role)) {
+      throw new ForbiddenException('Only managers and admins can reactivate students');
+    }
+
+    // Find the student's exam permission that needs reactivation
+    // Look for any permission regardless of who granted it
+    const permission = await this.prisma.studentExamPermission.findFirst({
+      where: {
+        userId: reactivateDto.userId,
+        isActive: false, // Only reactivate inactive permissions
+      },
+      orderBy: {
+        updatedAt: 'desc', // Get the most recent permission
+      },
+    });
+
+    if (!permission) {
+      throw new NotFoundException('No inactive exam permission found for this student');
+    }
+
+    // Update the permission and record who reactivated it
+    return this.prisma.studentExamPermission.update({
+      where: {
+        id: permission.id,
+      },
+      data: {
+        isActive: true,
+        validUntil: new Date(reactivateDto.validUntil),
+        usedAttempts: 0, // Reset attempts when reactivating
+        updatedAt: new Date(),
+        // Note: We could add a reactivatedBy field to track who reactivated it
+      },
+      include: {
+        user: {
+          select: {
+            id: true,
+            email: true,
+            firstName: true,
+            lastName: true,
+          }
+        }
+      }
     });
   }
 
