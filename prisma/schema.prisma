@@ -170,9 +170,9 @@ model Question {
 model Ticket {
   id             Int              @id @default(autoincrement())
   name           String
-  type           QuestionType     @default(EXAM)
   createdAt      DateTime         @default(now())
   updatedAt      DateTime         @updatedAt
+  type           QuestionType     @default(EXAM)
   examTickets    ExamTicket[]
   studentTickets StudentTicket[]
   questions      TicketQuestion[]
@@ -281,21 +281,23 @@ model ExamQuestion {
 }
 
 model StudentExamPermission {
-  id           Int        @id @default(autoincrement())
+  id           Int         @id @default(autoincrement())
   userId       Int
-  instructorId Int
-  isActive     Boolean    @default(true)
+  instructorId Int?
+  granterId    Int         @default(0)
+  granterType  Role        @default(INSTRUCTOR)
+  isActive     Boolean     @default(true)
   validUntil   DateTime
-  maxAttempts  Int        @default(3)
-  usedAttempts Int        @default(0)
-  createdAt    DateTime   @default(now())
-  updatedAt    DateTime   @updatedAt
-  instructor   Instructor @relation(fields: [instructorId], references: [id], onDelete: Cascade)
-  user         User       @relation(fields: [userId], references: [id], onDelete: Cascade)
+  maxAttempts  Int         @default(3)
+  usedAttempts Int         @default(0)
+  createdAt    DateTime    @default(now())
+  updatedAt    DateTime    @updatedAt
+  instructor   Instructor? @relation(fields: [instructorId], references: [id], onDelete: Cascade)
+  user         User        @relation(fields: [userId], references: [id], onDelete: Cascade)
 
-  @@unique([userId, instructorId])
   @@index([userId])
   @@index([instructorId])
+  @@index([granterId])
 }
 
 enum Role {

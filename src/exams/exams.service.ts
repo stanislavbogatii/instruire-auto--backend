@@ -8,6 +8,7 @@ import { PrismaService } from '../prisma/prisma.service';
 import { MailService } from '../mail/mail.service';
 import { PdfService } from './pdf.service';
 import { ImageService } from '../common/image.service';
+import { UserContextService } from '../common/user-context.service';
 import { 
   CreateExamDto, 
   SubmitAnswerDto, 
@@ -35,12 +36,21 @@ export class ExamsService {
     private mailService: MailService,
     private pdfService: PdfService,
     private imageService: ImageService,
+    private userContextService: UserContextService,
   ) {}
 
   async createStudentPermission(
-    instructorId: number,
+    user: any, // User object from JWT token
     createPermissionDto: CreateStudentPermissionDto,
   ) {
+    // Get the appropriate ID for the user based on their role
+    const granterId = createPermissionDto.grantedById || 
+                     this.userContextService.getUserContextId(user);
+    
+    if (!granterId) {
+      throw new BadRequestException('Unable to determine granter ID from user context');
+    }
+
     // Check if student exists
     const student = await this.prisma.user.findUnique({
       where: { id: createPermissionDto.userId },
@@ -50,36 +60,52 @@ export class ExamsService {
       throw new NotFoundException('Student not found');
     }
 
-    // Create or update permission
-    return this.prisma.studentExamPermission.upsert({
+    // Create or update permission using the new flexible schema
+    // First try to find existing permission
+    const existingPermission = await this.prisma.studentExamPermission.findFirst({
       where: {
-        userId_instructorId: {
-          userId: createPermissionDto.userId,
-          instructorId,
-        },
-      },
-      update: {
-        isActive: true,
-        validUntil: new Date(createPermissionDto.validUntil),
-        maxAttempts: createPermissionDto.maxAttempts || 3,
-        usedAttempts: 0, // Reset attempts when updating
-      },
-      create: {
         userId: createPermissionDto.userId,
-        instructorId,
-        isActive: true,
-        validUntil: new Date(createPermissionDto.validUntil),
-        maxAttempts: createPermissionDto.maxAttempts || 3,
-        usedAttempts: 0,
-      },
-      include: {
-        user: true,
+        granterId: granterId,
+        granterType: user.role,
       },
     });
+
+    if (existingPermission) {
+      // Update existing permission
+      return this.prisma.studentExamPermission.update({
+        where: { id: existingPermission.id },
+        data: {
+          isActive: true,
+          validUntil: new Date(createPermissionDto.validUntil),
+          maxAttempts: createPermissionDto.maxAttempts || 3,
+          usedAttempts: 0, // Reset attempts when updating
+        },
+        include: {
+          user: true,
+        },
+      });
+    } else {
+      // Create new permission
+      return this.prisma.studentExamPermission.create({
+        data: {
+          userId: createPermissionDto.userId,
+          granterId: granterId,
+          granterType: user.role,
+          instructorId: user.role === 'INSTRUCTOR' ? granterId : undefined, // Only set if granter is an instructor
+          isActive: true,
+          validUntil: new Date(createPermissionDto.validUntil),
+          maxAttempts: createPermissionDto.maxAttempts || 3,
+          usedAttempts: 0,
+        },
+        include: {
+          user: true,
+        },
+      });
+    }
   }
 
   async bulkCreateStudentPermissions(
-    instructorId: number,
+    user: any, // User object from JWT token
     bulkCreateDto: BulkCreateStudentPermissionDto,
   ) {
     // Verify all students exist
@@ -93,9 +119,8 @@ export class ExamsService {
 
     const permissions = await Promise.all(
       bulkCreateDto.userIds.map(userId =>
-        this.createStudentPermission(instructorId, {
+        this.createStudentPermission(user, {
           userId,
-          instructorId,
           validUntil: bulkCreateDto.validUntil,
           maxAttempts: bulkCreateDto.maxAttempts,
         }),
@@ -182,15 +207,12 @@ export class ExamsService {
       );
       console.log('Used ticket IDs:', usedTicketIds);
 
-      // Get 2 random tickets that haven't been used before
-      console.log('Getting random tickets...');
-      const tickets = await this.ticketsService.getRandomTickets(2, usedTicketIds);
-      console.log('Retrieved tickets count:', tickets.length);
+      // Get 2 random EXAM-type tickets that haven't been used before
+      const tickets = await this.ticketsService.getRandomTickets(2, usedTicketIds, 'EXAM');
 
       if (tickets.length < 2) {
-        throw new BadRequestException('Not enough available tickets for exam');
+        throw new BadRequestException('Not enough available EXAM tickets for exam');
       }
-      console.log('✅ Tickets validation passed');
 
       // Get current attempt number
       const attemptNumber = previousExams.length + 1;
@@ -541,12 +563,11 @@ export class ExamsService {
       throw new ForbiddenException('Only managers can reactivate students');
     }
 
-    const permission = await this.prisma.studentExamPermission.findUnique({
+    const permission = await this.prisma.studentExamPermission.findFirst({
       where: {
-        userId_instructorId: {
-          userId: reactivateDto.userId,
-          instructorId,
-        },
+        userId: reactivateDto.userId,
+        instructorId: instructorId,
+        granterType: 'INSTRUCTOR',
       },
     });
 
@@ -556,10 +577,7 @@ export class ExamsService {
 
     return this.prisma.studentExamPermission.update({
       where: {
-        userId_instructorId: {
-          userId: reactivateDto.userId,
-          instructorId,
-        },
+        id: permission.id,
       },
       data: {
         isActive: true,

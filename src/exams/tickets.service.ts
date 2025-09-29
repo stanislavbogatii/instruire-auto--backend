@@ -169,12 +169,13 @@ export class TicketsService {
     });
   }
 
-  async getRandomTickets(count: number = 2, excludeTicketIds: number[] = []) {
+  async getRandomTickets(count: number = 2, excludeTicketIds: number[] = [], type: 'EXAM' | 'PRACTICE' = 'EXAM') {
     const tickets = await this.prisma.ticket.findMany({
       where: {
         id: {
           notIn: excludeTicketIds,
         },
+        type: type, // Filter by ticket type
       },
       include: {
         questions: {

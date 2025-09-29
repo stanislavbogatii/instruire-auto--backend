@@ -13,6 +13,9 @@ import {
 } from '@nestjs/common';
 import { ApiTags, ApiOperation, ApiBearerAuth, ApiQuery } from '@nestjs/swagger';
 import { AuthGuard } from '@nestjs/passport';
+import { Role } from '@prisma/client';
+import { RolesGuard } from '../auth/guards/roles.guard';
+import { Roles } from '../auth/decorators/roles.decorator';
 import { ExamsService } from './exams.service';
 import { QuestionsService } from './questions.service';
 import { TicketsService } from './tickets.service';
@@ -138,17 +141,18 @@ export class ExamsController {
     return this.ticketsService.remove(id);
   }
 
-  // Student permissions (Instructor endpoints)
+  // Student permissions (Multi-role endpoints)
   @Post('permissions/student')
   @ApiOperation({ summary: 'Grant exam permission to a student' })
   @ApiBearerAuth('access-token')
-  @UseGuards(AuthGuard('jwt'))
+  @UseGuards(AuthGuard('jwt'), RolesGuard)
+  @Roles(Role.MANAGER, Role.ADMIN)
   createStudentPermission(
     @Request() req,
     @Body() createPermissionDto: CreateStudentPermissionDto,
   ) {
     return this.examsService.createStudentPermission(
-      req.user.instructorProfile?.id,
+      req.user,
       createPermissionDto,
     );
   }
@@ -156,13 +160,14 @@ export class ExamsController {
   @Post('permissions/students/bulk')
   @ApiOperation({ summary: 'Grant exam permission to multiple students' })
   @ApiBearerAuth('access-token')
-  @UseGuards(AuthGuard('jwt'))
+  @UseGuards(AuthGuard('jwt'), RolesGuard)
+  @Roles(Role.MANAGER, Role.ADMIN)
   bulkCreateStudentPermissions(
     @Request() req,
     @Body() bulkCreateDto: BulkCreateStudentPermissionDto,
   ) {
     return this.examsService.bulkCreateStudentPermissions(
-      req.user.instructorProfile?.id,
+      req.user,
       bulkCreateDto,
     );
   }
@@ -173,12 +178,6 @@ export class ExamsController {
   @ApiBearerAuth('access-token')
   @UseGuards(AuthGuard('jwt'))
   createExam(@Request() req, @Body() createExamDto: CreateExamDto) {
-    console.log('=== EXAM CREATION DEBUG ===');
-    console.log('User ID from token:', req.user.id);
-    console.log('User email:', req.user.email);
-    console.log('CreateExamDto:', createExamDto);
-    console.log('=== END DEBUG ===');
-    
     return this.examsService.createExam(req.user.id, createExamDto);
   }
 
