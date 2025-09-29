@@ -64,9 +64,13 @@ export class BulkCreateStudentPermissionDto {
   @IsInt({ each: true })
   userIds: number[];
 
-  @ApiProperty({ description: 'Instructor ID who grants the permissions' })
+  @ApiProperty({ 
+    description: 'ID of the user granting the permission (role-dependent)',
+    required: false
+  })
+  @IsOptional()
   @IsInt()
-  instructorId: number;
+  grantedById?: number;
 
   @ApiProperty({ description: 'Permission valid until this date' })
   @IsDateString()

@@ -123,6 +123,7 @@ export class ExamsService {
           userId,
           validUntil: bulkCreateDto.validUntil,
           maxAttempts: bulkCreateDto.maxAttempts,
+          grantedById: bulkCreateDto.grantedById, // Now using the consistent field name
         }),
       ),
     );
@@ -346,6 +347,7 @@ export class ExamsService {
   }
 
   async submitAnswer(examId: number, userId: number, submitAnswerDto: SubmitAnswerDto) {
+    console.log(examId, userId, ExamStatus.IN_PROGRESS);
     const exam = await this.prisma.exam.findFirst({
       where: {
         id: examId,
@@ -353,6 +355,7 @@ export class ExamsService {
         status: ExamStatus.IN_PROGRESS,
       },
     });
+    console.log(exam);
 
     if (!exam) {
       throw new NotFoundException('Active exam not found');
@@ -471,6 +474,66 @@ export class ExamsService {
         completedAt: new Date(),
       },
     });
+  }
+
+  async markExamAsFailed(examId: number, userId?: number, reason?: string) {
+    // Verify exam exists and is in progress
+    const exam = await this.prisma.exam.findUnique({
+      where: { id: examId },
+      include: { user: true },
+    });
+
+    if (!exam) {
+      throw new NotFoundException('Exam not found');
+    }
+
+    if (exam.status !== ExamStatus.IN_PROGRESS) {
+      throw new BadRequestException('Can only mark in-progress exams as failed');
+    }
+
+    // If userId is provided, verify it matches the exam's user
+    if (userId && exam.userId !== userId) {
+      throw new ForbiddenException('You can only mark your own exams as failed');
+    }
+
+    // Log the reason if provided for audit purposes
+    if (reason) {
+      console.log(`Exam ${examId} marked as failed by user ${userId}. Reason: ${reason}`);
+    }
+
+    // Calculate current score based on answered questions
+    const correctAnswers = await this.prisma.examQuestion.count({
+      where: {
+        examId,
+        isCorrect: true,
+      },
+    });
+
+    const updatedExam = await this.prisma.exam.update({
+      where: { id: examId },
+      data: {
+        status: ExamStatus.FAILED,
+        score: correctAnswers,
+        completedAt: new Date(),
+      },
+      include: { user: true },
+    });
+
+    // Generate PDF and send email with results
+    try {
+      const pdfBuffer = await this.pdfService.generateExamResultPdf(updatedExam);
+      await this.mailService.sendExamResultsWithPdf(updatedExam, pdfBuffer);
+    } catch (error) {
+      console.error('Failed to send exam result email:', error);
+      // Fallback to sending email without PDF
+      try {
+        await this.mailService.sendExamResults(updatedExam);
+      } catch (fallbackError) {
+        console.error('Failed to send fallback email:', fallbackError);
+      }
+    }
+
+    return updatedExam;
   }
 
   async getStudentExamHistory(userId: number, page: number = 1, limit: number = 10) {

@@ -33,7 +33,7 @@
       },
       "answers": [
         {
-          "ro": "Sunteţi obligat indiferent de direcţia de deplasare.",
+          "ro": "Sunteţi obligat indifirent de direcţia de deplasare.",
           "ru": "Обязаны независимо от направления движения."
         },
         {
@@ -3253,21 +3253,21 @@
       "question_number": 9,
       "correct_answer": 2,
       "question": {
-        "ro": "La acest semnal al agentului de circulaţie au voie să-şi continue deplasarea:",
-        "ru": "При этом сигнале регулировщика могут продолжить движение:"
+        "ro": "Semaforul din imagine, este destinat pentru dirijarea circulaţiei:",
+        "ru": "Светофор, показанный на рисунке, применяется для регулирования движения:"
       },
       "answers": [
         {
-          "ro": "Autoturismul şi pietonii.",
-          "ru": "Легковой автомобиль и пешеходы."
+          "ro": "Vehiculelor de rută, care se deplasează pe benzile special rezervate lor.",
+          "ru": "Маршрутных транспортных средств, движущихся по предназначенным им полосам."
         },
         {
-          "ro": "Numai pietonii.",
-          "ru": "Только пешеходы."
+          "ro": "Pe sectoarele de drum îngustat (în cazul efectuării lucrărilor pe drum) şi pe teritoriile întreprinderilor (organizaţiilor).",
+          "ru": "В местах сужения проезжей части (в случае проведения дорожных работ) и на территориях предприятий (организаций)."
         },
         {
-          "ro": "Autoturismul, biciclistul şi pietonii.",
-          "ru": "Легковой автомобиль, велосипедист и пешеходы."
+          "ro": "Vehiculelor pe banda cu circulaţia reversibilă.",
+          "ru": "Транспортных средств по полосе с реверсивным движением."
         }
       ]
     },
@@ -3276,25 +3276,25 @@
       "question_number": 10,
       "correct_answer": 3,
       "question": {
-        "ro": "La semnalul roşu al semaforului, în situaţia din imagine, se permite deplasarea:",
-        "ru": "На красный сигнал светофора в ситуации, показанной на рисунке, разрешается движение:"
+        "ro": "În cazul deplasării cu spatele, în condiţiile în care câmpul vizual este limitat, conducătorul trebuie:",
+        "ru": "При движении задним ходом в случае, когда обзорность сзади ограничена, водитель должен:"
       },
       "answers": [
         {
-          "ro": "Numai în direcţia săgeţii verzi.",
-          "ru": "Только в направлении зелёной стрелки."
+          "ro": "Să semnalizeze cu claxonul.",
+          "ru": "Подать звуковой сигнал."
         },
         {
-          "ro": "Numai în direcţia săgeţii verzi cedând trecerea vehiculelor care vin din direcţia opusă.",
-          "ru": "Только в направлении зелёной стрелки, уступив дорогу транспортным средствам, приближающимся с противоположного направления."
+          "ro": "Să pună în funcţiune avertizorul de avarie.",
+          "ru": "Включить аварийную сигнализацию."
         },
         {
-          "ro": "Numai la dreapta cedând trecerea vehiculelor care vin din direcţia opusă.",
-          "ru": "Только направо, уступив дорогу транспортным средствам, приближающимся с противоположного направления."
+          "ro": "Să recurgă la ajutorul altei persoane, aflate în afara autovehiculului.",
+          "ru": "Прибегнуть к помощи другого лица, находящегося вне транспортного средства."
         },
         {
-          "ro": "În direcţia săgeţii verzi sau la dreapta cedând trecerea vehiculelor care vin din direcţia opusă.",
-          "ru": "В направлении зелёной стрелки или направо, уступив дорогу транспортным средствам, приближающимся с противоположного направления."
+          "ro": "Să manifeste prudenţă sporită, periodic oprind, pentru a se asigura dacă nu se creează obstacole sau nu se periclitează siguranţa altor participanţi la trafic.",
+          "ru": "Соблюдать особую осторожность, периодически останавливаясь, чтобы убедиться, что не создаётся опасность или помеха другим участникам движения."
         }
       ]
     },
@@ -3303,22 +3303,13 @@
       "question_number": 11,
       "correct_answer": 1,
       "question": {
-        "ro": "În situaţia din imagine, conducătorul autoturismului poate executa manevra de depăşire?",
-        "ru": "Может ли водитель легкового автомобиля выполнить обгон в ситуации, показанной на рисунке?"
+        "ro": "Precizaţi pe care traiectorie se permite virarea la stânga?",
+        "ru": "По какой траектории разрешено повернуть налево?"
       },
       "answers": [
-        {
-          "ro": "Poate, deoarece nu sunt vehicule din sens opus.",
-          "ru": "Может, поскольку нет встречных транспортных средств."
-        },
-        {
-          "ro": "Poate, deoarece liniile de tramvai sunt situate în mijlocul părții carosabile.",
-          "ru": "Может, поскольку трамвайные пути расположены посередине проезжей части."
-        },
-        {
-          "ro": "Nu poate, deoarece liniile de tramvai sunt situate în mijlocul părții carosabile.",
-          "ru": "Не может, поскольку трамвайные пути расположены посередине проезжей части."
-        }
+        { "ro": "Numai pe traiectoria A.", "ru": "Только по траектории А." },
+        { "ro": "Numai pe traiectoria B.", "ru": "Только по траектории В." },
+        { "ro": "Pe oricare din traiectorii.", "ru": "По любой траектории." }
       ]
     },
     {
@@ -3326,21 +3317,18 @@
       "question_number": 12,
       "correct_answer": 3,
       "question": {
-        "ro": "Cum trebuie să procedeze conducătorul autoturismului care intenţionează să execute depăşirea?",
-        "ru": "Как должен поступить водитель легкового автомобиля, намеревающийся выполнить обгон?"
+        "ro": "Precizaţi dacă se permite depăşirea în situaţia din imagine?",
+        "ru": "Разрешается ли обгон в ситуации, показанной на рисунке?"
       },
       "answers": [
+        { "ro": "Nu se permite.", "ru": "Не разрешается." },
         {
-          "ro": "Să execute depăşirea fără restricţii.",
-          "ru": "Выполнить обгон без ограничений."
+          "ro": "Se permite numai în cazul în care viteza vehiculului ce se depăşeşte este mai mică de 30 km/h.",
+          "ru": "Разрешается, только если скорость обгоняемого транспортного средства менее 30 км/ч."
         },
         {
-          "ro": "Să execute depăşirea numai după ce se va convinge că manevra este în siguranţă.",
-          "ru": "Выполнить обгон только после того, как он убедится в безопасности манёвра."
-        },
-        {
-          "ro": "Să cedeze trecerea autocamionului şi să execute depăşirea ulterior.",
-          "ru": "Уступить дорогу грузовому автомобилю и выполнить обгон после этого."
+          "ro": "Se permite fără restricţii.",
+          "ru": "Разрешается без ограничений."
         }
       ]
     },
@@ -3349,21 +3337,17 @@
       "question_number": 13,
       "correct_answer": 2,
       "question": {
-        "ro": "Indicaţi care din vehiculele din imagine va traversa intersecţia primul?",
-        "ru": "Укажите какое из транспортных средств, изображённых на рисунке, проедет перекрёсток первым?"
+        "ro": "În situaţia din imagine, la apariţia semnalului verde al semaforului conducătorul autoturismului galben:",
+        "ru": "В ситуации, показанной на рисунке, при включении зелёного сигнала светофора водитель жёлтого легкового автомобиля:"
       },
       "answers": [
         {
-          "ro": "Autoturismul galben.",
-          "ru": "Жёлтый легковой автомобиль."
+          "ro": "Folosindu-se de prioritate în trecere, utilizând semnalul sonor va traversa intersecția.",
+          "ru": "Пользуясь преимуществом в движении, подав звуковой сигнал проедет перекрёсток."
         },
         {
-          "ro": "Autoturismul albastru.",
-          "ru": "Синий легковой автомобиль."
-        },
-        {
-          "ro": "Autoturismul roşu.",
-          "ru": "Красный легковой автомобиль."
+          "ro": "Va ceda trecerea autoturismului albastru deja angajat în trecerea intersecţiei.",
+          "ru": "Уступит дорогу синему легковому автомобилю, завершающему проезд перекрёстка."
         }
       ]
     },
@@ -3372,21 +3356,21 @@
       "question_number": 14,
       "correct_answer": 1,
       "question": {
-        "ro": "În ce ordine vor traversa intersecţia vehiculele din imagine?",
-        "ru": "В каком порядке проедут перекрёсток эти транспортные средства?"
+        "ro": "Conducătorul autoturismului roşu:",
+        "ru": "Водитель красного легкового автомобиля:"
       },
       "answers": [
         {
-          "ro": "Tramvaiul, camionul, autoturismul, autobuzul.",
-          "ru": "Трамвай, грузовой автомобиль, легковой автомобиль, автобус."
+          "ro": "Are prioritate în raport cu Dvs., deoarece se deplasează pe drumul cu prioritate.",
+          "ru": "Имеет преимущество перед Вами, так как движется по главной дороге."
         },
         {
-          "ro": "Camionul, tramvaiul, autobuzul, autoturismul.",
-          "ru": "Грузовой автомобиль, трамвай, автобус, легковой автомобиль."
+          "ro": "Are prioritate în raport cu Dvs., deoarece se deplasează prin intersecţia cu sens giratoriu.",
+          "ru": "Имеет преимущество перед Вами, так как движется по перекрёстку с круговым движением."
         },
         {
-          "ro": "Tramvaiul, autobuzul, autoturismul, camionul.",
-          "ru": "Трамвай, автобус, легковой автомобиль, грузовой автомобиль."
+          "ro": "Este obligat să vă cedeze trecerea, deoarece vă apropiaţi de intersecţie din dreapta.",
+          "ru": "Обязан уступить Вам дорогу, поскольку Вы приближаетесь к перекрёстку с правой стороны."
         }
       ]
     },
@@ -3395,21 +3379,17 @@
       "question_number": 15,
       "correct_answer": 1,
       "question": {
-        "ro": "În ce ordine vor traversa intersecţia vehiculele din imagine?",
-        "ru": "В каком порядке проедут перекрёсток эти транспортные средства?"
+        "ro": "Conducătorul cărui vehicul este obligat să cedeze trecerea?",
+        "ru": "Водитель какого транспортного средства должен уступить дорогу?"
       },
       "answers": [
         {
-          "ro": "Autoturismul, tramvaiul, autocamionul.",
-          "ru": "Легковой автомобиль, трамвай, грузовой автомобиль."
+          "ro": "Conducătorul autoturismului alb.",
+          "ru": "Водитель белого легкового автомобиля."
         },
         {
-          "ro": "Tramvaiul, autocamionul, autoturismul.",
-          "ru": "Трамвай, грузовой автомобиль, легковой автомобиль."
-        },
-        {
-          "ro": "Autocamionul, autoturismul, tramvaiul.",
-          "ru": "Грузовой автомобиль, легковой автомобиль, трамвай."
+          "ro": "Conducătorul autoturismului albastru.",
+          "ru": "Водитель синего легкового автомобиля."
         }
       ]
     },
@@ -3417,33 +3397,6 @@
       "bilet": 6,
       "question_number": 16,
       "correct_answer": 3,
-      "question": {
-        "ro": "În situaţia din imagine, având intenţia de a vira la dreapta, veţi:",
-        "ru": "В ситуации, показанной на рисунке, намереваясь повернуть направо, Вы:"
-      },
-      "answers": [
-        {
-          "ro": "Traversa intersecţia primul.",
-          "ru": "Проедете перекрёсток первым."
-        },
-        {
-          "ro": "Ceda trecerea doar autobuzului, ulterior veţi traversa intersecţia.",
-          "ru": "Уступите дорогу только автобусу, затем проедете перекрёсток."
-        },
-        {
-          "ro": "Ceda trecerea doar camionului, ulterior veţi traversa intersecţia.",
-          "ru": "Уступите дорогу только грузовому автомобилю, затем проедете перекрёсток."
-        },
-        {
-          "ro": "Ceda trecerea ambelor vehicule, ulterior veţi traversa intersecţia.",
-          "ru": "Уступите дорогу обоим транспортным средствам, затем проедете перекрёсток."
-        }
-      ]
-    },
-    {
-      "bilet": 6,
-      "question_number": 17,
-      "correct_answer": 1,
       "question": {
         "ro": "Semnalul de oprire a trenului în caz de oprire fortuită a vehiculului pe trecerea la nivel cu calea ferată se efectuează prin:",
         "ru": "Сигналом остановки для машиниста приближающегося поезда при вынужденной остановке транспортного средства на железнодорожном переезде является:"
@@ -3457,10 +3410,7 @@
           "ro": "Ridicarea verticală a braţelor.",
           "ru": "Поднятые вверх руки."
         },
-        {
-          "ro": "Rotirea braţului.",
-          "ru": "Круговое движение руки."
-        },
+        { "ro": "Rotirea braţului.", "ru": "Круговое движение руки." },
         {
           "ro": "Ridicarea verticală a braţului drept.",
           "ru": "Поднятая вверх правая рука."
@@ -3469,8 +3419,8 @@
     },
     {
       "bilet": 6,
-      "question_number": 18,
-      "correct_answer": 3,
+      "question_number": 17,
+      "correct_answer": 1,
       "question": {
         "ro": "În situația din imagine, se permite oprirea motocicletei pentru a îmbarca pasagerul?",
         "ru": "Разрешается ли остановить мотоцикл для посадки пассажира?"
@@ -3496,8 +3446,8 @@
     },
     {
       "bilet": 6,
-      "question_number": 19,
-      "correct_answer": 4,
+      "question_number": 18,
+      "correct_answer": 3,
       "question": {
         "ro": "Persoanele care domiciliază în alte state, dar sunt venite provizoriu în Republica Moldova, pot conduce vehicule pe drumurile publice numai dacă:",
         "ru": "Лица, проживающие в других государствах, но временно прибывшие в Республику Молдова, могут управлять транспортными средствами на общественных дорогах, если только:"
@@ -3519,8 +3469,8 @@
     },
     {
       "bilet": 6,
-      "question_number": 20,
-      "correct_answer": 3,
+      "question_number": 19,
+      "correct_answer": 4,
       "question": {
         "ro": "Conducătorilor de biciclete, trotinete, biciclete și trotinete electrice, ciclomotoare li se interzice:",
         "ru": "Водителям велосипедов, самокатов, электровелосипедов, электросамокатов и мопедов запрещается:"
@@ -3546,7 +3496,7 @@
     },
     {
       "bilet": 6,
-      "question_number": 21,
+      "question_number": 20,
       "correct_answer": 3,
       "question": {
         "ro": "Este interzisă exploatarea autoturismului prin retragerea plăcuțelor cu numărul de înmatriculare în cazul în care:",
@@ -3573,8 +3523,8 @@
     },
     {
       "bilet": 6,
-      "question_number": 22,
-      "correct_answer": 1,
+      "question_number": 21,
+      "correct_answer": 3,
       "question": {
         "ro": "De câte ori se va mări spaţiul de frânare, dacă viteza vehiculului va creşte de 3 ori?",
         "ru": "Во сколько раз увеличится тормозной путь, если скорость транспортного средства возрастёт в 3 раза?"
@@ -3600,7 +3550,7 @@
     },
     {
       "bilet": 6,
-      "question_number": 23,
+      "question_number": 22,
       "correct_answer": 1,
       "question": {
         "ro": "Cum trebuie să procedați dacă, în timpul deplasării pe sectorul de drum fără vehicule noaptea târziu, ați simţit că vă copleşeşte oboseala (stare de somnolenţă), etc?",
@@ -3623,7 +3573,7 @@
     },
     {
       "bilet": 6,
-      "question_number": 24,
+      "question_number": 23,
       "correct_answer": 1,
       "question": {
         "ro": "Modalitățile de efectuare a întreținerii tehnice zilnice:",
@@ -3641,6 +3591,29 @@
         {
           "ro": "Întreținerea tehnică zilnică se efectuează doar apelând la o persoană din preajmă.",
           "ru": "Ежедневное техническое обслуживание осуществляется только с помощью лица находящегося рядом."
+        }
+      ]
+    },
+    {
+      "bilet": 6,
+      "question_number": 24,
+      "correct_answer": 1,
+      "question": {
+        "ro": "Simptom al stopului cardiac în cazul traumatizării persoanei în accidentul din traficul rutier se consideră:",
+        "ru": "Признаком остановки сердца у пострадавшего при дорожно-транспортном происшествии является:"
+      },
+      "answers": [
+        {
+          "ro": ". Dispariţia pulsului central la artera carotidă (se verifică pe partea laterală a gâtului).",
+          "ru": "Исчезновение центрального пульса сонной артерии (проверяется на боковой стороне шеи)."
+        },
+        {
+          "ro": ". Încetarea respiraţiei.",
+          "ru": "Остановка дыхания."
+        },
+        {
+          "ro": "Mioza (micşoarea pupilelor).",
+          "ru": "Сужение зрачков."
         }
       ]
     },
@@ -3697,60 +3670,99 @@
     {
       "bilet": 7,
       "question_number": 3,
-      "correct_answer": 2,
+      "correct_answer": 1,
       "question": {
-        "ro": "Întrebare absentă din cauza trunchierii textului (truncated).",
-        "ru": "Вопрос отсутствует из-за обрезки текста (truncated)."
+        "ro": "Care din indicatoarele din imagine, informează conducătorii de vehicule că drumul este fără ieşire?",
+        "ru": "Какой из изображённых на рисунке знаков информирует водителей о том, что дорога не имеет сквозного проезда?"
       },
       "answers": [
-        {
-          "ro": "Răspuns absent.",
-          "ru": "Ответ отсутствует."
-        }
+        { "ro": "Indicatorul 1.", "ru": "Знак 1." },
+        { "ro": "Indicatorul 2.", "ru": "Знак 2." },
+        { "ro": "Indicatorul 3.", "ru": "Знак 3." }
       ]
     },
     {
       "bilet": 7,
       "question_number": 4,
-      "correct_answer": 5,
+      "correct_answer": 4,
       "question": {
-        "ro": "Întrebare absentă din cauza trunchierii textului (truncated).",
-        "ru": "Вопрос отсутствует из-за обрезки текста (truncated)."
+        "ro": "Care din indicatoarele din imagine permite întoarcerea?",
+        "ru": "Какой из указанных знаков разрешает разворот?"
       },
       "answers": [
         {
-          "ro": "Răspuns absent.",
-          "ru": "Ответ отсутствует."
+          "ro": "Doar primul.",
+          "ru": "Уметь оказывать первую помощь лицам, пострадавшим в дорожно-транспортных происшествиях."
+        },
+        {
+          "ro": "Doar al doilea.",
+          "ru": "Быть годным по медицинским показаниям."
+        },
+        {
+          "ro": "Doar al patrulea.",
+          "ru": "Только четвёртый"
+        },
+        {
+          "ro": "Întoarcerea o permite oricare din indicatoarele menționate.",
+          "ru": "Соответствовать всем вышеперечисленным требованиям."
+        },
+        {
+          "ro": "Întoarcerea o permite oricare din indicatoarele menționate.",
+          "ru": "Соответствовать всем вышеперечисленным требованиям."
         }
       ]
     },
     {
       "bilet": 7,
       "question_number": 5,
-      "correct_answer": 3,
+      "correct_answer": 2,
       "question": {
-        "ro": "Întrebare absentă din cauza trunchierii textului (truncated).",
-        "ru": "Вопрос отсутствует из-за обрезки текста (truncated)."
+        "ro": "În situaţia din imagine, precizaţi dacă tractorul de culoare roşie, viteza maximă a căruia prin construcție este de 30 km/h, poate să circule pe banda din stânga?",
+        "ru": "Может ли трактор красного цвета, максимальная конструктивная скорость которого 30 км/ч, двигаться по левой полосе в ситуации, показанной на рисунке?"
       },
       "answers": [
         {
-          "ro": "Răspuns absent.",
-          "ru": "Ответ отсутствует."
+          "ro": "Poate fără restricţii.",
+          "ru": "Может без ограничений."
+        },
+        {
+          "ro": "Poate, dacă viteza vehiculului care circula pe banda din dreapta este sub 30 km/h.",
+          "ru": "Может, если скорость транспортного средства на правой полосе менее 30 км/ч."
+        },
+        {
+          "ro": "Nu poate.",
+          "ru": "Не может."
         }
       ]
     },
     {
       "bilet": 7,
       "question_number": 6,
-      "correct_answer": 4,
+      "correct_answer": 5,
       "question": {
-        "ro": "Întrebare absentă din cauza trunchierii textului (truncated).",
-        "ru": "Вопрос отсутствует из-за обрезки текста (truncated)."
+        "ro": "În care din răspunsuri sunt indicate corect şi pe deplin toate direcţiile de deplasare permise?",
+        "ru": "В каком ответе правильно и полностью указаны все разрешённые направления движения?"
       },
       "answers": [
         {
-          "ro": "Răspuns absent.",
-          "ru": "Ответ отсутствует."
+          "ro": "Numai D.",
+          "ru": "Только D."
+        },
+        {
+          "ro": "Numai C şi D.",
+          "ru": "Только С и D."
+        },
+        {
+          "ro": "Numai B, C şi D.",
+          "ru": " Только B, C и D."
+        },
+        {
+          "ro": "Numai A, C şi D.",
+          "ru": "Только A, C и D."
+        },
+        {
+          "ro": "A, B, C şi D.",
+          "ru": "A, B, C и D."
         }
       ]
     },
@@ -3759,13 +3771,21 @@
       "question_number": 7,
       "correct_answer": 3,
       "question": {
-        "ro": "Întrebare absentă din cauza trunchierii textului (truncated).",
-        "ru": "Вопрос отсутствует из-за обрезки текста (truncated)."
+        "ro": "Marcajul în formă de triunghi avertizează că:",
+        "ru": "Разметка в виде треугольника предупреждает:"
       },
       "answers": [
         {
-          "ro": "Răspuns absent.",
-          "ru": "Ответ отсутствует."
+          "ro": "Vă apropiaţi de un drum cu bandă rezervată circulaţiei vehiculelor de rută.",
+          "ru": "О приближении к дороге с полосой для маршрутных транспортных средств."
+        },
+        {
+          "ro": "Vă apropiaţi de linia de oprire în cazul în care aceasta însoţeşte indicatorul „Oprire obligatorie”.",
+          "ru": "О приближении к стоп-линии в случае, когда она применяется со знаком «Обязательная остановка»."
+        },
+        {
+          "ro": "Vă apropiaţi de marcajul din triunghiuri alăturate unde, dacă e necesar, trebuie să opriţi pentru a ceda trecerea.",
+          "ru": "О приближении к разметке в виде прилегающих треугольников, где водитель при необходимости должен остановиться, уступая дорогу."
         }
       ]
     },
@@ -3774,13 +3794,21 @@
       "question_number": 8,
       "correct_answer": 2,
       "question": {
-        "ro": "Întrebare absentă din cauza trunchierii textului (truncated).",
-        "ru": "Вопрос отсутствует из-за обрезки текста (truncated)."
+        "ro": "În situaţia din imagine, având intenţia de a vira la stânga, Dvs. trebuie:",
+        "ru": "Намереваясь повернуть налево, в ситуации, показанной на рисунке, Вы должны:"
       },
       "answers": [
         {
-          "ro": "Răspuns absent.",
-          "ru": "Ответ отсутствует."
+          "ro": "Efectuaţi virarea fără a opri.",
+          "ru": "Осуществить поворот без остановки."
+        },
+        {
+          "ro": "Efectuaţi virarea, cedând trecerea automobilului ce vine din sens opus.",
+          "ru": "Осуществить поворот, уступив дорогу встречному автомобилю."
+        },
+        {
+          "ro": "Opriţi în faţa intersecţiei, aşteptând semnalul agentului de circulaţie.",
+          "ru": "Остановиться перед перекрёстком и дождаться сигнала регулировщика."
         }
       ]
     },
@@ -3789,13 +3817,25 @@
       "question_number": 9,
       "correct_answer": 4,
       "question": {
-        "ro": "Întrebare absentă din cauza trunchierii textului (truncated).",
-        "ru": "Вопрос отсутствует из-за обрезки текста (truncated)."
+        "ro": "La apariţia semnalului verde, conducătorii de vehicule:",
+        "ru": "При включении зелёного сигнала, водитель транспортных средств:"
       },
       "answers": [
         {
-          "ro": "Răspuns absent.",
-          "ru": "Ответ отсутствует."
+          "ro": "Pot să înceapă deplasarea numai după ce s-au asigurat că prin aceasta nu creează obstacole vehiculelor antrenate deja în trecerea intersecției.",
+          "ru": "Могут начать движение только убедившись, что при этом не будут созданы помехи находящимся на перекрёстке транспортным средствам."
+        },
+        {
+          "ro": "Pot să înceapă deplasarea numai după ce s-au asigurat că prin aceasta nu creează obstacole pietonilor care finalizează traversarea părţii carosabile.",
+          "ru": "Могут начать движение только убедившись, что при этом не будут созданы помехи пешеходам, завершающим переход проезжей части."
+        },
+        {
+          "ro": "Nu vor intra în intersecție în cazul în care direcţia este blocată şi nu pot elibera intersecţia până la schimbarea semnalului.",
+          "ru": "Не должны въезжать на перекрёсток, если в намеченном направлении движение затруднено или заблокировано."
+        },
+        {
+          "ro": "Trebuie să respecte toate cerinţele enumerate.",
+          "ru": "Должны соблюдать все перечисленные требования."
         }
       ]
     },
@@ -3804,13 +3844,17 @@
       "question_number": 10,
       "correct_answer": 1,
       "question": {
-        "ro": "Întrebare absentă din cauza trunchierii textului (truncated).",
-        "ru": "Вопрос отсутствует из-за обрезки текста (truncated)."
+        "ro": "La preselectarea concomitentă trebuie să cedeze trecerea:",
+        "ru": "При одновременном перестроении транспортных средств, движущихся попутно, должен уступить дорогу:"
       },
       "answers": [
         {
-          "ro": "Răspuns absent.",
-          "ru": "Ответ отсутствует."
+          "ro": "Conducătorul autoturismului alb.",
+          "ru": "Водитель белого легкового автомобиля."
+        },
+        {
+          "ro": "Conducătorul autoturismului verde.",
+          "ru": "Водитель зелёного легкового автомобиля."
         }
       ]
     },
@@ -3819,13 +3863,21 @@
       "question_number": 11,
       "correct_answer": 3,
       "question": {
-        "ro": "Întrebare absentă din cauza trunchierii textului (truncated).",
-        "ru": "Вопрос отсутствует из-за обрезки текста (truncated)."
+        "ro": "Precizaţi dacă vi se permite efectuarea depășirii în situaţia din imagine?",
+        "ru": "Разрешается ли Вам произвести обгон в ситуации, показанной на рисунке?"
       },
       "answers": [
         {
-          "ro": "Răspuns absent.",
-          "ru": "Ответ отсутствует."
+          "ro": "Da, deoarece pe acest sector de drum câmpul vizual este suficient.",
+          "ru": "Да, так как обзорность на этом участке дороги удовлетворительная."
+        },
+        {
+          "ro": "Da, deoarece din sensul opus nu vine niciun vehicul.",
+          "ru": "Да, поскольку со встречного направления нет транспортных средств."
+        },
+        {
+          "ro": "Nu, deoarece intrarea pe banda extremă din stânga, destinată sensului opus, este interzisă.",
+          "ru": "Нет, поскольку выезд на крайнюю левую полосу, предназначенную для встречного движения, запрещается."
         }
       ]
     },
@@ -3834,13 +3886,21 @@
       "question_number": 12,
       "correct_answer": 3,
       "question": {
-        "ro": "Întrebare absentă din cauza trunchierii textului (truncated).",
-        "ru": "Вопрос отсутствует из-за обрезки текста (truncated)."
+        "ro": "Precizaţi dacă pe acest sector de drum vă este permisă efectuarea manevrei de depăşire a bicicliştilor?",
+        "ru": "Разрешается ли Вам на этом участке дороги произвести обгон велосипедистов?"
       },
       "answers": [
         {
-          "ro": "Răspuns absent.",
-          "ru": "Ответ отсутствует."
+          "ro": "Da, întrucât intersectarea liniei discontinue a marcajului nu este interzisă.",
+          "ru": "Да, так как пересекать прерывистую линию разметки не запрещено."
+        },
+        {
+          "ro": "Da, întrucât bicicliştii se deplasează într-un rând.",
+          "ru": "Да, так как велосипедисты двигаются в один ряд."
+        },
+        {
+          "ro": "Nu, întrucât, în cazul apariției unui vehicul din sens opus, nu veţi putea asigura interval lateral suficient între vehicul şi biciclişti.",
+          "ru": "Нет, так как в случае появления встречного транспортного средства Вы не сможете соблюсти достаточный боковой интервал."
         }
       ]
     },
@@ -3849,13 +3909,21 @@
       "question_number": 13,
       "correct_answer": 2,
       "question": {
-        "ro": "Întrebare absentă din cauza trunchierii textului (truncated).",
-        "ru": "Вопрос отсутствует из-за обрезки текста (truncated)."
+        "ro": "Troleibuzul va traversa intersecţia:",
+        "ru": "Троллейбус проедет перекрёсток:"
       },
       "answers": [
         {
-          "ro": "Răspuns absent.",
-          "ru": "Ответ отсутствует."
+          "ro": "Primul.",
+          "ru": "Первым."
+        },
+        {
+          "ro": "Al doilea.",
+          "ru": "Вторым."
+        },
+        {
+          "ro": "Al treilea.",
+          "ru": "Третьим."
         }
       ]
     },
@@ -3864,13 +3932,21 @@
       "question_number": 14,
       "correct_answer": 2,
       "question": {
-        "ro": "Întrebare absentă din cauza trunchierii textului (truncated).",
-        "ru": "Вопрос отсутствует из-за обрезки текста (truncated)."
+        "ro": "Al doilea va traversa intersecţia:",
+        "ru": "Вторым проедет перекрёсток:"
       },
       "answers": [
         {
-          "ro": "Răspuns absent.",
-          "ru": "Ответ отсутствует."
+          "ro": "Autoturismul albastru.",
+          "ru": "Синий легковой автомобиль."
+        },
+        {
+          "ro": "Autoturismul roşu.",
+          "ru": "Красный легковой автомобиль."
+        },
+        {
+          "ro": "Motocicleta.",
+          "ru": "Мотоцикл."
         }
       ]
     },
@@ -3879,13 +3955,21 @@
       "question_number": 15,
       "correct_answer": 1,
       "question": {
-        "ro": "Întrebare absentă din cauza trunchierii textului (truncated).",
-        "ru": "Вопрос отсутствует из-за обрезки текста (truncated)."
+        "ro": "Indicaţi ordinea de traversare a intersecţiei în situaţia din imagine:",
+        "ru": "Укажите очерёдность проезда перекрёстка в ситуации, показанной на рисунке:"
       },
       "answers": [
         {
-          "ro": "Răspuns absent.",
-          "ru": "Ответ отсутствует."
+          "ro": "Tramvaiul, autobuzul, autoturismul.",
+          "ru": "Трамвай, автобус, легковой автомобиль."
+        },
+        {
+          "ro": "Autobuzul, autoturismul, tramvaiul.",
+          "ru": "Автобус, легковой автомобиль, трамвай."
+        },
+        {
+          "ro": "Autoturismul, tramvaiul, autobuzul.",
+          "ru": "Легковой автомобиль, трамвай, автобус."
         }
       ]
     },
@@ -3894,13 +3978,21 @@
       "question_number": 16,
       "correct_answer": 3,
       "question": {
-        "ro": "Întrebare absentă din cauza trunchierii textului (truncated).",
-        "ru": "Вопрос отсутствует из-за обрезки текста (truncated)."
+        "ro": "În situaţia din imagine Dvs. trebuie:",
+        "ru": "В ситуации, показанной на рисунке, Вы должны:"
       },
       "answers": [
         {
-          "ro": "Răspuns absent.",
-          "ru": "Ответ отсутствует."
+          "ro": "Fără a opri, imediat după ce trece ultimul vagon, să continuaţi deplasarea.",
+          "ru": "Не останавливаясь, продолжить движение сразу же после проезда последнего вагона."
+        },
+        {
+          "ro": "Să opriţi la indicatorul „Oprire obligatorie”, imediat după ultimul vagon, să reluaţi deplasarea.",
+          "ru": "Остановиться перед знаком «Обязательная остановка» и возобновить движение сразу же после проезда последнего вагона."
+        },
+        {
+          "ro": "Să opriţi la indicatorul „Oprire obligatorie” și reluaţi doar după asigurarea că nu se apropie tren sau alt vehicul feroviar din nici o direcţie.",
+          "ru": "Остановиться перед знаком «Обязательная остановка» и возобновить движение только убедившись, что к переезду ни с одной из сторон не приближается поезд или другое рельсовое транспортное средство."
         }
       ]
     },
@@ -3909,13 +4001,25 @@
       "question_number": 17,
       "correct_answer": 1,
       "question": {
-        "ro": "Întrebare absentă din cauza trunchierii textului (truncated).",
-        "ru": "Вопрос отсутствует из-за обрезки текста (truncated)."
+        "ro": "Se permite oprirea în locul indicat?",
+        "ru": "Разрешается ли остановиться в указанном месте?"
       },
       "answers": [
         {
-          "ro": "Răspuns absent.",
-          "ru": "Ответ отсутствует."
+          "ro": "Se permite fără restricții.",
+          "ru": "Разрешается без ограничений."
+        },
+        {
+          "ro": "Se permite doar pentru îmbarcarea sau debarcarea pasagerilor.",
+          "ru": "Разрешается только для посадки или высадки пассажиров."
+        },
+        {
+          "ro": "Se permite doar în cazul vizibilității suficiente în direcția de mers.",
+          "ru": "Разрешается только при удовлетворительной видимости в направлении движения."
+        },
+        {
+          "ro": "Nu se permite.",
+          "ru": "Не разрешается."
         }
       ]
     },
@@ -3924,13 +4028,25 @@
       "question_number": 18,
       "correct_answer": 3,
       "question": {
-        "ro": "Întrebare absentă din cauza trunchierii textului (truncated).",
-        "ru": "Вопрос отсутствует из-за обрезки текста (truncated)."
+        "ro": "Conducătorii vehiculelor aflate în trafic internațional sunt obligați:",
+        "ru": "Водители транспортных средств, участвующих в международном движении, обязаны:"
       },
       "answers": [
         {
-          "ro": "Răspuns absent.",
-          "ru": "Ответ отсутствует."
+          "ro": "Să posede permis de conducere internațional.",
+          "ru": "Иметь международное водительское удостоверение."
+        },
+        {
+          "ro": "Să fie escortate de vehiculele de patrulare ale poliției cu lumină portocalie.",
+          "ru": "Двигаться в сопровождении транспортных средств полиции с оранжевыми проблесковыми маячками."
+        },
+        {
+          "ro": "Să confirme achitarea taxei pentru folosirea drumurilor conform legislației fiscale.",
+          "ru": "Подтвердить уплату сбора за пользование дорогами в соответствии с налоговым законодательством."
+        },
+        {
+          "ro": "Să îndeplinească cerințele enumerate la punctele 1 și 2.",
+          "ru": "Выполнить требования, перечисленные в пунктах 1 и 2."
         }
       ]
     },
@@ -3939,13 +4055,29 @@
       "question_number": 19,
       "correct_answer": 4,
       "question": {
-        "ro": "Întrebare absentă din cauza trunchierii textului (truncated).",
-        "ru": "Вопрос отсутствует из-за обрезки текста (truncated)."
+        "ro": "În care din răspunsuri sunt indicate corect şi pe deplin cerințele impuse de Regulament față de construcția trotinetelor electrice pentru garantarea siguranței de deplasare?",
+        "ru": "В каком ответе правильно и полностью указаны требования к конструкции электросамокатов для обеспечения безопасности движения?"
       },
       "answers": [
         {
-          "ro": "Răspuns absent.",
-          "ru": "Ответ отсутствует."
+          "ro": "Dimensiunile de gabarit nu trebuie să depăşească: lungime – 2 m; lățime – 0,7 m; înălțime – 1,4 m.",
+          "ru": "Габаритные размеры не должны превышать: длина – 2 м; ширина – 0,7 м; высота – 1,4 м."
+        },
+        {
+          "ro": "Masa proprie să nu depășească 55 kg.",
+          "ru": "Собственная масса не должна превышать 55 кг."
+        },
+        {
+          "ro": "Spațiul de frânare să nu depășească 12 m.",
+          "ru": "Тормозной путь не должен превышать 12 м."
+        },
+        {
+          "ro": "Cerințele expuse la punctele 1 și 2.",
+          "ru": "Требования, изложенные в пунктах 1 и 2."
+        },
+        {
+          "ro": "Cerințele expuse la toate punctele anterioare.",
+          "ru": "Требования, изложенные во всех предыдущих пунктах."
         }
       ]
     },
@@ -3954,13 +4086,25 @@
       "question_number": 20,
       "correct_answer": 3,
       "question": {
-        "ro": "Întrebare absentă din cauza trunchierii textului (truncated).",
-        "ru": "Вопрос отсутствует из-за обрезки текста (truncated)."
+        "ro": "Este interzisă deplasarea ulterioară a autoturismului în cazul în care:",
+        "ru": "Запрещается дальнейшее движение легкового автомобиля, если:"
       },
       "answers": [
         {
-          "ro": "Răspuns absent.",
-          "ru": "Ответ отсутствует."
+          "ro": "Lipsesc sau sunt defectate centurile de siguranță și/sau tetierele banchetelor prevăzute prin construcție.",
+          "ru": "Отсутствуют или неисправны ремни безопасности и/или подголовники сидений, предусмотренные конструкцией."
+        },
+        {
+          "ro": "Lipsesc geamurile sau oglinzile retrovizoare prevăzute prin construcție ori acestea sunt deteriorate, având fisuri care diminuează vizibilitatea.",
+          "ru": "Отсутствуют предусмотренные конструкцией стёкла или зеркала заднего вида либо они имеют дефекты, ухудшающие видимость."
+        },
+        {
+          "ro": "Pe neașteptate, partea carosabilă s-a acoperit cu zăpadă sau gheață iar roțile nu sunt echipate cu anvelope marcate „M+S”.",
+          "ru": "Проезжая часть неожиданно покрылась снегом или льдом, а колёса не оснащены шинами с маркировкой «M+S»."
+        },
+        {
+          "ro": "Nu funcționează dispozitivele de spălare și dezaburire prevăzute prin construcție.",
+          "ru": "Не работают стеклоомыватели и устройства для обдува ветрового стекла, предусмотренные конструкцией."
         }
       ]
     },
@@ -3968,36 +4112,6 @@
       "bilet": 7,
       "question_number": 21,
       "correct_answer": 2,
-      "question": {
-        "ro": "Întrebare absentă din cauza trunchierii textului (truncated).",
-        "ru": "Вопрос отсутствует из-за обрезки текста (truncated)."
-      },
-      "answers": [
-        {
-          "ro": "Răspuns absent.",
-          "ru": "Ответ отсутствует."
-        }
-      ]
-    },
-    {
-      "bilet": 7,
-      "question_number": 22,
-      "correct_answer": 1,
-      "question": {
-        "ro": "Întrebare absentă din cauza trunchierii textului (truncated).",
-        "ru": "Вопрос отсутствует из-за обрезки текста (truncated)."
-      },
-      "answers": [
-        {
-          "ro": "Răspuns absent.",
-          "ru": "Ответ отсутствует."
-        }
-      ]
-    },
-    {
-      "bilet": 7,
-      "question_number": 23,
-      "correct_answer": 4,
       "question": {
         "ro": "Conducătorul autoturismului care vine din sensul opus, efectuând depăşirea, a apreciat greşit viteza automobilului Dvs. Cum veţi proceda?",
         "ru": "Водитель встречного легкового автомобиля, выполняя обгон, неверно оценил скорость Вашего автомобиля. Как Вы поступите?"
@@ -4019,7 +4133,7 @@
     },
     {
       "bilet": 7,
-      "question_number": 24,
+      "question_number": 22,
       "correct_answer": 1,
       "question": {
         "ro": "Care-i influenţa alcoolului consumat asupra capacităţii de apreciere a vitezei de deplasare de către conducător?",
@@ -4035,8 +4149,66 @@
           "ru": "Скорость движения представляется больше, чем в действительности."
         },
         {
-          "ro": "Consumul de alcool nu afectează capacitatea de apreciere a vitezei de deplasare de către conducător.",
+          "ro": "Consumul de alcool nu afectează capacitatea de apreciere a vitezei de deplasare.",
           "ru": "Употребление алкогольных напитков не влияет на способность водителя к определению скорости движения."
+        }
+      ]
+    },
+    {
+      "bilet": 7,
+      "question_number": 23,
+      "correct_answer": 4,
+      "question": {
+        "ro": "Înainte de fiecare călătorie conducătorul trebuie să verifice vizual:",
+        "ru": "Перед каждой поездкой водитель должен проверить внешним осмотром:"
+      },
+      "answers": [
+        {
+          "ro": "Starea roților și presiunea în pneuri.",
+          "ru": "Состояние колёс и давление в шинах."
+        },
+        {
+          "ro": "Starea și funcționalitatea dispozitivelor de iluminare și semnalizare luminoasă ale vehiculului.",
+          "ru": "Состояние и исправность приборов освещения и световой сигнализации транспортного средства."
+        },
+        {
+          "ro": "Nivelul lichidului în servomecanismul sistemului de direcție.",
+          "ru": "Уровень жидкости в гидроусилителе рулевого управления."
+        },
+        {
+          "ro": "Starea părților constructive indicate la punctele 1 și 2.",
+          "ru": "Состояние конструктивных частей, указанных в пунктах 1 и 2."
+        },
+        {
+          "ro": "Starea tuturor părților constructive menționate.",
+          "ru": "Состояние всех упомянутых конструктивных частей."
+        }
+      ]
+    },
+    {
+      "bilet": 7,
+      "question_number": 24,
+      "correct_answer": 1,
+      "question": {
+        "ro": "În cazul acordării primului ajutor persoanei traumatizate într-un accident din traficul rutier substanţele antiseptice se folosesc:",
+        "ru": "При оказании первой помощи пострадавшему при дорожно-транспортном происшествии антисептические средства применяются:"
+      },
+      "answers": [
+        {
+          "ro": "Pentru dezinfectarea rănilor.",
+          "ru": "Для дезинфекции ран."
+        },
+        {
+          "ro": "Pentru calmarea durerilor.",
+          "ru": "Для обезболивания."
+        },
+        {
+          "ro": "Pentru oprirea hemoragiei.",
+          "ru": "Для остановки кровотечения."
+        },
+        {
+          "ro": "În oricare din cazurile enumerate.",
+          "ru": "В любом из перечисленных случаев."
         }
       ]
     },
@@ -4045,21 +4217,21 @@
       "question_number": 1,
       "correct_answer": 2,
       "question": {
-        "ro": "Prin termenul „oprire voluntară” se înţelege:",
-        "ru": "Под термином «остановка» понимается:"
+        "ro": "Orice participant la trafic care respectă Regulamentul circulaţiei rutiere este în drept să conteze pe faptul că:",
+        "ru": "Каждый участник дорожного движения, соблюдающий Правила дорожного движения, вправе рассчитывать на то, что:"
       },
       "answers": [
         {
-          "ro": "Imobilizarea vehiculului pe drum atât cât este necesar pentru a îmbarca sau a debarca persoane, ori a încărca sau a descărca bunuri, în timpul în care conducătorul rămâne în vehicul ori în apropierea acestuia, pentru a putea, la nevoie să-l deplaseze.",
-          "ru": "Прекращение движения транспортного средства на время, необходимое для посадки или высадки пассажиров, либо его загрузки или разгрузки, при этом водитель находится за рулём или вблизи транспортного средства и, при необходимости, может его отвести."
+          "ro": "Persoana împuternicită cu reglementarea, îndrumarea şi controlul circulaţiei pe drumurile publice, îi va acorda prioritate în trecerea intersecţiei.",
+          "ru": "Лицо, уполномоченное регулировать, направлять и контролировать движение на общественных дорогах, предоставит ему первоочередное право проезда перекрёстка."
         },
         {
-          "ro": "Imobilizarea vehiculului pe drum pentru un motiv altul decât acela, de a îmbarca sau a debarca persoane, de a încărca sau descărca bunuri, în cazul în care timpul necesar pentru aceasta nu este limitat.",
-          "ru": "Прекращение движения транспортного средства по причинам, не связанным с посадкой или высадкой пассажиров, либо его загрузкой или разгрузкой и не ограниченное временем, необходимым для этого."
+          "ro": "Ceilalţi participanţi la trafic de asemenea execută cerinţele acestui Regulament.",
+          "ru": "Другие участники дорожного движения также выполняют требования этих Правил."
         },
         {
-          "ro": "Imobilizarea vehiculului din cauza defecţiunilor tehnice, eventualului pericol legat de transportarea încărcăturii, starea conducătorului (pasagerului) sau obstacolului de pe drum.",
-          "ru": "Прекращение движения транспортного средства из-за его технической неисправности или опасности, создаваемой перевозимым грузом, состоянием здоровья водителя (пассажира) или препятствием на дороге."
+          "ro": "Executarea semnalului de avertizare prin semnalizatorul de direcţie îi acordă prioritate în trecere.",
+          "ru": "Подача предупредительного сигнала световым указателем изменения направления движения даёт право преимущественного проезда."
         }
       ]
     },
@@ -4068,25 +4240,29 @@
       "question_number": 2,
       "correct_answer": 4,
       "question": {
-        "ro": "Persoana care conduce un vehicul trebuie:",
-        "ru": "Лицо, управляющее транспортным средством должно:"
+        "ro": "În care din răspunsuri corect și pe deplin sunt enumerate condițiile conform cărora conducătorul vehiculului nu trebuie să posede asupra sa permisul de conducere și să-l prezinte la solicitarea polițistului?",
+        "ru": "В каком ответе правильно и полностью перечислены условия при которых водителю транспортного средства не обязательно иметь при себе водительское удостоверение и предъявлять его по требованию полицейского?"
       },
       "answers": [
         {
-          "ro": "Să posede cunoştinţe de acordare a primului ajutor persoanelor traumatizate ca urmare a accidentului în traficul rutier.",
-          "ru": "Уметь оказывать первую помощь лицам, пострадавшим в дорожно-транспортных происшествиях."
+          "ro": "Doar dacă conduce vehiculul în Republica Moldova.",
+          "ru": "Только при управлении транспортным средством в Республике Молдова."
         },
         {
-          "ro": "Să fie aptă din punct de vedere medical.",
-          "ru": "Быть годным по медицинским показаниям."
+          "ro": "Doar dacă dreptul de a conduce vehiculul este supus evidenței în Registrul de Stat al conducătorilor.",
+          "ru": "Только если право на управление транспортным средством зарегистрировано в Государственном регистре водителей."
         },
         {
-          "ro": "Să posede dexteritatea necesară de a conduce în siguranţă vehiculul pe drum.",
-          "ru": "Иметь необходимые навыки уверенного и безопасного управления транспортным средством."
+          "ro": "Doar dacă posedă asupra sa un act de identitate valabil pe numele său.",
+          "ru": "Только если он имеет при себе действительное удостоверение личности на своё имя."
         },
         {
-          "ro": "Să corespundă tuturor cerințelor sus enumerate.",
-          "ru": "Соответствовать всем вышеперечисленным требованиям."
+          "ro": "Cu condiția îndeplinirii tuturor cerințelor enumerate.",
+          "ru": "При выполнении всех перечисленных условий."
+        },
+        {
+          "ro": "Doar cu condițiile enumerate în punctele 1 și 2.",
+          "ru": "При выполнении условий, перечисленных в пунктах 1 и 2."
         }
       ]
     },
@@ -4222,21 +4398,21 @@
       "question_number": 8,
       "correct_answer": 2,
       "question": {
-        "ro": "La acest semnal al agentului de circulaţie au voie să-şi continue deplasarea:",
-        "ru": "При этом сигнале регулировщика могут продолжить движение:"
+        "ro": "Căror vehicule li se permite deplasarea?",
+        "ru": "Каким транспортным средствам разрешается движение?"
       },
       "answers": [
         {
-          "ro": "Autoturismul albastru şi pietonii.",
-          "ru": "Синий легковой автомобиль и пешеходы."
+          "ro": "Autoturismelor alb şi roşu.",
+          "ru": "Белому и красному легковым автомобилям."
         },
         {
-          "ro": "Numai pietonii.",
-          "ru": "Только пешеходы."
+          "ro": "Autoturismelor alb şi verde.",
+          "ru": "Белому и зелёному легковым автомобилям."
         },
         {
-          "ro": "Autoturismul albastru, biciclistul şi pietonii.",
-          "ru": "Синий легковой автомобиль, велосипедист и пешеходы."
+          "ro": "Autoturismelor galben şi roşu.",
+          "ru": "Жёлтому и красному легковым автомобилям."
         }
       ]
     },
@@ -4245,25 +4421,25 @@
       "question_number": 9,
       "correct_answer": 4,
       "question": {
-        "ro": "Semnalele luminoase ale semaforului din imagine:",
-        "ru": "Сигналы светофора, показанные на рисунке:"
+        "ro": "În situația din imagine, Dvs.:",
+        "ru": "В ситуации, показанной на рисунке, Вы:"
       },
       "answers": [
         {
-          "ro": "Permit circulaţia înainte sau la dreapta.",
-          "ru": "Разрешают движение прямо или направо."
+          "ro": "Veți opri nu mai aproape de 10 m de la prima șină.",
+          "ru": "Остановитесь не ближе 10 м до ближайшего рельса."
         },
         {
-          "ro": "Interzic circulaţia înainte sau la dreapta.",
-          "ru": "Запрещают движение прямо или направо."
+          "ro": "Veți continua deplasarea numai după ce v-ați asigurat că de trecere din ambele sensuri nu se apropie trenul sau alt vehicul feroviar.",
+          "ru": "Продолжите движение, только убедившись, что к переезду ни с одной из сторон не приближается поезд или другое рельсовое транспортное средство."
         },
         {
-          "ro": "Permit circulaţia înainte sau la stânga.",
-          "ru": "Разрешают движение прямо или налево."
+          "ro": "Veți opri la indicatorul „Oprire obligatorie”.",
+          "ru": "Остановитесь у знака «Обязательная остановка»."
         },
         {
-          "ro": "Interzic circulaţia înainte sau la stânga.",
-          "ru": "Запрещают движение прямо или налево."
+          "ro": "Veți continua deplasarea fără oprire, conducându-vă de semnalul semaforului.",
+          "ru": "Продолжите движение без остановки руководствуясь сигналом светофора."
         }
       ]
     },
@@ -4349,21 +4525,17 @@
       "question_number": 13,
       "correct_answer": 2,
       "question": {
-        "ro": "Indicaţi ordinea de traversare a intersecţiei:",
-        "ru": "Укажите очерёдность проезда перекрёстка:"
+        "ro": "Cine este obligat să cedeze trecerea în situaţia din imagine?",
+        "ru": "Кто должен уступить дорогу в ситуации, показанной на рисунке?"
       },
       "answers": [
         {
-          "ro": "Autoturismul roşu, tramvaiul, autoturismul albastru, autoturismul galben.",
-          "ru": "Красный легковой автомобиль, трамвай, синий легковой автомобиль, жёлтый легковой автомобиль."
+          "ro": "1. Conducătorul autoturismului.",
+          "ru": "1. Водитель легкового автомобиля."
         },
         {
-          "ro": "Autoturismele roşu şi galben, apoi tramvaiul şi autoturismul albastru.",
-          "ru": "Красный и жёлтый легковых автомобиля, затем трамвай и синий легковой автомобиль."
-        },
-        {
-          "ro": "Tramvaiul şi autoturismul galben, apoi autoturismele roşu şi albastru.",
-          "ru": "Трамвай и жёлтый легковой автомобиль, затем красный и синий легковых автомобилей."
+          "ro": "2. Conducătorul autocamionului.",
+          "ru": "2. Водитель грузового автомобиля."
         }
       ]
     },
@@ -4476,25 +4648,25 @@
       "question_number": 18,
       "correct_answer": 1,
       "question": {
-        "ro": "Conducătorii vehiculelor aflate în trafic internațional sunt obligați:",
-        "ru": "Водители транспортных средств, участвующих в международном движении, обязаны:"
+        "ro": "Instruirea iniţială în conducerea vehiculului, trebuie efectuată pe:",
+        "ru": "Первоначальное обучение вождению транспортных средств должно производиться на:"
       },
       "answers": [
         {
-          "ro": "Să posede permis de conducere internațional.",
-          "ru": "Иметь международное водительское удостоверение."
+          "ro": "1. Terenuri închise circulaţiei sau pe terenurile amenajate şi destinate acestui scop.",
+          "ru": "1. Площадках, где нет движения транспортных средств или на площадках, специально оборудованных для этой цели."
         },
         {
-          "ro": "Să fie escortate de vehiculele de patrulare ale poliției care au pus în funcțiune dispozitivul cu lumina portocalie giratorie.",
-          "ru": "Двигаться в сопровождении транспортных средств полиции, на которых включены проблесковые маячки оранжевого цвета."
+          "ro": "2. Drumurile cu circulaţia în sens unic.",
+          "ru": "2. Дорогах с односторонним движением."
         },
         {
-          "ro": "Să confirme achitarea taxei pentru folosirea drumurilor în conformitate cu prevederile legislației fiscale.",
-          "ru": "Подтвердить уплату сбора за пользование дорогами в соответствии с положениями налогового законодательства."
+          "ro": "3. Drumurile cu circulaţia dublu sens care au pentru circulaţie într-o direcţie cel puţin două benzi.",
+          "ru": "3. Дорогах с двусторонним движением, имеющих не менее двух полос для движения в данном направлении."
         },
         {
-          "ro": "Să îndeplinească cerințele enumerate la punctele 1 și 2.",
-          "ru": "Выполнить требования, перечисленные в пунктах 1 и 2."
+          "ro": "4. Drumurile indicate la punctele 2 şi 3.",
+          "ru": "4. Дорогах, указанных в пунктах 2 и 3."
         }
       ]
     },
@@ -4503,29 +4675,21 @@
       "question_number": 19,
       "correct_answer": 3,
       "question": {
-        "ro": "În care din răspunsuri sunt indicate corect și pe deplin cerințele impuse de Regulament față de construcția trotinetelor electrice, pentru garantarea siguranței de deplasare?",
-        "ru": "В каком ответе правильно и полностью указаны требования предъявляемые Правилами к конструкции электросамокатов для обеспечения безопасности движения?"
+        "ro": "Precizați dacă biciclistului i se permite să circule pe banda extremă din stânga, în situația din imagine?",
+        "ru": "Разрешается ли велосипедисту двигаться по крайней левой полосе в ситуации, показанной на рисунке?"
       },
       "answers": [
         {
-          "ro": "Dimensiunile de gabarit trebuie să nu depășească: în lungime – 2 m, în lățime – 0,7 m, în înălțime – 1,4 m.",
-          "ru": "Габаритные размеры не должны превышать: по длине – 2 м, ширине – 0,7 м, высоте – 1,4 м."
+          "ro": "1. I se permite numai în cazul în care el intenționează să vireze la stânga la intersecția apropiată.",
+          "ru": "1. Разрешается, только если он намеревается на ближайшем перекрёстке повернуть налево."
         },
         {
-          "ro": "Masa proprie să nu depășească 55 kg.",
-          "ru": "Собственная масса не должна превышать 55 кг."
+          "ro": "2. I se permite numai în cazul în care el intenționează să traverseze intersecția înainte.",
+          "ru": "2. Разрешается, только если он намеревается проехать перекрёсток в прямом направлении."
         },
         {
-          "ro": "Spațiul de frânare să nu depășească 12 m.",
-          "ru": "Тормозной путь не должен превышать 12 м."
-        },
-        {
-          "ro": "Cerințele care sunt expuse la punctele 1 și 2.",
-          "ru": "Требования изложенные в пунктах 1 и 2."
-        },
-        {
-          "ro": "Cerințele care sunt expuse la toate punctele anterioare.",
-          "ru": "Требования изложенные во всех предыдущих пунктах."
+          "ro": "3. Nu i se permite.",
+          "ru": "3. Не разрешается."
         }
       ]
     },
@@ -4757,21 +4921,29 @@
       "question_number": 5,
       "correct_answer": 5,
       "question": {
-        "ro": "Care din indicatoarele din imagine se numește „Circulație interzisă”?",
-        "ru": "Какой из указанных знаков называется «Движение запрещено»?"
+        "ro": "Indicatoarele din imagine informează că parcarea este rezervată:",
+        "ru": "Указанные знаки информируют о том, что стоянка зарезервирована:"
       },
       "answers": [
         {
-          "ro": "Indicatorul 1.",
-          "ru": "Знак 1."
+          "ro": "Pentru autoturismul albastru, conducătorul căruia posedă cardul „Parking Card for People with Disabilities”.",
+          "ru": "Для синего легкового автомобиля, водитель которого имеет карточку «Parking Card for People with Disabilities»."
         },
         {
-          "ro": "Indicatorul 2.",
-          "ru": "Знак 2."
+          "ro": "Pentru autoturismul roşu, la fel ca şi pentru autoturismul albastru, conducătorii cărora posedă cardul „Parking Card for People with Disabilities”.",
+          "ru": "Для красного и синего легковых автомобилей, водители которых имеют карточку «Parking Card for People with Disabilities»."
         },
         {
-          "ro": "Indicatorul 3.",
-          "ru": "Знак 3."
+          "ro": "Numai pentru autoturismul albastru.",
+          "ru": "Только для синего легкового автомобиля."
+        },
+        {
+          "ro": "Numai pentru autoturismul roşu.",
+          "ru": "Только для красного легкового автомобиля."
+        },
+        {
+          "ro": "Pentru autoturismele roşu şi albastru.",
+          "ru": "Для красного и синего легковых автомобилей."
         }
       ]
     },
@@ -4780,21 +4952,21 @@
       "question_number": 6,
       "correct_answer": 3,
       "question": {
-        "ro": "Indicatoarele din imagine informează că:",
-        "ru": "Эти дорожные знаки информируют о том, что:"
+        "ro": "La intersecţia de care vă apropiați Dvs.:",
+        "ru": "На перекрёстке, к которому Вы приближаетесь:"
       },
       "answers": [
         {
-          "ro": "La 100 m se află parcul pentru copii.",
-          "ru": "Через 100 м находится детский парк."
+          "ro": "Vă veţi deplasa în orice direcţie fără a ceda trecerea.",
+          "ru": "Вы продолжите движение в любом направлении, не уступая дорогу."
         },
         {
-          "ro": "Peste 100 m se află trecerea pentru copii.",
-          "ru": "Через 100 м находится пешеходный переход для детей."
+          "ro": "Veţi ceda trecerea numai autoturismului verde.",
+          "ru": "Вы уступите дорогу только зелёному легковому автомобилю."
         },
         {
-          "ro": "La 100 m se află instituţia de învăţământ pentru copii.",
-          "ru": "Через 100 м находится детское образовательное учреждение."
+          "ro": "Veţi ceda trecerea autoturismelor verde şi roşu.",
+          "ru": "Вы уступите дорогу зелёному и красному легковым автомобилям."
         }
       ]
     },
@@ -4803,21 +4975,21 @@
       "question_number": 7,
       "correct_answer": 1,
       "question": {
-        "ro": "Marcajul rutier din imagine determină:",
-        "ru": "Изображённая на рисунке дорожная разметка обозначает:"
+        "ro": "Acest marcaj rutier indică:",
+        "ru": "Эта дорожная разметка обозначает:"
       },
       "answers": [
         {
-          "ro": "Locul de oprire a vehiculelor.",
-          "ru": "Место остановки транспортных средств."
+          "ro": "Trecerea pentru pietoni.",
+          "ru": "Пешеходный переход."
         },
         {
-          "ro": "Locul de staționare a vehiculelor.",
-          "ru": "Место стоянки транспортных средств."
+          "ro": "Locul unde pista pentru biciclişti întretaie partea carosabilă.",
+          "ru": "Место пересечения велосипедной дорожки с проезжей частью."
         },
         {
-          "ro": "Locul de staționare a vehiculelor de rută.",
-          "ru": "Место стоянки маршрутных транспортных средств."
+          "ro": "Spaţiile de pe drum pe care intrarea este interzisă.",
+          "ru": "Участки дороги, на которые въезд запрещён."
         }
       ]
     },
@@ -4849,25 +5021,25 @@
       "question_number": 9,
       "correct_answer": 2,
       "question": {
-        "ro": "Semnalele luminoase ale semaforului din imagine:",
-        "ru": "Сигналы светофора, показанные на рисунке:"
+        "ro": "În situația din imagine, Dvs.:",
+        "ru": "В ситуации, показанной на рисунке, Вы:"
       },
       "answers": [
         {
-          "ro": "Permit circulaţia înainte sau la dreapta.",
-          "ru": "Разрешают движение прямо или направо."
+          "ro": "Veţi opri nu mai aproape de 10 m de la prima şină.",
+          "ru": "Остановитесь не ближе 10 м до ближайшего рельса."
         },
         {
-          "ro": "Interzic circulaţia înainte sau la dreapta.",
-          "ru": "Запрещают движение прямо или направо."
+          "ro": "Veţi continua deplasarea numai după ce v-aţi asigurat că de trecere din ambele sensuri nu se apropie trenul sau alt vehicul feroviar.",
+          "ru": "Продолжите движение только убедившись, что к переезду ни с одной стороны не приближается поезд или другой рельсовый ТС."
         },
         {
-          "ro": "Permit circulaţia înainte sau la stânga.",
-          "ru": "Разрешают движение прямо или налево."
+          "ro": "Veţi opri la indicatorul „Oprire obligatorie”.",
+          "ru": "Остановитесь у знака «Обязательная остановка»."
         },
         {
-          "ro": "Interzic circulaţia înainte sau la stânga.",
-          "ru": "Запрещают движение прямо или налево."
+          "ro": "Veţi continua deplasarea fără oprire, conducându-vă de semnalul semaforului.",
+          "ru": "Продолжите движение без остановки, руководствуясь сигналом светофора."
         }
       ]
     },
@@ -4876,25 +5048,29 @@
       "question_number": 10,
       "correct_answer": 1,
       "question": {
-        "ro": "În situaţia din imagine se permite deplasarea:",
-        "ru": "В ситуации, показанной на рисунке, разрешается движение:"
+        "ro": "Pe care din traiectoriile indicate prin săgeţi este permisă deplasarea?",
+        "ru": "По каким из показанных стрелками траекторий разрешается движение?"
       },
       "answers": [
         {
-          "ro": "Numai la dreapta.",
-          "ru": "Только направо."
+          "ro": "Pe traiectoriile A şi E.",
+          "ru": "По траекториям A и E."
         },
         {
-          "ro": "Numai la stânga.",
-          "ru": "Только налево."
+          "ro": "Pe traiectoriile A, C şi E.",
+          "ru": "По траекториям A, C и E."
         },
         {
-          "ro": "Numai la stânga sau la dreapta.",
-          "ru": "Только налево или направо."
+          "ro": "Pe traiectoriile B şi D.",
+          "ru": "По траекториям B и D."
         },
         {
-          "ro": "În toate direcțiile.",
-          "ru": "Во всех направлениях."
+          "ro": "Pe traiectoriile B, C şi D.",
+          "ru": "По траекториям B, C и D."
+        },
+        {
+          "ro": "Pe oricare din traiectorii.",
+          "ru": "По любой из траекторий."
         }
       ]
     },
@@ -4903,25 +5079,21 @@
       "question_number": 11,
       "correct_answer": 2,
       "question": {
-        "ro": "În situaţia din imagine se permite deplasarea:",
-        "ru": "В ситуации, показанной на рисунке, разрешается движение:"
+        "ro": "În situaţia din imagine, care din conducători efectuează regulamentar manevra pe drumul cu linii de tramvai?",
+        "ru": "Водитель какого ТС правильно выполняет манёвр на дороге с трамвайными путями?"
       },
       "answers": [
         {
-          "ro": "Numai înainte.",
-          "ru": "Только прямо."
+          "ro": "Numai conducătorul autoturismului.",
+          "ru": "Только водитель легкового автомобиля."
         },
         {
-          "ro": "Numai la dreapta.",
-          "ru": "Только направо."
+          "ro": "Numai conducătorul autobuzului.",
+          "ru": "Только водитель автобуса."
         },
         {
-          "ro": "Numai înainte sau la dreapta.",
-          "ru": "Только прямо или направо."
-        },
-        {
-          "ro": "În toate direcțiile.",
-          "ru": "Во всех направлениях."
+          "ro": "Ambii conducători.",
+          "ru": "Оба водителя."
         }
       ]
     },
@@ -4930,21 +5102,21 @@
       "question_number": 12,
       "correct_answer": 2,
       "question": {
-        "ro": "Precizaţi dacă se permite depăşirea în situaţia din imagine?",
-        "ru": "Разрешается ли обгон в ситуации, показанной на рисунке?"
+        "ro": "Precizaţi dacă se permite depăşirea motocicletei pe acest sector de drum?",
+        "ru": "Можно ли обогнать мотоцикл на этом участке дороги?"
       },
       "answers": [
         {
-          "ro": "Se permite, deoarece nu sunt vehicule din sensul opus.",
-          "ru": "Разрешается, так как нет встречных транспортных средств."
+          "ro": "Se permite fără restricţii.",
+          "ru": "Можно без ограничений."
         },
         {
-          "ro": "Se permite, deoarece nu sunt pietoni la trecerea în cauză.",
-          "ru": "Разрешается, так как на пешеходном переходе нет пешеходов."
+          "ro": "Se permite, dacă viteza motocicletei este sub 30 km/h.",
+          "ru": "Можно, если скорость мотоцикла менее 30 км/ч."
         },
         {
           "ro": "Nu se permite.",
-          "ru": "Не разрешается."
+          "ru": "Нельзя."
         }
       ]
     },
@@ -4953,21 +5125,21 @@
       "question_number": 13,
       "correct_answer": 2,
       "question": {
-        "ro": "Indicaţi ordinea de traversare a intersecţiei:",
-        "ru": "Укажите очерёдность проезда перекрёстка:"
+        "ro": "Având intenţia de a vira la stânga Dvs. trebuie să cedaţi trecerea:",
+        "ru": "Намереваясь повернуть налево, Вы должны уступить дорогу:"
       },
       "answers": [
         {
-          "ro": "Autoturismul roşu, tramvaiul, autoturismul albastru, autoturismul galben.",
-          "ru": "Красный легковой автомобиль, трамвай, синий легковой автомобиль, жёлтый легковой автомобиль."
+          "ro": "Numai autoturismului roşu.",
+          "ru": "Только красному легковому автомобилю."
         },
         {
-          "ro": "Autoturismele roşu şi galben, apoi tramvaiul şi autoturismul albastru.",
-          "ru": "Красный и жёлтый легковых автомобиля, затем трамвай и синий легковой автомобиль."
+          "ro": "Numai autoturismului albastru.",
+          "ru": "Только синему легковому автомобилю."
         },
         {
-          "ro": "Tramvaiul şi autoturismul galben, apoi autoturismele roşu şi albastru.",
-          "ru": "Трамвай и жёлтый легковой автомобиль, затем красный и синий легковых автомобилей."
+          "ro": "Ambelor autoturisme.",
+          "ru": "Обоим легковым автомобилям."
         }
       ]
     },
@@ -4976,21 +5148,21 @@
       "question_number": 14,
       "correct_answer": 3,
       "question": {
-        "ro": "În ce ordine vor traversa intersecţia vehiculele din imagine?",
-        "ru": "В каком порядке проедут перекрёсток эти транспортные средства?"
+        "ro": "Având intenţia de a vira la stânga Dvs. trebuie să cedaţi trecerea:",
+        "ru": "Намереваясь повернуть налево Вы должны уступить дорогу:"
       },
       "answers": [
         {
-          "ro": "Autoturismul, autocamionul, motocicleta.",
-          "ru": "Легковой автомобиль, грузовой автомобиль, мотоцикл."
+          "ro": "Numai autoturismului roşu",
+          "ru": "Только красному легковому автомобилю."
         },
         {
-          "ro": "Autocamionul, autoturismul, motocicleta.",
-          "ru": "Грузовой автомобиль, легковой автомобиль, мотоцикл."
+          "ro": "Numai autoturismului albastru.",
+          "ru": "Только синему легковому автомобилю."
         },
         {
-          "ro": "Motocicleta, autoturismul, autocamionul.",
-          "ru": "Мотоцикл, легковой автомобиль, грузовой автомобиль."
+          "ro": "Ambelor autoturisme.",
+          "ru": "Обоим легковым автомобилям."
         }
       ]
     },
@@ -4999,25 +5171,21 @@
       "question_number": 15,
       "correct_answer": 3,
       "question": {
-        "ro": "În situaţia din imagine, având intenţia de a vira la dreapta, veţi:",
-        "ru": "В ситуации, показанной на рисунке, намереваясь повернуть направо, Вы:"
+        "ro": "Ultimul va traversa intersecţia conducătorul:",
+        "ru": "Последним проедет перекрёсток водитель:"
       },
       "answers": [
         {
-          "ro": "Traversa intersecţia primul.",
-          "ru": "Проедете перекрёсток первым."
+          "ro": "Motocicletei.",
+          "ru": "Мотоцикла."
         },
         {
-          "ro": "Ceda trecerea doar autobuzului, ulterior veţi traversa intersecţia.",
-          "ru": "Уступите дорогу только автобусу, затем проедете перекрёсток."
+          "ro": "Autocamionului.",
+          "ru": "Грузового автомобиля."
         },
         {
-          "ro": "Ceda trecerea doar camionului, ulterior veţi traversa intersecţia.",
-          "ru": "Уступите дорогу только грузовому автомобилю, затем проедете перекрёсток."
-        },
-        {
-          "ro": "Ceda trecerea ambelor vehicule, ulterior veţi traversa intersecţia.",
-          "ru": "Уступите дорогу обоим транспортным средствам, затем проедете перекрёсток."
+          "ro": "Autoturismului.",
+          "ru": "Легкового автомобиля."
         }
       ]
     },
@@ -5053,25 +5221,25 @@
       "question_number": 17,
       "correct_answer": 4,
       "question": {
-        "ro": "În situaţia din imagine, care este spaţiul minim faţă de locul special amenajat pentru oprirea vehiculelor de rută, unde este interzisă oprirea dacă prin aceasta se creează obstacole vehiculelor în cauză?",
-        "ru": "В ситуации, показанной на рисунке, ближе какого расстояния от остановочной площадки маршрутных транспортных средств запрещается остановка, если при этом создаётся помеха этим транспортным средствам?"
+        "ro": "În situația din imagine, care din conducători s-a oprit regulamentar?",
+        "ru": "Кто из водителей правильно остановился в ситуации, показанной на рисунке?"
       },
       "answers": [
         {
-          "ro": "15 m.",
-          "ru": "15 м."
+          "ro": "Conducătorul motocicletei.",
+          "ru": "Водитель мотоцикла."
         },
         {
-          "ro": "20 m.",
-          "ru": "20 м."
+          "ro": "Conducătorul autobuzului.",
+          "ru": "Водитель автобуса."
         },
         {
-          "ro": "25 m.",
-          "ru": "25 м."
+          "ro": "Ambii regulamentar.",
+          "ru": "Оба правильно."
         },
         {
-          "ro": "30 m.",
-          "ru": "30 м."
+          "ro": "Ambii neregulamentar.",
+          "ru": "Оба неправильно."
         }
       ]
     },
@@ -5080,25 +5248,21 @@
       "question_number": 18,
       "correct_answer": 3,
       "question": {
-        "ro": "Conducătorii vehiculelor aflate în trafic internațional sunt obligați:",
-        "ru": "Водители транспортных средств, участвующих в международном движении, обязаны:"
+        "ro": "Instruirea în conducere pe drumurile publice poate fi efectuată de:",
+        "ru": "Обучать вождению на общественных дорогах может:"
       },
       "answers": [
         {
-          "ro": "Să posede permis de conducere internațional.",
-          "ru": "Иметь международное водительское удостоверение."
+          "ro": "Oricare conducător cu permis valabil pentru categoria vehiculului şi vechime de cel puţin 2 ani.",
+          "ru": "Любой водитель с действующим удостоверением соответствующей категории и стажем не менее 2 лет."
         },
         {
-          "ro": "Să fie escortate de vehiculele de patrulare ale poliției care au pus în funcțiune dispozitivul cu lumina portocalie giratorie.",
-          "ru": "Двигаться в сопровождении транспортных средств полиции, на которых включены проблесковые маячки оранжевого цвета."
+          "ro": "Oricare conducător de 21 ani, cu vechime de cel puţin 3 ani şi fişe cu itinerare autorizate.",
+          "ru": "Любой водитель 21+, со стажем не менее 3 лет и схемами учебных маршрутов, утверждёнными полицией."
         },
         {
-          "ro": "Să confirme achitarea taxei pentru folosirea drumurilor în conformitate cu prevederile legislației fiscale.",
-          "ru": "Подтвердить уплату сбора за пользование дорогами в соответствии с положениями налогового законодательства."
-        },
-        {
-          "ro": "Să îndeplinească cerințele enumerate la punctele 1 și 2.",
-          "ru": "Выполнить требования, перечисленные в пунктах 1 и 2."
+          "ro": "Instructorul cu permis valabil pentru categoria respectivă, certificat de atestare şi fişe cu itinerare autorizate.",
+          "ru": "Инструктор с действующим удостоверением нужной категории, свидетельством о проф. аттестации и схемами маршрутов, утверждёнными полицией."
         }
       ]
     },
@@ -5107,29 +5271,21 @@
       "question_number": 19,
       "correct_answer": 3,
       "question": {
-        "ro": "În care din răspunsuri sunt indicate corect și pe deplin cerințele impuse de Regulament față de construcția trotinetelor electrice, pentru garantarea siguranței de deplasare?",
-        "ru": "В каком ответе правильно и полностью указаны требования предъявляемые Правилами к конструкции электросамокатов для обеспечения безопасности движения?"
+        "ro": "Precizați dacă bicicliștilor li se permite să traverseze strada în situația din imagine?",
+        "ru": "Разрешается ли велосипедистам пересекать дорогу в ситуации, показанной на рисунке?"
       },
       "answers": [
         {
-          "ro": "Dimensiunile de gabarit trebuie să nu depășească: în lungime – 2 m, în lățime – 0,7 m, în înălțime – 1,4 m.",
-          "ru": "Габаритные размеры не должны превышать: по длине – 2 м, ширине – 0,7 м, высоте – 1,4 м."
+          "ro": "Li se permite numai în intersecția cu circulația nedirijată.",
+          "ru": "Разрешается только на нерегулируемом перекрёстке."
         },
         {
-          "ro": "Masa proprie să nu depășească 55 kg.",
-          "ru": "Собственная масса не должна превышать 55 кг."
+          "ro": "Li se permite numai în lipsa pietonilor pe trecerea pentru pietoni.",
+          "ru": "Разрешается только при отсутствии пешеходов на переходе."
         },
         {
-          "ro": "Spațiul de frânare să nu depășească 12 m.",
-          "ru": "Тормозной путь не должен превышать 12 м."
-        },
-        {
-          "ro": "Cerințele care sunt expuse la punctele 1 și 2.",
-          "ru": "Требования изложенные в пунктах 1 и 2."
-        },
-        {
-          "ro": "Cerințele care sunt expuse la toate punctele anterioare.",
-          "ru": "Требования изложенные во всех предыдущих пунктах."
+          "ro": "Nu li se permite.",
+          "ru": "Не разрешается."
         }
       ]
     },
@@ -5138,25 +5294,21 @@
       "question_number": 20,
       "correct_answer": 1,
       "question": {
-        "ro": "Este interzisă deplasarea ulterioară a autoturismului în cazul în care:",
-        "ru": "Запрещается дальнейшее движение легкового автомобиля, если:"
+        "ro": "Vehiculul este reţinut şi adus la parcarea specială dacă:",
+        "ru": "Транспортное средство задерживается и доставляется на спецстоянку, если:"
       },
       "answers": [
         {
-          "ro": "Lipsesc sau sunt defectate centurile de siguranță și/sau tetierele banchetelor, prevăzute prin construcție.",
-          "ru": "Отсутствуют или неисправны предусмотренные конструкцией ремни безопасности и/или подголовники сидений."
+          "ro": "Conducătorul este în stare de ebrietate alcoolică şi nu are persoană care ar putea conduce vehiculul.",
+          "ru": "Водитель находится в состоянии алкогольного опьянения и нет лица, которое могло бы управлять ТС."
         },
         {
-          "ro": "Lipsesc geamurile sau oglinzile retrovizoare, prevăzute prin construcție ori acestea sunt deteriorate, având fisuri care diminuează vizibilitatea.",
-          "ru": "Отсутствуют предусмотренные конструкцией стёкла или зеркала заднего вида, либо они имеют дефекты, ухудшающие видимость."
+          "ro": "Vehiculul este dislocat într-un loc interzis staţionării şi creează obstacole altor participanţi la trafic.",
+          "ru": "ТС остановлено в месте, где стоянка запрещена, и создаёт помехи другим участникам движения."
         },
         {
-          "ro": "Pe neașteptate, pe partea carosabilă a căzut zăpadă, s-a format gheața sau polei, iar roțile autoturismului nu sunt echipate cu anvelope pe care este marcajul „M+S”, „M.S.” sau „M&S”.",
-          "ru": "Проезжая часть дороги неожиданно покрылась снегом или льдом, либо появилась гололедица, а его колёса не оснащены шинами с маркировкой «M+S», «M.S.» или «M&S»."
-        },
-        {
-          "ro": "Nu funcționează dispozitivele de spălare și dezaburire, prevăzute prin construcție.",
-          "ru": "Не работают стеклоомыватели и устройства для обдува ветрового стекла, предусмотренные конструкцией."
+          "ro": "În oricare din cazurile enumerate.",
+          "ru": "В любом из перечисленных случаев."
         }
       ]
     },
@@ -7527,7 +7679,7 @@
     {
       "bilet": 13,
       "question_number": 21,
-      "correct_answer": 4,
+      "correct_answer": 3,
       "question": {
         "ro": "Distanţa parcursă de vehicul, din momentul în care conducătorul acestuia a observat pericolul, până la începutul acţiunilor în vederea prevenirii accidentului din traficul rutier, se consideră:",
         "ru": "Расстояние, пройденное транспортным средством с момента обнаружения водителем опасности до начала конкретных действий, направленных на предотвращение дорожно-транспортного происшествия означает:"
@@ -7550,7 +7702,7 @@
     {
       "bilet": 13,
       "question_number": 22,
-      "correct_answer": 3,
+      "correct_answer": 1,
       "question": {
         "ro": "În care din imagini este arătată plasarea corectă a mâinilor pe volan în cazul deplasării rectilinii?",
         "ru": "На каком рисунке показано правильное положение рук водителя на рулевом колесе при движении автомобиля по прямой дороге?"
@@ -10041,7 +10193,11 @@
         },
         {
           "ro": "Umplute cu bioxid de azot.",
-          "ru": "Заполненные диоксидом азота."
+          "ru": "Заполненные двуокисью азота."
+        },
+        {
+          "ro": "Cu masa și сonținutul enumerate în punctele 1 și 2.",
+          "ru": "Соответствующими массе и наполнителям перечисленным в пунктах 1 и 2"
         }
       ]
     },
@@ -17345,25 +17501,29 @@
       "question_number": 1,
       "correct_answer": 3,
       "question": {
-        "ro": "Участникът la traficul rutier este obligat:",
-        "ru": "Участник дорожного движения обязан:"
+        "ro": "Conducătorului de vehicul îi este interzis:",
+        "ru": "Водителю транспортного средства запрещается:"
       },
       "answers": [
         {
-          "ro": "Să cunoască și să respecte exigențele Regulamentului circulației rutiere și să nu creeze pericol sau obstacole pentru circulația rutieră.",
-          "ru": "Знать и соблюдать требования Правил дорожного движения и не создавать опасность или препятствия для дорожного движения."
+          "ro": "Să execute manevra de mers cu spatele cu centura de siguranţă decuplată.",
+          "ru": "Выполнять манёвр движения задним ходом с непристёгнутым ремнём безопасности."
         },
         {
-          "ro": "Să presteze ajutor victimelor accidentelor de circulație și să cheme ambulanța.",
-          "ru": "Оказывать помощь пострадавшим в дорожно-транспортных происшествиях и вызывать скорую помощь."
+          "ro": "Să poarte vesta de protecţie reflectorizantă, în cazul în care acesta execută intervenţii la vehiculul oprit pe platforma drumului public.",
+          "ru": "Надевать предохранительный световозвращающий жилет при осуществлении работ на транспортном средстве после его остановки в пределах дорожного полотна."
         },
         {
-          "ro": "Să nu deterioreze sau să nu înlăture indicatoarele rutiere, mijloacele tehnice de organizare a circulației, să nu creeze obstacole pentru circulație și să nu polueze drumurile.",
-          "ru": "Не повреждать и не снимать дорожные знаки, технические средства организации движения, не создавать препятствия для движения и не загрязнять дороги."
+          "ro": "Să poarte convorbiri telefonice în timpul deplasării, cu excepţia cazurilor în care vehiculul sau telefonul sunt echipate cu dispozitiv \"mâini libere\".",
+          "ru": "Вести телефонные переговоры во время движения, за исключением случаев, когда транспортное средство или телефон оборудованы техническим устройством, позволяющим вести переговоры без использования рук."
         },
         {
-          "ro": "Să execute toate acțiunile enumerate.",
-          "ru": "Выполнять все перечисленные действия."
+          "ro": "Să efectueze acţiunile enumerate în punctele 1 şi 2.",
+          "ru": "Совершать действия, перечисленные в пунктах 1 и 2."
+        },
+        {
+          "ro": "Să efectueze oricare din acţiunile enumerate.",
+          "ru": "Совершать любое из перечисленных действий."
         }
       ]
     },
@@ -17372,25 +17532,21 @@
       "question_number": 2,
       "correct_answer": 2,
       "question": {
-        "ro": "Care din indicatoarele rutiere din imagine informează despre apropierea de o zonă cu circulație reglementată?",
-        "ru": "Какой из указанных дорожных знаков информирует о приближении к зоне с ограниченным движением?"
+        "ro": "În care caz conducătorul a reacţionat corespunzător la semnificaţia indicatorului rutier din imagine?",
+        "ru": "В каком случае водитель правильно выполнил требования указанного знака?"
       },
       "answers": [
         {
-          "ro": "Indicatorul 1.",
-          "ru": "Знак 1."
+          "ro": "A cedat trecerea numai autovehiculelor ce se deplasau pe drumul intersectat.",
+          "ru": "Уступил дорогу только механическим транспортным средствам, движущимся по пересекаемой дороге."
         },
         {
-          "ro": "Indicatorul 2.",
-          "ru": "Знак 2."
+          "ro": "A cedat trecerea tuturor vehiculelor care se apropiau de intersecţie pe drumul ce urma să fie intersectat.",
+          "ru": "Уступил дорогу всем транспортным средствам, которые приближаются к перекрёстку по пересекаемой дороге."
         },
         {
-          "ro": "Indicatorul 3.",
-          "ru": "Знак 3."
-        },
-        {
-          "ro": "Indicatoarele 2 și 3.",
-          "ru": "Знаки 2 и 3."
+          "ro": "A cedat trecerea numai vehiculelor care se apropiau de intersecţie din dreapta.",
+          "ru": "Уступил дорогу только транспортным средствам приближающимся к перекрёстку справа."
         }
       ]
     },
@@ -17399,25 +17555,21 @@
       "question_number": 3,
       "correct_answer": 2,
       "question": {
-        "ro": "Indicatorul din imagine semnalizează:",
-        "ru": "Этот дорожный знак обозначает:"
+        "ro": "Indicatorul din imagine se numește:",
+        "ru": "Этот дорожный знак называется:"
       },
       "answers": [
         {
-          "ro": "Locul pentru popas.",
-          "ru": "Место отдыха."
+          "ro": "„Loc pentru verificarea autovehiculelor”.",
+          "ru": "«Место для осмотра автомобилей»."
         },
         {
-          "ro": "Hotelul sau motelul.",
-          "ru": "Гостиницу или мотель."
+          "ro": "„Refugiul rezervat depanării”.",
+          "ru": "«Место для аварийной остановки»."
         },
         {
-          "ro": "Campingul.",
-          "ru": "Кемпинг."
-        },
-        {
-          "ro": "Parcul de rulote.",
-          "ru": "Стоянку для автофургонов."
+          "ro": "„Locul pentru popas”.",
+          "ru": "«Место отдыха»."
         }
       ]
     },
@@ -17426,25 +17578,25 @@
       "question_number": 4,
       "correct_answer": 1,
       "question": {
-        "ro": "Acest indicator rutier avertizează despre apropierea de:",
-        "ru": "Этот дорожный знак предупреждает о приближении к:"
+        "ro": "Acest indicator rutier avertizează despre apropierea:",
+        "ru": "Этот дорожный знак предупреждает о приближении:"
       },
       "answers": [
         {
-          "ro": "Sectorul de drum cu îmbrăcăminte din piatră cubică.",
-          "ru": "Участку дороги с покрытием из брусчатки."
+          "ro": "Doar de ieşirea spre chei.",
+          "ru": "Только к выезду на набережную."
         },
         {
-          "ro": "Sectorul de drum cu denivelări.",
-          "ru": "Участку дороги с неровностями."
+          "ro": "Doar de podul basculant.",
+          "ru": "Только к разводному мосту."
         },
         {
-          "ro": "Sectorul de drum cu pericol de împroșcare cu pietriș sau prund de sub roțile vehiculelor.",
-          "ru": "Участку дороги на котором возможен выброс гравия или щебня из-под колёс транспортных средств."
+          "ro": "Doar de bacul de transbordare.",
+          "ru": "Только к паромной переправе."
         },
         {
-          "ro": "Sectorul de drum pe care se efectuează lucrări.",
-          "ru": "Участку дороги на котором ведутся работы."
+          "ro": "De podul basculant sau bacul de transbordare.",
+          "ru": "К разводному мосту или паромной переправе."
         }
       ]
     },
@@ -17453,21 +17605,29 @@
       "question_number": 5,
       "correct_answer": 4,
       "question": {
-        "ro": "În situația din imagine, având prioritate de trecere, Dvs.:",
-        "ru": "В ситуации, показанной на рисунке, имея преимущество в движении, Вы:"
+        "ro": "Aflându-vă la volanul automobilului din imagine în care din direcţii puteţi continua deplasarea?",
+        "ru": "В каких направлениях Вы можете продолжить движение, находясь за рулём изображённого на рисунке автомобиля?"
       },
       "answers": [
         {
-          "ro": "Puteți continua deplasarea fără a reduce viteza.",
-          "ru": "Можете продолжить движение не снижая скорости."
+          "ro": "Numai A.",
+          "ru": "Только А."
         },
         {
-          "ro": "Puteți continua deplasarea, dar cu prudență sporită.",
-          "ru": "Можете продолжить движение, но с особой осторожностью."
+          "ro": "Numai B.",
+          "ru": "Только В."
         },
         {
-          "ro": "Trebuie să opriți și să cedați trecerea.",
-          "ru": "Должны остановиться и уступить дорогу."
+          "ro": "Numai C.",
+          "ru": "Только С."
+        },
+        {
+          "ro": "B sau C.",
+          "ru": "В или С."
+        },
+        {
+          "ro": "În oricare din direcţii.",
+          "ru": "В любом из направлений."
         }
       ]
     },
@@ -17476,25 +17636,25 @@
       "question_number": 6,
       "correct_answer": 3,
       "question": {
-        "ro": "În care din imagini este arătat marcajul ce determină marginea părții carosabile cu acostament pavat?",
-        "ru": "На каком рисунке изображена разметка, обозначающая край проезжей части с укреплённой обочиной?"
+        "ro": "În asociere cu care indicator rutier se foloseşte marcajul format din triunghiuri alăturate?",
+        "ru": "С каким дорожным знаком применяется разметка в виде прилегающих друг к другу треугольников?"
       },
       "answers": [
         {
-          "ro": "În imaginea A.",
-          "ru": "На рисунке А."
+          "ro": "Cu indicatorul de avertizare „Intersecţie a drumurilor de semnificaţie echivalentă”.",
+          "ru": "С предупреждающим знаком «Пересечение равнозначных дорог»."
         },
         {
-          "ro": "În imaginea B.",
-          "ru": "На рисунке В."
+          "ro": "Cu indicatorul „Oprire obligatorie”.",
+          "ru": "Со знаком «Обязательная остановка»."
         },
         {
-          "ro": "În imaginea C.",
-          "ru": "На рисунке С."
+          "ro": "Cu indicatorul „Cedează trecerea”.",
+          "ru": "Со знаком «Уступи дорогу»."
         },
         {
-          "ro": "În imaginile A și B.",
-          "ru": "На рисунках А и В."
+          "ro": "Cu oricare din indicatoarele enumerate.",
+          "ru": "С любым из перечисленных знаков."
         }
       ]
     },
@@ -17503,21 +17663,29 @@
       "question_number": 7,
       "correct_answer": 4,
       "question": {
-        "ro": "Linia dublă continuă separă:",
-        "ru": "Двойная сплошная линия разделяет:"
+        "ro": "Circulația pe pista pentru bicicliști, semnalizată prin marcajul din imagine, pe lângă bicicliști, este permisă:",
+        "ru": "Движение по велосипедной дорожке, которая обозначена данной разметкой, кроме велосипедистов разрешается:"
       },
       "answers": [
         {
-          "ro": "Benzile de circulație pe drumurile cu patru sau mai multe benzi.",
-          "ru": "Полосы движения на дорогах с четырьмя и более полосами."
+          "ro": "Doar conducătorilor ciclomotoarelor.",
+          "ru": "Только водителям мопедов."
         },
         {
-          "ro": "Sensurile de circulație pe drumurile cu patru sau mai multe benzi.",
-          "ru": "Транспортные потоки противоположных направлений на дорогах с четырьмя и более полосами."
+          "ro": "Doar pietonilor, dacă lipsește trotuarul sau pista pentru pietoni.",
+          "ru": "Только пешеходам при отсутствии тротуара или пешеходной дорожки."
         },
         {
-          "ro": "Banda pentru vehiculele de rută de benzile pentru celelalte vehicule.",
-          "ru": "Полосу для маршрутных транспортных средств от полос для других транспортных средств."
+          "ro": "Doar conducătorilor motocicletelor cu două roți la care cilindreea nu depășește 125 cm³.",
+          "ru": "Только водителям двухколёсных мотоциклов с рабочим объемом двигателя, не превышающим 125 см³."
+        },
+        {
+          "ro": "Participanților la trafic, enumerați la punctele 1 și 2.",
+          "ru": "Участникам дорожного движения, перечисленным в пунктах 1 и 2."
+        },
+        {
+          "ro": "Tuturor participanților la trafic enumerați.",
+          "ru": "Всем перечисленным участникам дорожного движения."
         }
       ]
     },
@@ -17526,21 +17694,21 @@
       "question_number": 8,
       "correct_answer": 1,
       "question": {
-        "ro": "În această situație, deplasarea prin intersecție este permisă:",
-        "ru": "В данной ситуации движение через перекрёсток разрешено:"
+        "ro": "Aceste semnale ale semaforului permit trecerea:",
+        "ru": "Эти сигналы светофора разрешают движение:"
       },
       "answers": [
         {
-          "ro": "Numai înainte.",
-          "ru": "Только прямо."
+          "ro": "Tramvaiului, autoturismelor alb şi roşu.",
+          "ru": "Трамваю, белому и красному легковым автомобилям."
         },
         {
-          "ro": "Înainte și la dreapta.",
-          "ru": "Прямо и направо."
+          "ro": "Autoturismelor galben şi roşu.",
+          "ru": "Жёлтому и красному легковым автомобилям."
         },
         {
-          "ro": "În toate direcțiile.",
-          "ru": "Во всех направлениях."
+          "ro": "Tuturor vehiculelor.",
+          "ru": "Всем транспортным средствам."
         }
       ]
     },
@@ -17549,21 +17717,21 @@
       "question_number": 9,
       "correct_answer": 2,
       "question": {
-        "ro": "Semnalizarea cu indicatoarele schimbării direcției de mers poate fi întreruptă:",
-        "ru": "Сигнал указателями изменения направления движения может быть прекращён:"
+        "ro": "În situaţia din imagine, pentru ocolirea obstacolului, sunteţi obligat să conectaţi semnalizatorul de direcţie stânga?",
+        "ru": "Обязаны ли Вы включить указатель изменения направления движения влево для объезда препятствия в ситуации, показанной на рисунке?"
       },
       "answers": [
         {
-          "ro": "Imediat după începerea manevrării.",
-          "ru": "Сразу после начала выполнения манёвра."
+          "ro": "Sunteţi obligat doar la deplasarea pe timp de noapte sau în condiţii de vizibilitate redusă.",
+          "ru": "Обязаны только при движении в тёмное время суток или в условиях недостаточной видимости."
         },
         {
-          "ro": "Imediat după terminarea manevrării.",
-          "ru": "Немедленно после завершения манёвра."
+          "ro": "Sunteţi obligat, deoarece vehiculul îşi schimbă poziţia pe partea carosabilă.",
+          "ru": "Обязаны, поскольку транспортное средство изменяет своё положение на проезжей части."
         },
         {
-          "ro": "În oricare din momentele indicate.",
-          "ru": "В любой из указанных моментов."
+          "ro": "Nu sunteţi obligat, deoarece din sens opus nu vine nici un vehicul.",
+          "ru": "Не обязаны, так как нет встречных транспортных средств."
         }
       ]
     },
@@ -17572,29 +17740,25 @@
       "question_number": 10,
       "correct_answer": 3,
       "question": {
-        "ro": "Mersul cu spatele este interzis:",
-        "ru": "Движение задним ходом запрещается:"
+        "ro": "Precizați dacă i se permite conducătorului mersul cu spatele în situația din imagine?",
+        "ru": "Разрешается ли водителю движение задним ходом в ситуации, показанной на рисунке?"
       },
       "answers": [
         {
-          "ro": "La o distanță mai mică de 50 de metri de la trecerile la nivel cu calea ferată.",
-          "ru": "На расстоянии менее 50 метров от железнодорожных переездов."
+          "ro": "I se permite fără restricții.",
+          "ru": "Разрешается без ограничений."
         },
         {
-          "ro": "În tuneluri.",
-          "ru": "В тоннелях."
+          "ro": "I se permite numai pentru îmbarcarea pasagerilor.",
+          "ru": "Разрешается только для посадки пассажиров."
         },
         {
-          "ro": "Pe drumurile cu sens unic.",
-          "ru": "На дорогах с односторонним движением."
+          "ro": "I se permite, dar numai până la trecerea pentru pietoni.",
+          "ru": "Разрешается, но только до пешеходного перехода."
         },
         {
-          "ro": "În cazurile enumerate la punctele 1 și 2.",
-          "ru": "В случаях, перечисленных в пунктах 1 и 2."
-        },
-        {
-          "ro": "În toate cazurile enumerate.",
-          "ru": "Во всех перечисленных случаях."
+          "ro": "I se interzice.",
+          "ru": "Запрещается."
         }
       ]
     },
@@ -17603,25 +17767,29 @@
       "question_number": 11,
       "correct_answer": 2,
       "question": {
-        "ro": "Cu ce viteză maximă puteți continua deplasarea în zona de acțiune a acestor indicatoare, aflându-vă la volanul unui autoturism?",
-        "ru": "С какой максимальной скоростью Вы можете продолжить движение в зоне действия этих знаков, находясь за рулём легкового автомобиля?"
+        "ro": "Limita maximă de viteză, în afara localităţilor pe drumurile semnalizate prin indicatorul din imagine, pentru autoturisme este de:",
+        "ru": "Допустимый максимальный предел скорости вне населённых пунктов на дорогах, обозначенных указанным знаком, для легковых автомобилей:"
       },
       "answers": [
         {
-          "ro": "20 km/h.",
-          "ru": "20 км/ч."
+          "ro": "130 km/h.",
+          "ru": "130 км/ч."
         },
         {
-          "ro": "40 km/h.",
-          "ru": "40 км/ч."
+          "ro": "110 km/h.",
+          "ru": "110 км/ч."
         },
         {
-          "ro": "60 km/h.",
-          "ru": "60 км/ч."
+          "ro": "90 km/h.",
+          "ru": "90 км/ч."
         },
         {
-          "ro": "Viteza indicată pe primul indicator.",
-          "ru": "Скорость, указанная на первом знаке."
+          "ro": "70 km/h.",
+          "ru": "70 км/ч."
+        },
+        {
+          "ro": "50 km/h.",
+          "ru": "50 км/ч."
         }
       ]
     },
@@ -17630,34 +17798,7 @@
       "question_number": 12,
       "correct_answer": 1,
       "question": {
-        "ro": "Conducătorul de vehicul trebuie să manifeste prudență sporită și, în caz de necesitate, să reducă viteza până la limita care ar garanta siguranța traficului sau chiar să oprească:",
-        "ru": "Водитель транспортного средства должен проявлять особую осторожность и, в случае необходимости, снизить скорость до предела, обеспечивающего безопасность движения, или даже остановиться:"
-      },
-      "answers": [
-        {
-          "ro": "La deplasarea pe lângă vehiculele oprite și care au avariile conectate.",
-          "ru": "При проезде мимо стоящих транспортных средств с включённой аварийной сигнализацией."
-        },
-        {
-          "ro": "La deplasarea pe lângă vehiculele cu regim de circulație prioritară care efectuează misiuni urgente de serviciu.",
-          "ru": "При проезде мимо транспортных средств с преимущественным правом движения, выполняющих неотложные служебные задания."
-        },
-        {
-          "ro": "La deplasarea pe lângă vehiculele care execută lucrări de întreținere sau reparații ale drumului.",
-          "ru": "При проезде мимо транспортных средств, выполняющих работы по содержанию или ремонту дороги."
-        },
-        {
-          "ro": "În toate cazurile enumerate.",
-          "ru": "Во всех перечисленных случаях."
-        }
-      ]
-    },
-    {
-      "bilet": 30,
-      "question_number": 13,
-      "correct_answer": 2,
-      "question": {
-        "ro": "Primul va traversa intersecția:",
+        "ro": "Primul va traversa intersecţia:",
         "ru": "Первым проедет перекрёсток:"
       },
       "answers": [
@@ -17666,12 +17807,31 @@
           "ru": "Легковой автомобиль."
         },
         {
-          "ro": "Motocicleta.",
-          "ru": "Мотоцикл."
+          "ro": "Autobuzul.",
+          "ru": "Автобус."
+        }
+      ]
+    },
+    {
+      "bilet": 30,
+      "question_number": 13,
+      "correct_answer": 2,
+      "question": {
+        "ro": "Care din conducătorii automobilelor este obligat să cedeze trecerea tramvaiului?",
+        "ru": "Водитель какого автомобиля должен уступить дорогу трамваю?"
+      },
+      "answers": [
+        {
+          "ro": "Conducătorul autoturismului.",
+          "ru": "Водитель легкового автомобиля."
         },
         {
-          "ro": "Autocamionul.",
-          "ru": "Грузовой автомобиль."
+          "ro": "Conducătorul camionului.",
+          "ru": "Водитель грузового автомобиля."
+        },
+        {
+          "ro": "Ambii conducători.",
+          "ru": "Оба водителя."
         }
       ]
     },
@@ -17680,25 +17840,25 @@
       "question_number": 14,
       "correct_answer": 4,
       "question": {
-        "ro": "Vehiculele vor traversa intersecția în ordinea următoare:",
-        "ru": "Транспортные средства проедут перекрёсток в следующем порядке:"
+        "ro": "În ce ordine vor traversa intersecţia aceste vehicule?",
+        "ru": "В каком порядке проедут перекрёсток эти транспортные средства?"
       },
       "answers": [
         {
-          "ro": "Motocicleta, autoturismul, autocamionul.",
-          "ru": "Мотоцикл, легковой автомобиль, грузовой автомобиль."
+          "ro": "Autoturismul, camionul, motocicleta.",
+          "ru": "Легковой автомобиль, грузовой автомобиль, мотоцикл."
         },
         {
-          "ro": "Autoturismul, motocicleta, autocamionul.",
-          "ru": "Легковой автомобиль, мотоцикл, грузовой автомобиль."
-        },
-        {
-          "ro": "Autocamionul, motocicleta, autoturismul.",
+          "ro": "Camionul motocicleta, autoturismul.",
           "ru": "Грузовой автомобиль, мотоцикл, легковой автомобиль."
         },
         {
-          "ro": "Autocamionul, autoturismul, motocicleta.",
+          "ro": "Camionul, autoturismul, motocicleta.",
           "ru": "Грузовой автомобиль, легковой автомобиль, мотоцикл."
+        },
+        {
+          "ro": "Autoturismul, motocicleta, camionul.",
+          "ru": "Легковой автомобиль, мотоцикл, грузовой автомобиль."
         }
       ]
     },
@@ -17707,21 +17867,25 @@
       "question_number": 15,
       "correct_answer": 2,
       "question": {
-        "ro": "Ultimul va traversa intersecția:",
-        "ru": "Последним проедет перекрёсток:"
+        "ro": "Aflându-vă la volanul automobilului şi având intenţia să continuaţi deplasarea înainte veţi:",
+        "ru": "Находясь за рулём автомобиля и намереваясь проехать в прямом направлении Вы:"
       },
       "answers": [
         {
-          "ro": "Autoturismul galben.",
-          "ru": "Жёлтый легковой автомобиль."
+          "ro": "Traversa intersecţia primul.",
+          "ru": "Проедете перекрёсток первым."
         },
         {
-          "ro": "Autoturismul roșu.",
-          "ru": "Красный легковой автомобиль."
+          "ro": "Ceda trecerea autobuzului, ulterior veţi traversa intersecţia.",
+          "ru": "Уступите дорогу автобусу, затем проедете перекрёсток."
         },
         {
-          "ro": "Autoturismul verde.",
-          "ru": "Зелёный легковой автомобиль."
+          "ro": "Ceda trecerea motocicletei, ulterior veţi traversa intersecţia.",
+          "ru": "Уступите дорогу мотоциклу, затем проедете перекрёсток."
+        },
+        {
+          "ro": "Ceda trecerea motocicletei şi autobuzului, ulterior veţi traversa intersecţia.",
+          "ru": "Уступите дорогу мотоциклу и автобусу, затем проедете перекрёсток."
         }
       ]
     },
@@ -17730,17 +17894,17 @@
       "question_number": 16,
       "correct_answer": 3,
       "question": {
-        "ro": "Precizați dacă se permite oprirea în locul indicat de săgeată?",
-        "ru": "Разрешается ли остановка в указанном стрелкой месте?"
+        "ro": "Precizaţi dacă în situaţia din imagine se permite oprirea vehiculului?",
+        "ru": "Разрешается ли остановка транспортного средства в ситуации, показанной на рисунке?"
       },
       "answers": [
         {
-          "ro": "Se permite fără restricții.",
-          "ru": "Разрешается без ограничений."
+          "ro": "Se permite, deoarece drumul are câte o bandă pe sens.",
+          "ru": "Разрешается, так как дорога имеет по одной полосе для движения в каждом направлении."
         },
         {
-          "ro": "Se permite numai pentru îmbarcarea sau debarcarea pasagerilor.",
-          "ru": "Разрешается только для посадки или высадки пассажиров."
+          "ro": "Se permite, deoarece vehiculul este plasat pe acostament.",
+          "ru": "Разрешается, так как транспортное средство находится на обочине."
         },
         {
           "ro": "Nu se permite.",
@@ -17753,21 +17917,29 @@
       "question_number": 17,
       "correct_answer": 5,
       "question": {
-        "ro": "În zona pietonală:",
-        "ru": "В пешеходных зонах:"
+        "ro": "În zona pietonală pot intra doar vehiculele care:",
+        "ru": "В пешеходную зону могут въезжать только транспортные средства которые:"
       },
       "answers": [
         {
-          "ro": "Este permisă doar circulația pietonilor.",
-          "ru": "Разрешается движение только пешеходов."
+          "ro": "Aparțin persoanelor ce locuiesc în această zonă și nu au alte căi de acces.",
+          "ru": "Принадлежат лицам, проживающим в этой зоне и не имеющим других подъездных путей."
         },
         {
-          "ro": "Este permisă circulația pietonilor și vehiculelor de aprovizionare în timpul stabilit prin indicatoare.",
-          "ru": "Разрешается движение пешеходов и транспортных средств для доставки грузов в установленное знаками время."
+          "ro": "Prestează servicii populației din această zonă, cu condiția că masa maximă autorizată a lor nu depășește 3500 kg, care imediat după prestarea serviciilor trebuie se părăsească zona.",
+          "ru": "Обслуживают население в данной зоне, их разрешённая максимальная масса не превышает 3500 кг, которые сразу после предоставления услуг должны покинуть эту зону."
         },
         {
-          "ro": "Este permisă circulația tuturor vehiculelor cu viteza de maximum 20 km/h.",
-          "ru": "Разрешается движение всех транспортных средств со скоростью не более 20 км/ч."
+          "ro": "Prestează servicii instituțiilor aflate în zonă, cu condiția că masa maximă autorizată a lor nu depășește 3500 kg, care imediat după prestarea serviciilor trebuie se părăsească zona.",
+          "ru": "Обслуживают учреждения в данной зоне, их разрешённая максимальная масса не превышает 3500 кг, которые сразу после предоставления услуг должны покинуть эту зону."
+        },
+        {
+          "ro": "Efectuează în această zonă lucrări tehnologice, care imediat după efectuarea lucrărilor trebuie se părăsească zona.",
+          "ru": "Осуществляют в этой зоне технологические работы, которые сразу после выполнения работ должны эту зону покинуть."
+        },
+        {
+          "ro": "Sunt menționate la punctele precedente.",
+          "ru": "Упомянуты в предыдущих пунктах."
         }
       ]
     },
@@ -17776,25 +17948,29 @@
       "question_number": 18,
       "correct_answer": 5,
       "question": {
-        "ro": "Conducătorii vehiculelor cu regim de circulație prioritară, care execută misiuni urgente de serviciu pot:",
-        "ru": "Водители транспортных средств с преимущественным правом движения, выполняющие неотложные служебные задания, могут:"
+        "ro": "Conducătorilor li se interzice:",
+        "ru": "Водителям запрещается:"
       },
       "answers": [
         {
-          "ro": "Să utilizeze dispozitivele cu lumină giratorii de culoare albastră și roșie, precum și semnalele sonore speciale.",
-          "ru": "Использовать проблесковые маячки синего и красного цвета, а также специальные звуковые сигналы."
+          "ro": "Depășirea vehiculului cu regim de circulație prioritară.",
+          "ru": "Обгонять транспортное средство с преимущественным правом движения."
         },
         {
-          "ro": "Să devie de la exigențele indicatoarelor rutiere, marcajelor și semnalelor semafoarelor.",
-          "ru": "Отступать от требований дорожных знаков, разметки и сигналов светофоров."
+          "ro": "Depășirea vehiculelor escortate de vehiculul cu regim de circulație prioritară.",
+          "ru": "Обгонять транспортные средства, сопровождаемые транспортным средством с преимущественным правом движения."
         },
         {
-          "ro": "Să nu respecte exigențele privind vitezele maxime admise pe diferite categorii de drumuri.",
-          "ru": "Не соблюдать требования о максимально допустимых скоростях на различных категориях дорог."
+          "ro": "Să creeze obstacole în executarea lucrărilor de către vehiculele destinate întreținerii drumurilor.",
+          "ru": "Препятствовать работе транспортных средств дорожно-эксплуатационных служб."
         },
         {
-          "ro": "Să execute toate acțiunile enumerate.",
-          "ru": "Выполнять все перечисленные действия."
+          "ro": "Să execute acțiunile enumerate la punctele 1 și 2.",
+          "ru": "Совершать только действия, перечисленные в пунктах 1 и 2."
+        },
+        {
+          "ro": "Să execute acțiunile enumerate la toate punctele precedente.",
+          "ru": "Совершать действия, перечисленные во всех предыдущих пунктах."
         }
       ]
     },
@@ -17803,21 +17979,21 @@
       "question_number": 19,
       "correct_answer": 2,
       "question": {
-        "ro": "Este interzisă exploatarea vehiculelor în cazul în care:",
-        "ru": "Запрещается эксплуатация транспортных средств если:"
+        "ro": "În cazul în care autovehiculul prezintă scurgeri de lubrifianţi conducătorul este obligat:",
+        "ru": "При обнаружении негерметичности системы смазки водитель должен:"
       },
       "answers": [
         {
-          "ro": "Conținutul de monoxid de carbon în gazele de eșapament ale autoturismelor depășește 3,5% la turația de ralanti a motorului.",
-          "ru": "Содержание окиси углерода в отработавших газах легковых автомобилей превышает 3,5% при работе двигателя на холостом ходу."
+          "ro": "Să întrerupă deplasarea ulterioară.",
+          "ru": "Прекратить дальнейшее движение."
         },
         {
-          "ro": "Nu funcționează indicatoarele schimbării direcției de mers sau semnalizarea de avarie.",
-          "ru": "Не работают указатели поворота или аварийная сигнализация."
+          "ro": "Să ia toate măsurile pentru înlăturarea defecţiunii, iar dacă nu este posibil – să meargă la garaj sau la punctul cel mai apropiat de reparaţie, respectând măsurile necesare de precauţie punând în funcţiune avertizorul de avarie.",
+          "ru": "Принять все меры к устранению неисправности, а если это невозможно – двигаться к ближайшему месту стоянки или ремонта, соблюдая необходимые меры предосторожности, включив аварийную сигнализацию."
         },
         {
-          "ro": "Nu funcționează dispozitivul pentru spălarea parbrizului.",
-          "ru": "Не работает устройство обмыва ветрового стекла."
+          "ro": "Să alimenteze vehiculul la cea mai apropiată staţie de aprovizionare cu combustibil şi să continue călătoria.",
+          "ru": "Дозаправить транспортное средство на ближайшей автозаправочной станции и продолжить поездку."
         }
       ]
     },
@@ -17826,21 +18002,21 @@
       "question_number": 20,
       "correct_answer": 1,
       "question": {
-        "ro": "Prin „spaţiul de oprire” se înțelege:",
-        "ru": "Под «остановочным путём» понимается:"
+        "ro": "Ce se înţelege prin „timp de reacţie”?",
+        "ru": "Что понимается под «временем реакции»?"
       },
       "answers": [
         {
-          "ro": "Distanța parcursă de vehicul din momentul în care conducătorul acestuia a observat pericolul până la oprirea definitivă a vehiculului.",
-          "ru": "Расстояние, пройденное транспортным средством с момента обнаружения водителем опасности до полной остановки."
+          "ro": "Timpul din momentul în care conducătorul de vehicul a sesizat pericolul până la începutul acţiunilor în vederea prevenirii acestuia.",
+          "ru": "Время от момента, когда водитель транспортного средства заметил опасность до начала действий, направленных на её предотвращение."
         },
         {
-          "ro": "Distanța parcursă de vehicul din momentul în care a început frânarea până la oprirea definitivă a vehiculului.",
-          "ru": "Расстояние, пройденное транспортным средством с момента начала торможения до полной остановки."
+          "ro": "Timpul din momentul în care conducătorul a acţionat frânele, până la oprirea definitivă a vehiculului.",
+          "ru": "Время от момента, когда водитель начал торможение до полной остановки транспортного средства."
         },
         {
-          "ro": "Distanța parcursă de vehicul din momentul în care conducătorul acestuia a observat pericolul până la momentul în care a început frânarea.",
-          "ru": "Расстояние, пройденное транспортным средством с момента обнаружения водителем опасности до начала торможения."
+          "ro": "Timpul din momentul în care conducătorul a sesizat pericolul până la oprirea definitivă a vehiculului.",
+          "ru": "Время от момента, когда водитель заметил опасность до полной остановки транспортного средства."
         }
       ]
     },
@@ -17849,25 +18025,29 @@
       "question_number": 21,
       "correct_answer": 5,
       "question": {
-        "ro": "Ce caracteristici au automobilele în caz de cădere a presiunii în pneuri?",
-        "ru": "Какими характеристиками обладают автомобили при падении давления в шинах?"
+        "ro": "Conducătorul motocicletei este obligat să cedeze trecerea:",
+        "ru": "Водитель мотоцикла обязан уступить дорогу:"
       },
       "answers": [
         {
-          "ro": "Maniabilitatea se îmbunătățește.",
-          "ru": "Улучшается управляемость."
+          "ro": "Doar pietonului care se află la marginea din stânga a părţii carosabile şi intenţionează să se angajeze în traversare.",
+          "ru": "Только пешеходу, который находится у левого края проезжей части и намеревается перейти дорогу."
         },
         {
-          "ro": "Se mărește stabilitatea la drum.",
-          "ru": "Повышается устойчивость на дороге."
+          "ro": "Doar pietonului care se află la marginea din dreapta a părţii carosabile şi intenţionează să se angajeze în traversare.",
+          "ru": "Только пешеходу, который находится у правого края проезжей части и намеревается перейти дорогу."
         },
         {
-          "ro": "Se mărește consumul de combustibil.",
-          "ru": "Увеличивается расход топлива."
+          "ro": "Doar pietonului care se află pe partea carosabilă.",
+          "ru": "Только пешеходу, который находится на проезжей части."
         },
         {
-          "ro": "Se îmbunătățesc toate caracteristicile enumerate.",
-          "ru": "Улучшаются все перечисленные характеристики."
+          "ro": "Pietonilor enumeraţi la punctele 2 şi 3.",
+          "ru": "Пешеходам, перечисленным в пунктах 2 и 3."
+        },
+        {
+          "ro": "Tuturor pietonilor.",
+          "ru": "Всем пешеходам."
         }
       ]
     },
@@ -17876,25 +18056,21 @@
       "question_number": 22,
       "correct_answer": 1,
       "question": {
-        "ro": "Care sunt principalele cauze ale accidentelor în traficul rutier?",
-        "ru": "Каковы основные причины дорожно-транспортных происшествий?"
+        "ro": "Virarea la stânga, în intersecția în care lipsește marcajul ce delimitează benzile de circulație în limitele intersecției, urmează a fi efectuată:",
+        "ru": "Поворот налево на перекрёстке на котором отсутствует разметка, определяющая границы полос движения в пределах перекрёстка, следует осуществлять:"
       },
       "answers": [
         {
-          "ro": "Nerespectarea regulilor de circulație de către conducătorii auto.",
-          "ru": "Нарушение водителями правил дорожного движения."
+          "ro": "Lăsând centrul intersecției pe partea dreaptă, pentru a nu intersecta traiectoria de deplasare a vehiculului ce vine din sens opus și efectuează simultan manevra de virare la stânga.",
+          "ru": "Оставляя центр перекрёстка с правой стороны, чтобы не пересекать траекторию движения транспортного средства, которое одновременно поворачивает налево со встречного направления."
         },
         {
-          "ro": "Defectele tehnice ale vehiculelor.",
-          "ru": "Технические неисправности транспортных средств."
+          "ro": "Lăsând centrul intersecției pe stânga de vehicul.",
+          "ru": "Оставляя центр перекрёстка слева от транспортного средства."
         },
         {
-          "ro": "Condițiile meteorologice nefavorabile.",
-          "ru": "Неблагоприятные погодные условия."
-        },
-        {
-          "ro": "Toate cauzele enumerate.",
-          "ru": "Все перечисленные причины."
+          "ro": "Prin înțelegerea reciprocă cu conducătorul vehiculului ce vine din sens opus și efectuează manevra de virare la stânga.",
+          "ru": "По взаимной договорённости с водителем транспортного средства, которое движется со встречного направления и поворачивает налево."
         }
       ]
     },
@@ -18484,21 +18660,21 @@
       "question_number": 22,
       "correct_answer": 3,
       "question": {
-        "ro": "În cazul în care conducătorul vehiculului nu poate determina prezența îmbrăcămintei drumului, iar indicatoarele rutiere de prioritate lipsesc, acesta:",
-        "ru": "Если водитель не может определить наличие покрытия на дороге, а знаки приоритета отсутствуют, то:"
+        "ro": "În cazul în care conducătorul vehiculului nu poate determina dacă îşi poate continua deplasarea cel care s-a simţit rău după acordarea ajutorului medical:",
+        "ru": "В случае, если водитель не может определить, может ли продолжить движение человек, которому стало плохо после оказания медицинской помощи:"
       },
       "answers": [
         {
-          "ro": "Va considera că a ajuns la intersecția drumurilor de semnificație echivalentă.",
-          "ru": "Ему следует считать, что он подъехал к перекрёстку равнозначных дорог."
+          "ro": "Este recomandat să însoţească pacientul la domiciliu.",
+          "ru": "Рекомендуется сопроводить пострадавшего домой."
         },
         {
-          "ro": "Este în drept să considere că a ajuns la intersecție pe drumul cu prioritate.",
-          "ru": "Он имеет право считать, что подъехал к перекрёстку по главной дороге."
+          "ro": "Este recomandat să apeleze 112 şi să aştepte sosirea ambulanţei.",
+          "ru": "Рекомендуется вызвать 112 и дождаться приезда скорой медицинской помощи."
         },
         {
-          "ro": "Va considera că se află pe drumul fără prioritate.",
-          "ru": "Он должен считать, что подъехал к перекрёстку по второстепенной дороге."
+          "ro": "Trebuie să-l lase singur şi să reia deplasarea.",
+          "ru": "Нужно оставить его одного и продолжить путь."
         }
       ]
     },

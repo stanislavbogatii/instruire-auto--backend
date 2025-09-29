@@ -196,7 +196,23 @@ export class ExamsController {
     @Request() req,
     @Body() submitAnswerDto: SubmitAnswerDto,
   ) {
+    console.log(id, req.user.id, submitAnswerDto);
     return this.examsService.submitAnswer(id, req.user.id, submitAnswerDto);
+  }
+
+  @Post(':id/fail')
+  @ApiOperation({ 
+    summary: 'Mark an exam as failed', 
+    description: 'Allows a student to voluntarily mark their in-progress exam as failed. This will calculate the current score and send result notifications.' 
+  })
+  @ApiBearerAuth('access-token')
+  @UseGuards(AuthGuard('jwt'))
+  async markExamAsFailed(
+    @Param('id', ParseIntPipe) id: number,
+    @Request() req,
+    @Body() body?: { reason?: string },
+  ) {
+    return this.examsService.markExamAsFailed(id, req.user.id, body?.reason);
   }
 
   // History endpoints
