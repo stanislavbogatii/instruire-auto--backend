@@ -20,6 +20,7 @@ model User {
   lastName            String?                 @default("")
   phone               String?                 @default("")
   privateMessage      String?                 @default("")
+  idnp                String?                 @default("")
   userId              Int?                    @unique
   exams               Exam[]
   instructorProfile   Instructor?             @relation("UserInstructor")

@@ -17,6 +17,9 @@ export class UserResponseDto {
   @ApiProperty({ required: false })
   phone?: string;
 
+  @ApiProperty({ required: false })
+  idnp?: string;
+
   @ApiProperty({ enum: Role })
   role: Role;
 

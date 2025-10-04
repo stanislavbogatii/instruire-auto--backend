@@ -1,0 +1,439 @@
+<!DOCTYPE html>
+<html lang="ro">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Fișă de Examinare - Probă Teoretică</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        @page {
+            size: A4;
+            margin: 0;
+        }
+        
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #f5f5f5;
+            padding: 20px;
+        }
+        
+        .form-container {
+            width: 210mm;
+            min-height: 297mm;
+            margin: 0 auto;
+            padding: 15mm;
+            background-color: white;
+            box-shadow: 0 0 10px rgba(0,0,0,0.1);
+        }
+        
+        h1 {
+            text-align: center;
+            font-size: 14pt;
+            margin-bottom: 20px;
+            text-transform: uppercase;
+            font-weight: bold;
+        }
+        
+        .header-info {
+            margin-bottom: 20px;
+        }
+        
+        .field {
+            margin-bottom: 12px;
+            display: flex;
+            align-items: center;
+        }
+        
+        .field label {
+            font-weight: bold;
+            margin-right: 10px;
+            white-space: nowrap;
+            font-size: 11pt;
+        }
+        
+        .field-line {
+            flex: 1;
+            border-bottom: 1px solid #333;
+            min-height: 20px;
+        }
+        
+        .idnp-boxes {
+            display: flex;
+            gap: 3px;
+        }
+        
+        .idnp-box {
+            width: 22px;
+            height: 28px;
+            border: 1px solid #333;
+            text-align: center;
+            font-size: 12pt;
+        }
+        
+        .answers-table {
+            width: 100%;
+            margin: 20px 0;
+            border-collapse: collapse;
+        }
+        
+        .answers-table td {
+            border: 1px solid #333;
+            padding: 6px 4px;
+            text-align: center;
+            font-size: 10pt;
+            height: 30px;
+        }
+        
+        .answers-table .row-label {
+            font-weight: bold;
+            background-color: #f0f0f0;
+            width: 30px;
+        }
+        
+        .answers-table .question-cell {
+            width: calc((100% - 30px) / 24);
+        }
+        
+        .footer {
+            margin-top: 30px;
+        }
+        
+        .signature-section {
+            margin-top: 20px;
+        }
+        
+        .note {
+            text-align: center;
+            font-size: 10pt;
+            margin: 5px 0 15px 0;
+            font-style: italic;
+        }
+        
+        @media print {
+            body {
+                background-color: white;
+                padding: 0;
+            }
+            
+            .form-container {
+                width: 210mm;
+                height: 297mm;
+                box-shadow: none;
+                page-break-after: always;
+            }
+        }
+        
+        @media screen and (max-width: 800px) {
+            body {
+                padding: 10px;
+            }
+            
+            .form-container {
+                width: 100%;
+                padding: 10mm;
+            }
+            
+            .answers-table {
+                font-size: 8pt;
+            }
+            
+            .answers-table td {
+                padding: 4px 2px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="form-container">
+        <h1>Fișa de Examinare a Probei Teoretice la Examenul Intern</h1>
+        
+        <div class="header-info">
+            <div class="field">
+                <label>Data</label>
+                <div class="field-line"></div>
+            </div>
+            
+            <div class="field">
+                <label>Numele</label>
+                <div class="field-line"></div>
+            </div>
+            
+            <div class="field">
+                <label>Prenumele</label>
+                <div class="field-line"></div>
+            </div>
+            
+            <div class="field">
+                <label>IDNP</label>
+                <div class="idnp-boxes">
+                    <input type="text" class="idnp-box" maxlength="1">
+                    <input type="text" class="idnp-box" maxlength="1">
+                    <input type="text" class="idnp-box" maxlength="1">
+                    <input type="text" class="idnp-box" maxlength="1">
+                    <input type="text" class="idnp-box" maxlength="1">
+                    <input type="text" class="idnp-box" maxlength="1">
+                    <input type="text" class="idnp-box" maxlength="1">
+                    <input type="text" class="idnp-box" maxlength="1">
+                    <input type="text" class="idnp-box" maxlength="1">
+                    <input type="text" class="idnp-box" maxlength="1">
+                    <input type="text" class="idnp-box" maxlength="1">
+                    <input type="text" class="idnp-box" maxlength="1">
+                    <input type="text" class="idnp-box" maxlength="1">
+                </div>
+            </div>
+            
+            <div class="field">
+                <label>Examinarea pentru primirea permisului de categoria</label>
+                <div class="field-line"></div>
+            </div>
+            
+            <div class="field">
+                <label>Semnătura cursantului</label>
+                <div class="field-line"></div>
+            </div>
+        </div>
+
+        <table class="answers-table">
+            <tr>
+                <td class="row-label">N</td>
+                <td class="question-cell">1</td>
+                <td class="question-cell">2</td>
+                <td class="question-cell">3</td>
+                <td class="question-cell">4</td>
+                <td class="question-cell">5</td>
+                <td class="question-cell">6</td>
+                <td class="question-cell">7</td>
+                <td class="question-cell">8</td>
+                <td class="question-cell">9</td>
+                <td class="question-cell">10</td>
+                <td class="question-cell">11</td>
+                <td class="question-cell">12</td>
+                <td class="question-cell">13</td>
+                <td class="question-cell">14</td>
+                <td class="question-cell">15</td>
+                <td class="question-cell">16</td>
+                <td class="question-cell">17</td>
+                <td class="question-cell">18</td>
+                <td class="question-cell">19</td>
+                <td class="question-cell">20</td>
+                <td class="question-cell">21</td>
+                <td class="question-cell">22</td>
+                <td class="question-cell">23</td>
+                <td class="question-cell">24</td>
+            </tr>
+            <tr>
+                <td class="row-label">I</td>
+                <td class="question-cell"></td>
+                <td class="question-cell"></td>
+                <td class="question-cell"></td>
+                <td class="question-cell"></td>
+                <td class="question-cell"></td>
+                <td class="question-cell"></td>
+                <td class="question-cell"></td>
+                <td class="question-cell"></td>
+                <td class="question-cell"></td>
+                <td class="question-cell"></td>
+                <td class="question-cell"></td>
+                <td class="question-cell"></td>
+                <td class="question-cell"></td>
+                <td class="question-cell"></td>
+                <td class="question-cell"></td>
+                <td class="question-cell"></td>
+                <td class="question-cell"></td>
+                <td class="question-cell"></td>
+                <td class="question-cell"></td>
+                <td class="question-cell"></td>
+                <td class="question-cell"></td>
+                <td class="question-cell"></td>
+                <td class="question-cell"></td>
+                <td class="question-cell"></td>
+            </tr>
+            <tr>
+                <td class="row-label">C</td>
+                <td class="question-cell"></td>
+                <td class="question-cell"></td>
+                <td class="question-cell"></td>
+                <td class="question-cell"></td>
+                <td class="question-cell"></td>
+                <td class="question-cell"></td>
+                <td class="question-cell"></td>
+                <td class="question-cell"></td>
+                <td class="question-cell"></td>
+                <td class="question-cell"></td>
+                <td class="question-cell"></td>
+                <td class="question-cell"></td>
+                <td class="question-cell"></td>
+                <td class="question-cell"></td>
+                <td class="question-cell"></td>
+                <td class="question-cell"></td>
+                <td class="question-cell"></td>
+                <td class="question-cell"></td>
+                <td class="question-cell"></td>
+                <td class="question-cell"></td>
+                <td class="question-cell"></td>
+                <td class="question-cell"></td>
+                <td class="question-cell"></td>
+                <td class="question-cell"></td>
+            </tr>
+            <tr>
+                <td class="row-label">R</td>
+                <td class="question-cell"></td>
+                <td class="question-cell"></td>
+                <td class="question-cell"></td>
+                <td class="question-cell"></td>
+                <td class="question-cell"></td>
+                <td class="question-cell"></td>
+                <td class="question-cell"></td>
+                <td class="question-cell"></td>
+                <td class="question-cell"></td>
+                <td class="question-cell"></td>
+                <td class="question-cell"></td>
+                <td class="question-cell"></td>
+                <td class="question-cell"></td>
+                <td class="question-cell"></td>
+                <td class="question-cell"></td>
+                <td class="question-cell"></td>
+                <td class="question-cell"></td>
+                <td class="question-cell"></td>
+                <td class="question-cell"></td>
+                <td class="question-cell"></td>
+                <td class="question-cell"></td>
+                <td class="question-cell"></td>
+                <td class="question-cell"></td>
+                <td class="question-cell"></td>
+            </tr>
+        </table>
+
+        <table class="answers-table">
+            <tr>
+                <td class="row-label">N</td>
+                <td class="question-cell">25</td>
+                <td class="question-cell">26</td>
+                <td class="question-cell">27</td>
+                <td class="question-cell">28</td>
+                <td class="question-cell">29</td>
+                <td class="question-cell">30</td>
+                <td class="question-cell">31</td>
+                <td class="question-cell">32</td>
+                <td class="question-cell">33</td>
+                <td class="question-cell">34</td>
+                <td class="question-cell">35</td>
+                <td class="question-cell">36</td>
+                <td class="question-cell">37</td>
+                <td class="question-cell">38</td>
+                <td class="question-cell">39</td>
+                <td class="question-cell">40</td>
+                <td class="question-cell">41</td>
+                <td class="question-cell">42</td>
+                <td class="question-cell">43</td>
+                <td class="question-cell">44</td>
+                <td class="question-cell">45</td>
+                <td class="question-cell">46</td>
+                <td class="question-cell">47</td>
+                <td class="question-cell">48</td>
+            </tr>
+            <tr>
+                <td class="row-label">I</td>
+                <td class="question-cell"></td>
+                <td class="question-cell"></td>
+                <td class="question-cell"></td>
+                <td class="question-cell"></td>
+                <td class="question-cell"></td>
+                <td class="question-cell"></td>
+                <td class="question-cell"></td>
+                <td class="question-cell"></td>
+                <td class="question-cell"></td>
+                <td class="question-cell"></td>
+                <td class="question-cell"></td>
+                <td class="question-cell"></td>
+                <td class="question-cell"></td>
+                <td class="question-cell"></td>
+                <td class="question-cell"></td>
+                <td class="question-cell"></td>
+                <td class="question-cell"></td>
+                <td class="question-cell"></td>
+                <td class="question-cell"></td>
+                <td class="question-cell"></td>
+                <td class="question-cell"></td>
+                <td class="question-cell"></td>
+                <td class="question-cell"></td>
+                <td class="question-cell"></td>
+            </tr>
+            <tr>
+                <td class="row-label">C</td>
+                <td class="question-cell"></td>
+                <td class="question-cell"></td>
+                <td class="question-cell"></td>
+                <td class="question-cell"></td>
+                <td class="question-cell"></td>
+                <td class="question-cell"></td>
+                <td class="question-cell"></td>
+                <td class="question-cell"></td>
+                <td class="question-cell"></td>
+                <td class="question-cell"></td>
+                <td class="question-cell"></td>
+                <td class="question-cell"></td>
+                <td class="question-cell"></td>
+                <td class="question-cell"></td>
+                <td class="question-cell"></td>
+                <td class="question-cell"></td>
+                <td class="question-cell"></td>
+                <td class="question-cell"></td>
+                <td class="question-cell"></td>
+                <td class="question-cell"></td>
+                <td class="question-cell"></td>
+                <td class="question-cell"></td>
+                <td class="question-cell"></td>
+                <td class="question-cell"></td>
+            </tr>
+            <tr>
+                <td class="row-label">R</td>
+                <td class="question-cell"></td>
+                <td class="question-cell"></td>
+                <td class="question-cell"></td>
+                <td class="question-cell"></td>
+                <td class="question-cell"></td>
+                <td class="question-cell"></td>
+                <td class="question-cell"></td>
+                <td class="question-cell"></td>
+                <td class="question-cell"></td>
+                <td class="question-cell"></td>
+                <td class="question-cell"></td>
+                <td class="question-cell"></td>
+                <td class="question-cell"></td>
+                <td class="question-cell"></td>
+                <td class="question-cell"></td>
+                <td class="question-cell"></td>
+                <td class="question-cell"></td>
+                <td class="question-cell"></td>
+                <td class="question-cell"></td>
+                <td class="question-cell"></td>
+                <td class="question-cell"></td>
+                <td class="question-cell"></td>
+                <td class="question-cell"></td>
+                <td class="question-cell"></td>
+            </tr>
+        </table>
+
+        <div class="footer">
+            <div class="field">
+                <label>Calificativ</label>
+                <div class="field-line" style="max-width: 200px;"></div>
+            </div>
+            <div class="note">(admis/respins)</div>
+            
+            <div class="signature-section">
+                <div class="field">
+                    <label>Numele, Prenumele, semnătura examinatorului</label>
+                    <div class="field-line"></div>
+                </div>
+            </div>
+        </div>
+    </div>
+</body>
+</html>

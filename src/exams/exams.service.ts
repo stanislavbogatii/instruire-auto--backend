@@ -346,6 +346,40 @@ export class ExamsService {
     };
   }
 
+  async getCompleteExamForPdf(examId: number) {
+    const exam = await this.prisma.exam.findUnique({
+      where: { id: examId },
+      include: {
+        user: {
+          select: {
+            id: true,
+            firstName: true,
+            lastName: true,
+            email: true,
+            idnp: true, // Add idnp field
+          },
+        },
+        questions: {
+          include: {
+            question: {
+              select: {
+                id: true,
+                correctAnswer: true, // Include correct answer
+              },
+            },
+          },
+          orderBy: { order: 'asc' },
+        },
+      },
+    });
+
+    if (!exam) {
+      throw new NotFoundException('Exam not found');
+    }
+
+    return exam;
+  }
+
   async submitAnswer(examId: number, userId: number, submitAnswerDto: SubmitAnswerDto) {
     console.log(examId, userId, ExamStatus.IN_PROGRESS);
     const exam = await this.prisma.exam.findFirst({
@@ -450,18 +484,18 @@ export class ExamsService {
     });
 
     // Generate PDF and send email with results
-    try {
-      const pdfBuffer = await this.pdfService.generateExamResultPdf(updatedExam);
-      await this.mailService.sendExamResultsWithPdf(updatedExam, pdfBuffer);
-    } catch (error) {
-      console.error('Failed to send exam result email:', error);
-      // Fallback to sending email without PDF
-      try {
-        await this.mailService.sendExamResults(updatedExam);
-      } catch (fallbackError) {
-        console.error('Failed to send fallback email:', fallbackError);
-      }
-    }
+    // try {
+    //   const pdfBuffer = await this.pdfService.generateExamResultPdf(updatedExam);
+    //   await this.mailService.sendExamResultsWithPdf(updatedExam, pdfBuffer);
+    // } catch (error) {
+    //   console.error('Failed to send exam result email:', error);
+    //   // Fallback to sending email without PDF
+    //   try {
+    //     await this.mailService.sendExamResults(updatedExam);
+    //   } catch (fallbackError) {
+    //     console.error('Failed to send fallback email:', fallbackError);
+    //   }
+    // }
 
     return updatedExam;
   }
@@ -520,18 +554,18 @@ export class ExamsService {
     });
 
     // Generate PDF and send email with results
-    try {
-      const pdfBuffer = await this.pdfService.generateExamResultPdf(updatedExam);
-      await this.mailService.sendExamResultsWithPdf(updatedExam, pdfBuffer);
-    } catch (error) {
-      console.error('Failed to send exam result email:', error);
-      // Fallback to sending email without PDF
-      try {
-        await this.mailService.sendExamResults(updatedExam);
-      } catch (fallbackError) {
-        console.error('Failed to send fallback email:', fallbackError);
-      }
-    }
+    // try {
+    //   const pdfBuffer = await this.pdfService.generateExamResultPdf(updatedExam);
+    //   await this.mailService.sendExamResultsWithPdf(updatedExam, pdfBuffer);
+    // } catch (error) {
+    //   console.error('Failed to send exam result email:', error);
+    //   // Fallback to sending email without PDF
+    //   try {
+    //     await this.mailService.sendExamResults(updatedExam);
+    //   } catch (fallbackError) {
+    //     console.error('Failed to send fallback email:', fallbackError);
+    //   }
+    // }
 
     return updatedExam;
   }

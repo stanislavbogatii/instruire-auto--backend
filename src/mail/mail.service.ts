@@ -37,7 +37,7 @@ export class MailService {
   }) {
     await this.mailer.sendMail({
       to,
-      subject: 'Confirm Your Driving Lesson for Tomorrow',
+      subject: 'Confirmă lecția rezervată de conducere pentru mâine',
       template: 'reservation-confirmation',
       context,
     });

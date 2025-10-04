@@ -604,37 +604,28 @@ export class ReservationsService {
       );
       if (validGroups.length === 0) return null;
 
-      // Собираем ВСЕ резервации от ВСЕХ групп и инструкторов (не только от наименее занятой группы)
-      const allGroupReservations = validGroups.flatMap(group =>
-        group.instructors.flatMap(instructor => 
-          instructor.isActive && instructor.cars.some(car => car.gearbox === gearbox)
-            ? instructor.reservations
-            : []
-        )
-      );
+      let leastBusyGroup = validGroups[0];
+      let minTotalReservations = this.countTotalGroupReservations(validGroups[0]);
 
-      // Убираем дубликаты резерваций по времени
-      const uniqueReservations = allGroupReservations.filter((reservation, index, self) => 
-        index === self.findIndex(r => r.startTime.getTime() === reservation.startTime.getTime())
-      );
+      for (let i = 1; i < validGroups.length; i++) {
+        const totalReservations = this.countTotalGroupReservations(validGroups[i]);
+        if (totalReservations < minTotalReservations) {
+          minTotalReservations = totalReservations;
+          leastBusyGroup = validGroups[i];
+        }
+      }
 
-      const reservations = uniqueReservations.map(r => ({ 
+      const allGroupReservations = [
+        ...leastBusyGroup.instructors.flatMap(instructor => instructor.reservations)
+      ];
+
+      const reservations = allGroupReservations.map(r => ({ 
         id: r.id, 
         startTime: r.startTime 
       })); 
-
-      // Подсчитываем общее количество инструкторов по всем группам
-      const totalInstructors = validGroups.reduce((total, group) => 
-        total + group.instructors.filter(instructor => 
-          instructor.isActive && 
-          instructor.cars.some(car => car.gearbox === gearbox)
-        ).length, 0
-      );
-
       return { 
-        groupId: 0, // 0 означает "все группы"
-        total_instructors: totalInstructors,
-        reservations: reservations.sort((a, b) => a.startTime.getTime() - b.startTime.getTime())
+        groupId: leastBusyGroup.id, 
+        reservations 
       }; 
     } 
   
@@ -661,23 +652,24 @@ export class ReservationsService {
 
     if (instructors.length === 0) return null;
 
-    // Собираем ВСЕ резервации от ВСЕХ инструкторов (не только от наименее занятого)
-    const allInstructorReservations = instructors.flatMap(instructor => instructor.reservations);
+    let leastBusyInstructor = instructors[0];
+    let minReservations = instructors[0].reservations.length;
 
-    // Убираем дубликаты резерваций по времени
-    const uniqueReservations = allInstructorReservations.filter((reservation, index, self) => 
-      index === self.findIndex(r => r.startTime.getTime() === reservation.startTime.getTime())
-    );
+    for (let i = 1; i < instructors.length; i++) {
+      if (instructors[i].reservations.length < minReservations) {
+        minReservations = instructors[i].reservations.length;
+        leastBusyInstructor = instructors[i];
+      }
+    }
   
-    const reservations = uniqueReservations.map(r => ({ 
+    const reservations = leastBusyInstructor.reservations.map(r => ({ 
       id: r.id, 
       startTime: r.startTime 
     })); 
   
     return { 
-      instructorId: 0, // 0 означает "все инструкторы"
-      total_instructors: instructors.length,
-      reservations: reservations.sort((a, b) => a.startTime.getTime() - b.startTime.getTime())
+      instructorId: leastBusyInstructor.id, 
+      reservations 
     }; 
   } 
 

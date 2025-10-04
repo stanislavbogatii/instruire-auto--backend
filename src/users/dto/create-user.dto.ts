@@ -35,6 +35,15 @@ export class CreateUserDto {
   })
   phone?: string;
 
+  @ApiProperty({ 
+    example: '2001234567890', 
+    description: 'User IDNP (Personal Identification Number)',
+    required: false 
+  })
+  @IsOptional()
+  @IsString()
+  idnp?: string;
+
   @IsOptional()
   @IsEnum(Role, { message: 'role must be a valid Role value' })
   role?: Role;

@@ -10,7 +10,7 @@ export class UsersService {
   constructor(private prisma: PrismaService) {}
 
   async create(dto: CreateUserDto, groupId?: number) {
-    const { email, password, firstName, lastName, phone, privateMessage } = dto;  
+    const { email, password, firstName, lastName, phone, privateMessage, idnp } = dto;  
 
     const exists = await this.prisma.user.findUnique({ where: { email } });
     if (exists) {
@@ -27,7 +27,8 @@ export class UsersService {
         firstName,
         lastName,
         phone,     
-        privateMessage,  
+        privateMessage,
+        idnp,
         role,
         groupId 
       },
@@ -48,6 +49,7 @@ export class UsersService {
         role: true,
         phone: true,
         privateMessage: true,
+        idnp: true,
         createdAt: true,
         updatedAt: true,
         groupId: true
@@ -80,7 +82,7 @@ export class UsersService {
       throw new NotFoundException(`User with id=${id} not found`);
     }
 
-    const data: { email?: string; hash?: string; phone?: string; privateMessage?: string; groupId?: number } = {};  // Add phone to type
+    const data: { email?: string; hash?: string; phone?: string; privateMessage?: string; idnp?: string; groupId?: number } = {};
     // 2) If updating email, check conflict
     if (dto.email && dto.email !== user.email) {
       const conflict = await this.prisma.user.findUnique({
@@ -105,6 +107,10 @@ export class UsersService {
 
     if (dto.privateMessage !== undefined) {
       data.privateMessage = dto.privateMessage;
+    }
+
+    if (dto.idnp !== undefined) {
+      data.idnp = dto.idnp;
     }
 
     const updated = await this.prisma.user.update({
@@ -141,6 +147,7 @@ export class UsersService {
         group: true,
         phone: true,
         privateMessage: true,
+        idnp: true,
         createdAt: true,
         updatedAt: true
       }

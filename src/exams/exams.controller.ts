@@ -10,6 +10,10 @@ import {
   UseGuards,
   Request,
   ParseIntPipe,
+  Res,
+  NotFoundException,
+  BadRequestException,
+  InternalServerErrorException,
 } from '@nestjs/common';
 import { ApiTags, ApiOperation, ApiBearerAuth, ApiQuery } from '@nestjs/swagger';
 import { AuthGuard } from '@nestjs/passport';
@@ -19,6 +23,8 @@ import { Roles } from '../auth/decorators/roles.decorator';
 import { ExamsService } from './exams.service';
 import { QuestionsService } from './questions.service';
 import { TicketsService } from './tickets.service';
+import { PdfService } from './pdf.service';
+import { Response } from 'express';
 import {
   CreateExamDto,
   SubmitAnswerDto,
@@ -38,6 +44,7 @@ export class ExamsController {
     private readonly examsService: ExamsService,
     private readonly questionsService: QuestionsService,
     private readonly ticketsService: TicketsService,
+    private readonly pdfService: PdfService,
   ) {}
 
   // Questions endpoints
@@ -328,5 +335,114 @@ export class ExamsController {
     @Param('ticketId', ParseIntPipe) ticketId: number,
   ) {
     return this.examsService.getPracticesByTicket(req.user.id, ticketId);
+  }
+
+  @Get(':examId/download-pdf')
+  @ApiOperation({ 
+    summary: 'Download exam results as PDF form',
+    description: 'Generate and download exam results as a PDF document using the official exam form template. Only accessible by managers and admins.'
+  })
+  @ApiBearerAuth('access-token')
+  @UseGuards(AuthGuard('jwt'), RolesGuard)
+  @Roles(Role.MANAGER, Role.ADMIN)
+  async downloadExamResultsPdf(
+    @Param('examId', ParseIntPipe) examId: number,
+    @Res() res: Response,
+  ) {
+    try {
+      // Validate examId
+      if (!examId || examId <= 0) {
+        throw new BadRequestException('Invalid exam ID provided');
+      }
+
+      // Fetch exam details with comprehensive error handling
+      const exam = await this.examsService.getExamDetails(examId);
+      
+      if (!exam) {
+        throw new NotFoundException(`Exam with ID ${examId} not found`);
+      }
+
+      // Validate exam data completeness
+      if (!exam.user) {
+        throw new BadRequestException('Exam user data is incomplete');
+      }
+
+      if (!exam.questions || exam.questions.length === 0) {
+        throw new BadRequestException('Exam has no questions data');
+      }
+
+      // Ensure exam is completed or failed (not in progress)
+      if (exam.status === 'IN_PROGRESS') {
+        throw new BadRequestException('Cannot generate PDF for exam still in progress');
+      }
+
+      // Fetch the complete exam data with isCorrect information from database
+      const completeExam = await this.examsService.getCompleteExamForPdf(examId);
+
+      // Prepare exam data for PDF generation
+      const examDataForPdf = {
+        id: exam.id,
+        status: exam.status,
+        score: exam.score,
+        totalQuestions: exam.totalQuestions,
+        passScore: exam.passScore,
+        startedAt: exam.startedAt,
+        completedAt: exam.completedAt,
+        user: {
+          firstName: completeExam.user.firstName,
+          lastName: completeExam.user.lastName,
+          email: completeExam.user.email,
+          idnp: (completeExam.user as any).idnp || '', // Get idnp from database
+        },
+        questions: completeExam.questions.map(q => ({
+          id: q.questionId,
+          selectedAnswer: q.selectedAnswer,
+          isCorrect: q.isCorrect,
+          order: q.order,
+          correctAnswer: q.question.correctAnswer, // Include correct answer
+        })),
+      };
+
+      // Generate PDF with comprehensive error handling
+      const pdfBuffer = await this.pdfService.generateExamResultFormPdf(examDataForPdf);
+      
+      if (!pdfBuffer || pdfBuffer.length === 0) {
+        throw new InternalServerErrorException('Generated PDF is empty or invalid');
+      }
+
+      // Generate safe filename
+      const studentName = `${exam.user.firstName || ''} ${exam.user.lastName || ''}`.trim() || 'Student';
+      const safeStudentName = studentName.replace(/[^a-zA-Z0-9\s-]/g, '').replace(/\s+/g, '_');
+      const examDate = exam.startedAt.toISOString().split('T')[0];
+      const filename = `Exam_Results_${safeStudentName}_${examDate}_${examId}.pdf`;
+
+      // Set response headers
+      res.set({
+        'Content-Type': 'application/pdf',
+        'Content-Disposition': `attachment; filename="${filename}"`,
+        'Content-Length': pdfBuffer.length.toString(),
+        'Cache-Control': 'no-cache, no-store, must-revalidate',
+        'Pragma': 'no-cache',
+        'Expires': '0',
+      });
+
+      // Send the PDF
+      res.end(pdfBuffer);
+    } catch (error) {
+      // Log the error for debugging
+      console.error(`Error generating PDF for exam ${examId}:`, error);
+      
+      // Handle different types of errors appropriately
+      if (error instanceof NotFoundException || 
+          error instanceof BadRequestException ||
+          error instanceof InternalServerErrorException) {
+        throw error;
+      }
+      
+      // For any other unexpected errors
+      throw new InternalServerErrorException(
+        `Failed to generate exam results PDF: ${error.message || 'Unknown error'}`
+      );
+    }
   }
 }

@@ -29,6 +29,15 @@ export class UpdateUserDto extends PartialType(CreateUserDto) {
   phone?: string;
 
   @ApiPropertyOptional({ 
+    example: '2001234567890', 
+    description: 'User IDNP (Personal Identification Number)',
+    required: false 
+  })
+  @IsOptional()
+  @IsString()
+  idnp?: string;
+
+  @ApiPropertyOptional({ 
     example: 'I prefer morning lessons', 
     description: 'Private message or preferences',
     required: false 
