@@ -255,6 +255,22 @@ export class ExamsController {
     );
   }
 
+  @Get('history/student/:studentId')
+  @ApiOperation({ 
+    summary: 'Get exam history for a specific student',
+    description: 'Available for MANAGER and ADMIN roles. Returns exam history for the specified student by ID.'
+  })
+  @ApiBearerAuth('access-token')
+  @UseGuards(AuthGuard('jwt'), RolesGuard)
+  @Roles(Role.MANAGER, Role.ADMIN)
+  getStudentHistoryById(
+    @Param('studentId', ParseIntPipe) studentId: number,
+    @Query('page', ParseIntPipe) page: number = 1,
+    @Query('limit', ParseIntPipe) limit: number = 10,
+  ) {
+    return this.examsService.getStudentExamHistory(studentId, page, limit);
+  }
+
   @Get('permissions/my-status')
   @ApiOperation({ summary: 'Get current user exam permission status' })
   @ApiBearerAuth('access-token')
