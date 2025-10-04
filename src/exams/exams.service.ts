@@ -900,8 +900,23 @@ export class ExamsService {
     });
 
     if (existingPractice) {
-      // Return existing practice session
-      return this.getPracticeDetails(existingPractice.id);
+      // If practice is completed, delete it and create a new one
+      if (existingPractice.status === 'PASSED' || existingPractice.status === 'FAILED') {
+        // Delete the completed practice session and all its answers
+        await this.prisma.$transaction(async (tx) => {
+          await tx.studentTicketAnswer.deleteMany({
+            where: { studentTicketId: existingPractice.id },
+          });
+          await tx.studentTicket.delete({
+            where: { id: existingPractice.id },
+          });
+        });
+        
+        // Continue to create new practice session below
+      } else {
+        // Return existing incomplete practice session
+        return this.getPracticeDetails(existingPractice.id);
+      }
     }
 
     // Create new practice session
