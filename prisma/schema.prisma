@@ -150,9 +150,22 @@ model Instructor {
   reservations       Reservation[]
   reservationHistory ReservationHistory[]
   examPermissions    StudentExamPermission[]
+  blackouts          InstructorBlackout[]
 
   @@index([instructorsGroupId])
   @@index([userId], map: "Instructor_userId_fkey")
+}
+
+model InstructorBlackout {
+  id                 Int                  @id @default(autoincrement())
+  dateTime           DateTime
+  instructorId       Int 
+  instructor         Instructor           @relation(fields: [instructorId], references: [id])
+  
+  createdAt          DateTime             @default(now())
+  updatedAt          DateTime             @updatedAt
+
+  @@unique([instructorId, dateTime])
 }
 
 model Question {

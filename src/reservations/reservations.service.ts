@@ -3,11 +3,8 @@ import { PrismaService } from 'src/prisma/prisma.service';
 import { CreateReservationsDto } from './dto/create-reservations.dto';
 import { UpdateReservationDto } from './dto/update-reservation.dto';
 import { HistoryService } from './history.service';
-import { ApiTags } from '@nestjs/swagger';
 import { Car, Instructor, InstructorsGroup, Reservation } from '@prisma/client';
-import { start } from 'repl';
 import { BusyReservationResponse } from './dto/ busy-reservation.dto';
-import { group } from 'console';
 
 @Injectable()
 export class ReservationsService {
@@ -28,7 +25,6 @@ export class ReservationsService {
   ];
 
   async createReservationsForUser(userId: number, dto: CreateReservationsDto) {
-    // Validate that the target user exists
     const targetUser = await this.prisma.user.findUnique({
       where: { id: userId },
     });

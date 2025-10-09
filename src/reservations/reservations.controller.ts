@@ -32,7 +32,6 @@ import { AuthGuard } from '@nestjs/passport';
 import { Session } from 'src/common/session.decorator';
 import { Role, User } from '@prisma/client';
 import { plainToInstance } from 'class-transformer';
-import { group } from 'console';
 import { ReservationDto } from './dto/reservation.dto';
 import { BusyReservationResponse } from './dto/ busy-reservation.dto';
 import { ReservationHistoryDto } from './dto/reservation-history.dto';
@@ -82,7 +81,6 @@ export class ReservationsController {
     @Body() dto: CreateReservationsForUserDto, 
     @Session() session: User
   ) {
-    // Check if current user has permission to create reservations for others
     if (session.role !== Role.ADMIN && session.role !== Role.MANAGER && session.role !== Role.INSTRUCTOR) {
       throw new ForbiddenException("Only admins, managers, and instructors can create reservations for other users");
     }

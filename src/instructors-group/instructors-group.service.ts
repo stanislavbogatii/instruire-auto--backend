@@ -2,6 +2,8 @@ import { Injectable, NotFoundException, BadRequestException } from '@nestjs/comm
 import { PrismaService } from '../prisma/prisma.service';
 import { CreateInstructorsGroupDto } from './dto/create-instructors-group.dto';
 import { UpdateInstructorsGroupDto } from './dto/update-instructors-group.dto';
+import { InstructorBlackoutResponseDto } from 'src/instructors/dto/instructor-blackout-response.dto';
+import { Prisma } from '@prisma/client';
 
 @Injectable()
 export class InstructorsGroupService {
@@ -148,5 +150,38 @@ export class InstructorsGroupService {
 
       return { message: 'Instructor swapped successfully' };
     });
+  }
+
+  async getBlackoutsByInstructorsGroup(instructorsGroupId: number) {
+    const group = await this.prisma.instructorsGroup.findUnique({
+      where: { id: instructorsGroupId },
+      include: {
+        instructors: {
+          include: {
+            blackouts: true,
+          },
+        },
+      },
+    }) as Prisma.InstructorsGroupGetPayload<{
+      include: {
+        instructors: {
+          include: {
+            blackouts: true;
+          };
+        };
+      };
+    }>;
+
+    
+    if (!group) {
+      throw new NotFoundException(`InstructorsGroup with ID ${instructorsGroupId} not found`);
+    }
+
+    const blackouts: InstructorBlackoutResponseDto[] = group.instructors.flatMap(instructor => 
+      instructor.blackouts.map(blackout => ({
+        ...blackout,
+      }))
+    );
+    return blackouts;
   }
 }

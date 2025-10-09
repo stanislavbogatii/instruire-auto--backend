@@ -8,6 +8,7 @@ import { UsersService } from '../users/users.service';
 import { CreateInstructorDto } from './dto/create-instructor.dto';
 import { UpdateInstructorDto } from './dto/update-instructor.dto';
 import { Role } from '@prisma/client';
+import { InstructorBlackoutDto } from './dto/add-blackouts.dto';
 
 @Injectable()
 export class InstructorsService {
@@ -17,7 +18,8 @@ export class InstructorsService {
   ) {}
 
   async create(createInstructorDto: CreateInstructorDto) {
-    const { firstName, lastName, phone, email, password, sector, order } = createInstructorDto;
+    const { firstName, lastName, phone, email, password, sector, order } =
+      createInstructorDto;
 
     const existsPhone = await this.prisma.instructor.findFirst({
       where: { phone },
@@ -29,14 +31,17 @@ export class InstructorsService {
     });
     if (existsEmail) throw new ConflictException('Email already in use');
 
-    const user = await this.usersService.create({
-      email,
-      phone,
-      password,
-      role: Role.INSTRUCTOR,
-      firstName,
-      lastName,
-    }, undefined);
+    const user = await this.usersService.create(
+      {
+        email,
+        phone,
+        password,
+        role: Role.INSTRUCTOR,
+        firstName,
+        lastName,
+      },
+      undefined,
+    );
 
     return this.prisma.instructor.create({
       data: {
@@ -54,36 +59,39 @@ export class InstructorsService {
             firstName: true,
             lastName: true,
             role: true,
-          }
-        }
-      }
+          },
+        },
+      },
     });
   }
 
   async findAll(includeInactive = false) {
     return await this.prisma.instructor.findMany({
-      where: includeInactive ? {} : { isActive: true }
+      where: includeInactive ? {} : { isActive: true },
     });
   }
 
   async findOne(id: number) {
-    const inst = await this.prisma.instructor.findUnique({ 
-      where: { id } 
+    const inst = await this.prisma.instructor.findUnique({
+      where: { id },
     });
     if (!inst) throw new NotFoundException(`Instructor ${id} not found`);
-    if (!inst.isActive) throw new ConflictException(`Instructor ${id} is inactive`);
+    if (!inst.isActive)
+      throw new ConflictException(`Instructor ${id} is inactive`);
     return inst;
   }
 
   async findOneByUserId(id: number) {
-    const inst = await this.prisma.instructor.findUnique({ 
-      where: { userId: id } 
+    const inst = await this.prisma.instructor.findUnique({
+      where: { userId: id },
     });
-    if (!inst) throw new NotFoundException(`Instructor with userId: ${id} not found`);
-    if (!inst.isActive) throw new ConflictException(`Instructor ${id} is inactive`);
+    if (!inst)
+      throw new NotFoundException(`Instructor with userId: ${id} not found`);
+    if (!inst.isActive)
+      throw new ConflictException(`Instructor ${id} is inactive`);
     return inst;
   }
-  
+
   async findOneWithInactive(id: number) {
     const inst = await this.prisma.instructor.findUnique({ where: { id } });
     if (!inst) throw new NotFoundException(`Instructor ${id} not found`);
@@ -118,7 +126,7 @@ export class InstructorsService {
     }
     return this.prisma.instructor.update({
       where: { id },
-      data: { isActive: false }
+      data: { isActive: false },
     });
   }
 
@@ -131,19 +139,22 @@ export class InstructorsService {
     }
     return this.prisma.instructor.update({
       where: { id },
-      data: { isActive: true }
+      data: { isActive: true },
     });
   }
 
-  async getInstructorReservations(instructorId: number, completed: boolean = false) {
+  async getInstructorReservations(
+    instructorId: number,
+    completed: boolean = false,
+  ) {
     const instructor = await this.findOne(instructorId);
-    
+
     const now = new Date();
-    
+
     return this.prisma.reservation.findMany({
       where: {
         instructorId: instructor.id,
-        startTime: completed ? { lt: now } : { gte: now }
+        startTime: completed ? { lt: now } : { gte: now },
       },
       include: {
         user: {
@@ -153,12 +164,49 @@ export class InstructorsService {
             lastName: true,
             email: true,
             phone: true,
-          }
-        }
+          },
+        },
       },
       orderBy: {
-        startTime: completed ? 'desc' : 'asc'
-      }
+        startTime: completed ? 'desc' : 'asc',
+      },
     });
+  }
+
+  async getBlackoutsByInstructor(instructorId: number) {
+    const now = new Date(); 
+    now.setHours(now.getHours() - 2);
+
+    return this.prisma.instructorBlackout.findMany({
+      where: {
+        instructorId,
+        dateTime: {
+          gte: now,
+        },
+      },
+      orderBy: {
+        dateTime: 'asc',
+      },
+    });
+  }
+
+  async addBlackouts(blackouts: InstructorBlackoutDto[]) {
+    for (const blackout of blackouts) {
+      const { instructorId, dateTime } = blackout;
+      const instructorExists = await this.prisma.instructor.findUnique({
+        where: { id: instructorId },
+      });
+      if (!instructorExists) {
+        throw new NotFoundException(
+          `Instructor with ID ${instructorId} not found`,
+        );
+      }
+      await this.prisma.instructorBlackout.create({
+        data: {
+          instructorId,
+          dateTime: new Date(dateTime),
+        },
+      });
+    }
   }
 }

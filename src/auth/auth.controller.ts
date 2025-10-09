@@ -49,7 +49,6 @@ export class AuthController {
   @ApiBody({ type: RegisterAuthDto })
   @ApiResponse({ status: 201, description: 'User created and token returned.' })
   async register(@Body() dto: RegisterAuthDto) {
-    console.log(dto)
     return this.authService.register(dto);
   }
 

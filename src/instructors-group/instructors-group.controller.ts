@@ -1,13 +1,28 @@
-import { Controller, Get, Post, Body, Patch, Param, Delete } from '@nestjs/common';
-import { ApiTags, ApiOperation, ApiResponse } from '@nestjs/swagger';
+import {
+  Controller,
+  Get,
+  Post,
+  Body,
+  Patch,
+  Param,
+  Delete,
+  ParseIntPipe,
+  Session,
+} from '@nestjs/common';
+import { ApiTags, ApiOperation, ApiResponse, ApiParam } from '@nestjs/swagger';
 import { InstructorsGroupService } from './instructors-group.service';
 import { CreateInstructorsGroupDto } from './dto/create-instructors-group.dto';
 import { UpdateInstructorsGroupDto } from './dto/update-instructors-group.dto';
+import { User } from '@prisma/client';
+import { plainToInstance } from 'class-transformer';
+import { InstructorBlackoutResponseDto } from 'src/instructors/dto/instructor-blackout-response.dto';
 
 @ApiTags('instructors-group')
 @Controller('instructors-group')
 export class InstructorsGroupController {
-  constructor(private readonly instructorsGroupService: InstructorsGroupService) {}
+  constructor(
+    private readonly instructorsGroupService: InstructorsGroupService,
+  ) {}
 
   @Post()
   @ApiOperation({ summary: 'Create a new instructors group' })
@@ -27,10 +42,34 @@ export class InstructorsGroupController {
     return await this.instructorsGroupService.findOne(+id);
   }
 
+  @Get('blackouts/:instrutorGroupId')
+  @ApiOperation({ summary: 'Get blackouts for an instructors group' })
+  @ApiParam({ name: 'Instructors group id', type: Number })
+  @ApiResponse({
+    status: 200,
+    description: 'List of blackouts.',
+    type: [InstructorBlackoutResponseDto],
+  })
+  async getBlackouts(
+    @Param('instructorsGroupId', ParseIntPipe) instructorsGroupId: number,
+    @Session() session: User,
+  ) {
+    const blackouts = await this.instructorsGroupService.getBlackoutsByInstructorsGroup(instructorsGroupId);
+    return plainToInstance(InstructorBlackoutResponseDto, blackouts, {
+      groups: [session.role],
+    });
+  }
+
   @Patch(':id')
   @ApiOperation({ summary: 'Update a instructors group' })
-  async update(@Param('id') id: string, @Body() updateInstructorsGroupDto: UpdateInstructorsGroupDto) {
-    return await this.instructorsGroupService.update(+id, updateInstructorsGroupDto);
+  async update(
+    @Param('id') id: string,
+    @Body() updateInstructorsGroupDto: UpdateInstructorsGroupDto,
+  ) {
+    return await this.instructorsGroupService.update(
+      +id,
+      updateInstructorsGroupDto,
+    );
   }
 
   @Delete(':id')
@@ -41,14 +80,23 @@ export class InstructorsGroupController {
 
   @Post(':id/instructors/:instructorId')
   @ApiOperation({ summary: 'Add an instructor to the group' })
-  async addInstructor(@Param('id') id: string, @Param('instructorId') instructorId: string) {
+  async addInstructor(
+    @Param('id') id: string,
+    @Param('instructorId') instructorId: string,
+  ) {
     return await this.instructorsGroupService.addInstructor(+id, +instructorId);
   }
 
   @Delete(':id/instructors/:instructorId')
   @ApiOperation({ summary: 'Remove an instructor from the group' })
-  async removeInstructor(@Param('id') id: string, @Param('instructorId') instructorId: string) {
-    return await this.instructorsGroupService.removeInstructor(+id, +instructorId);
+  async removeInstructor(
+    @Param('id') id: string,
+    @Param('instructorId') instructorId: string,
+  ) {
+    return await this.instructorsGroupService.removeInstructor(
+      +id,
+      +instructorId,
+    );
   }
 
   @Post(':id/swap-instructor/:oldInstructorId/:newInstructorId')
@@ -59,6 +107,10 @@ export class InstructorsGroupController {
     @Param('oldInstructorId') oldInstructorId: string,
     @Param('newInstructorId') newInstructorId: string,
   ) {
-    return await this.instructorsGroupService.swapInstructor(+id, +oldInstructorId, +newInstructorId);
+    return await this.instructorsGroupService.swapInstructor(
+      +id,
+      +oldInstructorId,
+      +newInstructorId,
+    );
   }
 }
