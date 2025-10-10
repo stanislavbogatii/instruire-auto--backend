@@ -181,9 +181,14 @@ export class InstructorsService {
     return this.prisma.instructorBlackout.findMany({
       where: {
         instructorId,
-        dateTime: {
-          gte: now,
-        },
+        OR: [
+          {
+            AND: [{ dateTime: { gte: now } }, { endDateTime: null }],
+          },
+          {
+            endDateTime: { gte: now } ,
+          },
+        ],
       },
       orderBy: {
         dateTime: 'asc',
@@ -205,6 +210,14 @@ export class InstructorsService {
       await this.prisma.instructorBlackout.create({
         data: {
           instructorId,
+          type: blackout.type,
+          repeatEveryDays: blackout.repeatEveryDays,
+          startDateTime: blackout.startDateTime
+            ? new Date(blackout.startDateTime)
+            : null,
+          endDateTime: blackout.endDateTime
+            ? new Date(blackout.endDateTime)
+            : null,
           dateTime: new Date(dateTime),
         },
       });

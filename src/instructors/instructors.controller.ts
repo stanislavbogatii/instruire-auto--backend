@@ -71,6 +71,8 @@ export class InstructorsController {
   async deleteBlackout(@Param('id', ParseIntPipe) id: number) {
     await this.instructorsService.deleteBlackout(id);
   }
+  
+
 
   @Patch('blackouts/:id')
   @Roles(Role.ADMIN, Role.MANAGER)
@@ -139,3 +141,4 @@ export class InstructorsController {
     return this.instructorsService.getInstructorReservations(id, true);
   }
 }
+

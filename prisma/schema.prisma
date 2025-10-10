@@ -161,6 +161,12 @@ model InstructorBlackout {
   dateTime           DateTime
   instructorId       Int 
   instructor         Instructor           @relation(fields: [instructorId], references: [id])
+
+  type               InstructorBlackoutType  @default(SINGLE)
+  startDateTime      DateTime?
+  endDateTime        DateTime?
+
+  repeatEveryDays    Int                  @default(0)
   
   createdAt          DateTime             @default(now())
   updatedAt          DateTime             @updatedAt
@@ -347,4 +353,9 @@ enum PracticeStatus {
 enum QuestionType {
   EXAM
   PRACTICE
+}
+
+enum InstructorBlackoutType {
+  SINGLE
+  REPEAT
 }
