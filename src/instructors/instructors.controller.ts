@@ -27,6 +27,7 @@ import { InstructorBlackoutResponseDto } from './dto/instructor-blackout-respons
 import { AddBlackoutsDto } from './dto/add-blackouts.dto';
 import { Roles } from 'src/auth/decorators/roles.decorator';
 import { RolesGuard } from 'src/auth/guards/roles.guard';
+import { UpdateInstructorBlackoutDto } from './dto/update-instructor-blackout.dto';
 
 @ApiTags('instructors')
 @ApiBearerAuth('access-token') 
@@ -59,6 +60,26 @@ export class InstructorsController {
   async getBlackouts(@Param('instructorId', ParseIntPipe) instructorId: number, @Session() session: User) {
     const blackouts = await this.instructorsService.getBlackoutsByInstructor(instructorId);
     return plainToInstance(InstructorBlackoutResponseDto, blackouts, { groups: [session.role] });
+  }
+
+  @Delete('blackouts/:id')
+  @Roles(Role.ADMIN, Role.MANAGER)
+  @UseGuards(RolesGuard)
+  @ApiOperation({ summary: 'Delete a blackout by ID' })
+  @ApiParam({ name: 'id', type: Number })
+  @ApiResponse({ status: 200, description: 'Blackout deleted.' })
+  async deleteBlackout(@Param('id', ParseIntPipe) id: number) {
+    await this.instructorsService.deleteBlackout(id);
+  }
+
+  @Patch('blackouts/:id')
+  @Roles(Role.ADMIN, Role.MANAGER)
+  @UseGuards(RolesGuard)
+  @ApiOperation({ summary: 'Update a blackout by ID' })
+  @ApiParam({ name: 'id', type: Number })
+  @ApiResponse({ status: 200, description: 'Blackout updated.' })
+  async updateBlackout(id: number, dto: UpdateInstructorBlackoutDto) {
+    await this.instructorsService.updateBlackout(id, dto);
   }
 
   @Get()

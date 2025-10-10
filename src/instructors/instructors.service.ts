@@ -9,6 +9,7 @@ import { CreateInstructorDto } from './dto/create-instructor.dto';
 import { UpdateInstructorDto } from './dto/update-instructor.dto';
 import { Role } from '@prisma/client';
 import { InstructorBlackoutDto } from './dto/add-blackouts.dto';
+import { UpdateInstructorBlackoutDto } from './dto/update-instructor-blackout.dto';
 
 @Injectable()
 export class InstructorsService {
@@ -174,7 +175,7 @@ export class InstructorsService {
   }
 
   async getBlackoutsByInstructor(instructorId: number) {
-    const now = new Date(); 
+    const now = new Date();
     now.setHours(now.getHours() - 2);
 
     return this.prisma.instructorBlackout.findMany({
@@ -208,5 +209,30 @@ export class InstructorsService {
         },
       });
     }
+  }
+
+  async deleteBlackout(blackoutId: number) {
+    const blackout = await this.prisma.instructorBlackout.findUnique({
+      where: { id: blackoutId },
+    });
+    if (!blackout) {
+      throw new NotFoundException(`Blackout with ID ${blackoutId} not found`);
+    }
+    return this.prisma.instructorBlackout.delete({
+      where: { id: blackoutId },
+    });
+  }
+
+  async updateBlackout(blackoutId: number, dto: UpdateInstructorBlackoutDto) {
+    const blackout = await this.prisma.instructorBlackout.findUnique({
+      where: { id: blackoutId },
+    });
+    if (!blackout) {
+      throw new NotFoundException(`Blackout with ID ${blackoutId} not found`);
+    }
+    return this.prisma.instructorBlackout.update({
+      where: { id: blackoutId },
+      data: dto,
+    });
   }
 }
