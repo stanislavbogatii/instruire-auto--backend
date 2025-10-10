@@ -510,8 +510,8 @@ export class ReservationsService {
       throw new NotFoundException(`Instructor with id ${instructor_id} not found`);
     }
     return {
-      instructorId: instructor.id,
-      total_instructors: 1,
+      groupId: null,
+      instructorsIds: [instructor.id],
       reservations: instructor.reservations
     }
   }
@@ -545,8 +545,8 @@ export class ReservationsService {
     })); 
 
     return { 
+      instructorsIds: instructors.map(i => i.id),
       groupId: instructors_group_id,
-      total_instructors: instructors.length,
       reservations 
     }; 
   }
@@ -620,6 +620,7 @@ export class ReservationsService {
         startTime: r.startTime 
       })); 
       return { 
+        instructorsIds: leastBusyGroup.instructors.map(i => i.id),
         groupId: leastBusyGroup.id, 
         reservations 
       }; 
@@ -664,7 +665,8 @@ export class ReservationsService {
     })); 
   
     return { 
-      instructorId: leastBusyInstructor.id, 
+      groupId: null,
+      instructorsIds: [leastBusyInstructor.id], 
       reservations 
     }; 
   } 

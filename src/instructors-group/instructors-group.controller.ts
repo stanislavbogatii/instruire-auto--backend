@@ -7,15 +7,17 @@ import {
   Param,
   Delete,
   ParseIntPipe,
-  Session,
+  UseGuards,
 } from '@nestjs/common';
-import { ApiTags, ApiOperation, ApiResponse, ApiParam } from '@nestjs/swagger';
+import { ApiTags, ApiOperation, ApiResponse, ApiParam, ApiBearerAuth } from '@nestjs/swagger';
 import { InstructorsGroupService } from './instructors-group.service';
 import { CreateInstructorsGroupDto } from './dto/create-instructors-group.dto';
 import { UpdateInstructorsGroupDto } from './dto/update-instructors-group.dto';
 import { User } from '@prisma/client';
 import { plainToInstance } from 'class-transformer';
 import { InstructorBlackoutResponseDto } from 'src/instructors/dto/instructor-blackout-response.dto';
+import { AuthGuard } from '@nestjs/passport/dist/auth.guard';
+import { Session } from 'src/common/session.decorator';
 
 @ApiTags('instructors-group')
 @Controller('instructors-group')
@@ -42,9 +44,11 @@ export class InstructorsGroupController {
     return await this.instructorsGroupService.findOne(+id);
   }
 
-  @Get('blackouts/:instrutorGroupId')
+  @Get('blackouts/:instructorsGroupId')
   @ApiOperation({ summary: 'Get blackouts for an instructors group' })
-  @ApiParam({ name: 'Instructors group id', type: Number })
+  @ApiParam({ name: 'instructorsGroupId', type: Number })
+  @ApiBearerAuth('access-token') 
+  @UseGuards(AuthGuard('jwt'))
   @ApiResponse({
     status: 200,
     description: 'List of blackouts.',

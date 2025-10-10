@@ -1,6 +1,5 @@
 export interface InstructorResponse {
   instructorId: number;
-  total_instructors?: number;
   reservations: {
     id: number;
     startTime: Date;
@@ -8,8 +7,8 @@ export interface InstructorResponse {
 }
 
 export interface GroupResponse {
-  groupId: number;
-  total_instructors?: number;
+  groupId: number | null;
+  instructorsIds: number[];
   reservations: {
     id: number;
     startTime: Date;
@@ -19,4 +18,4 @@ export interface GroupResponse {
 export type BusyReservationGrupResponse = GroupResponse;
 export type BusyReservationInstructorResponse = InstructorResponse;
 
-export type BusyReservationResponse = InstructorResponse | GroupResponse;
+export type BusyReservationResponse = GroupResponse;
