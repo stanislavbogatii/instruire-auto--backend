@@ -1,5 +1,22 @@
-import { IsArray, IsDateString, IsInt, IsOptional, IsString, Min } from 'class-validator';
+import { IsArray, IsDateString, IsEnum, IsInt, IsOptional, IsString, Min } from 'class-validator';
 import { ApiProperty } from '@nestjs/swagger';
+
+export enum Language {
+  RO = 'ro',
+  RU = 'ru',
+}
+
+export class LanguageQueryDto {
+  @ApiProperty({ 
+    description: 'Language for questions and answers', 
+    enum: Language,
+    required: false,
+    default: Language.RO
+  })
+  @IsOptional()
+  @IsEnum(Language)
+  lang?: Language = Language.RO;
+}
 
 export class CreateExamDto {
   @ApiProperty({ description: 'Time limit in minutes', required: false, default: 30 })

@@ -9,6 +9,7 @@ import { MailService } from '../mail/mail.service';
 import { PdfService } from './pdf.service';
 import { ImageService } from '../common/image.service';
 import { UserContextService } from '../common/user-context.service';
+import { parseQuestionText, parseAnswers, Language } from '../common/utils/multilingual.util';
 import { 
   CreateExamDto, 
   SubmitAnswerDto, 
@@ -187,7 +188,7 @@ export class ExamsService {
     return permission;
   }
 
-  async createExam(userId: number, createExamDto: CreateExamDto) {
+  async createExam(userId: number, createExamDto: CreateExamDto, lang: Language = 'ro') {
     try {
       console.log('=== CREATEEXAM SERVICE DEBUG ===');
       console.log('User ID:', userId);
@@ -292,9 +293,9 @@ export class ExamsService {
           ...examDetails,
           questions: examDetails.questions.map(eq => ({
             id: eq.question.id,
-            text: eq.question.text,
+            text: parseQuestionText(eq.question.text, lang),
             image: (eq as any).image || eq.question.image,
-            answers: JSON.parse(eq.question.answers),
+            answers: parseAnswers(eq.question.answers, lang),
             order: eq.order,
             selectedAnswer: eq.selectedAnswer,
             isAnswered: eq.selectedAnswer !== null,
@@ -308,7 +309,7 @@ export class ExamsService {
     }
   }
 
-  async getExamDetails(examId: number) {
+  async getExamDetails(examId: number, lang: Language = 'ro') {
     console.log('=== GETEXAMDETAILS DEBUG ===');
     console.log('Looking for exam ID:', examId);
     
@@ -336,9 +337,9 @@ export class ExamsService {
       ...exam,
       questions: exam.questions.map(eq => ({
         id: eq.question.id,
-        text: eq.question.text,
+        text: parseQuestionText(eq.question.text, lang),
         image: (eq as any).image || eq.question.image, // Prioritize ExamQuestion image, fallback to Question image
-        answers: JSON.parse(eq.question.answers),
+        answers: parseAnswers(eq.question.answers, lang),
         order: eq.order,
         selectedAnswer: eq.selectedAnswer,
         isAnswered: eq.selectedAnswer !== null,
@@ -868,7 +869,7 @@ export class ExamsService {
   // PRACTICE MODE METHODS
   // ================================
 
-  async startPractice(userId: number, startPracticeDto: StartPracticeDto) {
+  async startPractice(userId: number, startPracticeDto: StartPracticeDto, lang: Language = 'ro') {
     const { ticketId } = startPracticeDto;
 
     // Verify ticket exists
@@ -915,7 +916,7 @@ export class ExamsService {
         // Continue to create new practice session below
       } else {
         // Return existing incomplete practice session
-        return this.getPracticeDetails(existingPractice.id);
+        return this.getPracticeDetails(existingPractice.id, lang);
       }
     }
 
@@ -944,10 +945,10 @@ export class ExamsService {
       return session;
     });
 
-    return this.getPracticeDetails(practiceSession.id);
+    return this.getPracticeDetails(practiceSession.id, lang);
   }
 
-  async getPracticeDetails(studentTicketId: number) {
+  async getPracticeDetails(studentTicketId: number, lang: Language = 'ro') {
     const practice = await this.prisma.studentTicket.findUnique({
       where: { id: studentTicketId },
       include: {
@@ -974,10 +975,10 @@ export class ExamsService {
       completedAt: practice.completedAt,
       questions: practice.answers.map(answer => ({
         id: answer.question.id,
-        text: answer.question.text,
+        text: parseQuestionText(answer.question.text, lang),
         image: answer.question.image,
         imageUrl: this.imageService.getImageUrl(answer.question.image), // Add full image URL
-        answers: JSON.parse(answer.question.answers),
+        answers: parseAnswers(answer.question.answers, lang),
         order: answer.order,
         selectedAnswer: answer.selectedAnswer,
         isCorrect: answer.isCorrect,

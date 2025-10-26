@@ -33,6 +33,7 @@ import {
   ReactivateStudentDto,
   StartPracticeDto,
   SubmitPracticeAnswerDto,
+  LanguageQueryDto,
 } from './dto/exam.dto';
 import { CreateQuestionDto, UpdateQuestionDto } from './dto/question.dto';
 import { CreateTicketDto, UpdateTicketDto } from './dto/ticket.dto';
@@ -182,16 +183,35 @@ export class ExamsController {
   // Student exam endpoints
   @Post()
   @ApiOperation({ summary: 'Start a new exam for the current student' })
+  @ApiQuery({ 
+    name: 'lang', 
+    required: false, 
+    enum: ['ro', 'ru'],
+    description: 'Language for questions and answers (ro or ru). Defaults to Romanian.'
+  })
   @ApiBearerAuth('access-token')
   @UseGuards(AuthGuard('jwt'))
-  createExam(@Request() req, @Body() createExamDto: CreateExamDto) {
-    return this.examsService.createExam(req.user.id, createExamDto);
+  createExam(
+    @Request() req, 
+    @Body() createExamDto: CreateExamDto,
+    @Query() query: LanguageQueryDto,
+  ) {
+    return this.examsService.createExam(req.user.id, createExamDto, query.lang);
   }
 
   @Get(':id')
   @ApiOperation({ summary: 'Get exam details' })
-  getExam(@Param('id', ParseIntPipe) id: number) {
-    return this.examsService.getExamDetails(id);
+  @ApiQuery({ 
+    name: 'lang', 
+    required: false, 
+    enum: ['ro', 'ru'],
+    description: 'Language for questions and answers (ro or ru). Defaults to Romanian.'
+  })
+  getExam(
+    @Param('id', ParseIntPipe) id: number,
+    @Query() query: LanguageQueryDto,
+  ) {
+    return this.examsService.getExamDetails(id, query.lang);
   }
 
   @Post(':id/answers')
@@ -304,18 +324,37 @@ export class ExamsController {
 
   @Post('practice')
   @ApiOperation({ summary: 'Start or resume practice session for a ticket' })
+  @ApiQuery({ 
+    name: 'lang', 
+    required: false, 
+    enum: ['ro', 'ru'],
+    description: 'Language for questions and answers (ro or ru). Defaults to Romanian.'
+  })
   @ApiBearerAuth('access-token')
   @UseGuards(AuthGuard('jwt'))
-  startPractice(@Request() req, @Body() startPracticeDto: StartPracticeDto) {
-    return this.examsService.startPractice(req.user.id, startPracticeDto);
+  startPractice(
+    @Request() req, 
+    @Body() startPracticeDto: StartPracticeDto,
+    @Query() query: LanguageQueryDto,
+  ) {
+    return this.examsService.startPractice(req.user.id, startPracticeDto, query.lang);
   }
 
   @Get('practice/:id')
   @ApiOperation({ summary: 'Get practice session details' })
+  @ApiQuery({ 
+    name: 'lang', 
+    required: false, 
+    enum: ['ro', 'ru'],
+    description: 'Language for questions and answers (ro or ru). Defaults to Romanian.'
+  })
   @ApiBearerAuth('access-token')
   @UseGuards(AuthGuard('jwt'))
-  getPracticeDetails(@Param('id', ParseIntPipe) id: number) {
-    return this.examsService.getPracticeDetails(id);
+  getPracticeDetails(
+    @Param('id', ParseIntPipe) id: number,
+    @Query() query: LanguageQueryDto,
+  ) {
+    return this.examsService.getPracticeDetails(id, query.lang);
   }
 
   @Post('practice/:id/answers')
