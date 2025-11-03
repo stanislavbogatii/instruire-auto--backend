@@ -371,6 +371,16 @@ export class ExamsService {
           },
           orderBy: { order: 'asc' },
         },
+        examTickets: {
+          include: {
+            ticket: {
+              select: {
+                id: true,
+                name: true,
+              },
+            },
+          },
+        },
       },
     });
 

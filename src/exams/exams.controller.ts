@@ -434,6 +434,22 @@ export class ExamsController {
       // Fetch the complete exam data with isCorrect information from database
       const completeExam = await this.examsService.getCompleteExamForPdf(examId);
 
+      // Prepare ticket information with question ranges
+      const tickets = completeExam.examTickets.map((et, index) => {
+        // Calculate question range for each ticket
+        const questionsPerTicket = Math.floor(completeExam.totalQuestions / completeExam.examTickets.length);
+        const startQuestion = index * questionsPerTicket + 1;
+        const endQuestion = index === completeExam.examTickets.length - 1 
+          ? completeExam.totalQuestions 
+          : (index + 1) * questionsPerTicket;
+        
+        return {
+          name: et.ticket.name,
+          startQuestion,
+          endQuestion,
+        };
+      });
+
       // Prepare exam data for PDF generation
       const examDataForPdf = {
         id: exam.id,
@@ -449,6 +465,7 @@ export class ExamsController {
           email: completeExam.user.email,
           idnp: (completeExam.user as any).idnp || '', // Get idnp from database
         },
+        tickets, // Add ticket information
         questions: completeExam.questions.map(q => ({
           id: q.questionId,
           selectedAnswer: q.selectedAnswer,

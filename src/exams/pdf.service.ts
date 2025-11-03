@@ -226,6 +226,11 @@ export class PdfService {
       email: string;
       idnp?: string | null;
     };
+    tickets?: Array<{
+      name: string;
+      startQuestion: number;
+      endQuestion: number;
+    }>;
     questions: Array<{
       id: number;
       selectedAnswer: number | null;
@@ -356,14 +361,19 @@ export class PdfService {
       // Fill answers table - completely dynamic approach
       const answersHtml = this.generateAnswersTable(examData.questions);
       
-      // Replace ALL answer tables with our single dynamic table
+      // Generate tickets section if available
+      const ticketsHtml = examData.tickets && examData.tickets.length > 0 
+        ? this.generateTicketsSection(examData.tickets)
+        : '';
+      
+      // Replace ALL answer tables with our tickets section + answers table
       // First replacement puts our content, subsequent ones remove the table
       let tableCount = 0;
       html = html.replace(
         /<table class="answers-table">[\s\S]*?<\/table>/g,
         () => {
           tableCount++;
-          return tableCount === 1 ? answersHtml : '';
+          return tableCount === 1 ? ticketsHtml + answersHtml : '';
         }
       );
       
@@ -497,4 +507,32 @@ export class PdfService {
     
     return html;
   }
+
+  private generateTicketsSection(tickets: Array<{
+    name: string;
+    startQuestion: number;
+    endQuestion: number;
+  }>): string {
+    let html = `
+      <div style="margin-bottom: 20px; padding: 15px; background-color: #f8f9fa; border-left: 4px solid #007bff; border-radius: 4px;">
+        <h3 style="margin: 0 0 10px 0; font-size: 14pt; color: #333;">Biletele folosite:</h3>
+        <ul style="margin: 5px 0; padding-left: 20px; list-style-type: none;">
+    `;
+    
+    tickets.forEach(ticket => {
+      html += `
+        <li style="margin: 5px 0; font-size: 11pt;">
+          <strong>• ${ticket.name}</strong> (Întrebările ${ticket.startQuestion}-${ticket.endQuestion})
+        </li>
+      `;
+    });
+    
+    html += `
+        </ul>
+      </div>
+    `;
+    
+    return html;
+  }
 }
+

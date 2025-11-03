@@ -20,6 +20,7 @@ import { NotificationsModule } from './notifications/notifications.module';
 import { BackupModule } from './backup/backup.module';
 import { ExamsModule } from './exams/exams.module';
 import { ImagesModule } from './images/images.module';
+import { ContractModule } from './contract/contract.module';
 
 @Module({
   imports: [
@@ -64,6 +65,7 @@ import { ImagesModule } from './images/images.module';
     }),
     MailModule,
     ReservationsModule,
+    ContractModule,
   ],
   controllers: [AppController],
   providers: [AppService],
