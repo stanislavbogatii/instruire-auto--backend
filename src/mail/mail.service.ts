@@ -172,11 +172,6 @@ export class MailService {
               <li><strong>📄 Cererea de înscriere</strong> - completată cu datele dumneavoastră personale</li>
               <li><strong>📝 Contractul de prestări servicii</strong> - Nr. ${studentData.contractNumber}</li>
             </ul>
-            <div style="background-color: #fff3cd; border-left: 4px solid #ffc107; padding: 15px; margin-top: 20px; border-radius: 5px;">
-              <p style="margin: 0; color: #856404;">
-                <strong>⚠️ Important:</strong> Vă rugăm să printați ambele documente, să le semnați și să le aduceți la prima lecție.
-              </p>
-            </div>
           </div>
 
           <div style="background-color: #e7f3ff; padding: 25px; border-radius: 10px; margin-bottom: 30px; border-left: 4px solid #0066cc;">
@@ -208,12 +203,23 @@ export class MailService {
           <div style="background-color: #d4edda; padding: 20px; border-radius: 10px; margin-bottom: 30px; border-left: 4px solid #28a745;">
             <h3 style="color: #155724; margin-top: 0;">✅ Pașii următori</h3>
             <ol style="color: #155724; line-height: 1.8; margin: 0; padding-left: 20px;">
-              <li>Printați și semnați documentele atașate</li>
               <li>Pregătiți actele necesare (buletin, certificat medical)</li>
               <li>Așteptați confirmarea pentru programarea primei lecții</li>
               <li>Prezentați-vă cu toate documentele la prima sesiune</li>
             </ol>
           </div>
+         
+          <div style="background-color: #fff3cd; padding: 20px; border-radius: 10px; margin-bottom: 30px; border-left: 4px solid #ffc107;">
+            <h3 style="color: #856404; margin-top: 0;">💳 Achitare curs</h3>
+            <p style="color: #856404; line-height: 1.6;">
+              Puteți achita taxa de instruire online în siguranță folosind platforma MAIB Pay.<br>
+              <a href="https://maibpay.md/pay/BV1ar" 
+                style="display: inline-block; background-color: #28a745; color: white; text-decoration: none; padding: 10px 20px; border-radius: 6px; margin-top: 10px; font-weight: bold;">
+                👉 Efectuați plata acum
+              </a>
+            </p>
+          </div>
+
 
           <div style="background-color: #fff; border: 2px solid #e9ecef; padding: 25px; border-radius: 10px; margin-bottom: 30px;">
             <h3 style="color: #2c3e50; margin-top: 0;">📞 Contact</h3>
