@@ -18,12 +18,6 @@ export class ContractDataDto {
     example: 'Ion Popescu'
   })
   studentName: string;
-
-  @ApiProperty({
-    description: 'Data contractului în format DD.MM.YYYY',
-    example: '03.11.2025'
-  })
-  contractDate: string;
 }
 
 export class ContractGeneratedResponseDto {

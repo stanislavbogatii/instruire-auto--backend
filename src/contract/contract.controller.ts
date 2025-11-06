@@ -104,7 +104,6 @@ export class ContractController {
         contractNumber: '20251103-456',
         email: 'ion.popescu@example.com',
         studentName: 'Ion Popescu',
-        contractDate: '03.11.2025'
       }
     }
   })
@@ -133,12 +132,10 @@ export class ContractController {
   async generateContracts(@Body() studentDto: CreateStudentDto) {
     try {
       const contractNumber = this.generateContractNumber();
-      const contractDate = this.getCurrentDate();
 
       const studentData = {
         ...studentDto,
         contractNumber,
-        contractDate,
       };
 
       const { applicationPDF, contractPDF } = 
@@ -150,7 +147,6 @@ export class ContractController {
           firstName: studentDto.prenume,
           lastName: studentDto.nume,
           contractNumber,
-          contractDate,
           cutie: studentDto.cutie,
           telefon: studentDto.telefon,
         },
@@ -167,7 +163,6 @@ export class ContractController {
           contractNumber,
           email: studentDto.email,
           studentName: `${studentDto.prenume} ${studentDto.nume}`,
-          contractDate,
         },
       };
     } catch (error) {

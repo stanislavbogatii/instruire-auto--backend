@@ -23,7 +23,6 @@ export interface StudentData {
   cutie: 'MECANICĂ' | 'AUTOMATĂ';
   deUndeAflat: string;
   contractNumber: string;
-  contractDate: string;
 }
 
 @Injectable()
@@ -183,7 +182,7 @@ export class ContractService {
   </div>
   
   <div class="signature">
-    <div>Data: ${data.contractDate}</div>
+    <div>Data: ________________</div>
     <div>Semnatura: ________________</div>
   </div>
 </body>
@@ -318,7 +317,7 @@ export class ContractService {
   
   <div class="contract-info">
     Nr. ${data.contractNumber}<br>
-    ${data.contractDate} mun. Chișinău
+    ________________ mun. Chișinău
   </div>
   
   <div class="parties">

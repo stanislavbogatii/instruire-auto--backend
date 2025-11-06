@@ -138,7 +138,6 @@ export class MailService {
       firstName: string;
       lastName: string;
       contractNumber: string;
-      contractDate: string;
       cutie: string;
       telefon: string;
     },
@@ -159,7 +158,7 @@ export class MailService {
 
           <div style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; padding: 30px; border-radius: 10px; margin-bottom: 30px;">
             <h2 style="margin: 0 0 10px 0; font-size: 24px;">Bună ziua, ${studentData.firstName} ${studentData.lastName}!</h2>
-            <p style="margin: 0; font-size: 16px; opacity: 0.9;">Bun venit la Școala Auto PROD-AM SERVICE</p>
+            <p style="margin: 0; font-size: 16px; opacity: 0.9;">Bun venit la Școala Auto PROD-AM SERVICE SRL - Instruire Auto</p>
           </div>
 
           <div style="background-color: #f8f9fa; padding: 25px; border-radius: 10px; margin-bottom: 30px;">
@@ -180,10 +179,6 @@ export class MailService {
               <tr>
                 <td style="padding: 8px 0; color: #495057;"><strong>Număr contract:</strong></td>
                 <td style="padding: 8px 0; color: #2c3e50;">${studentData.contractNumber}</td>
-              </tr>
-              <tr>
-                <td style="padding: 8px 0; color: #495057;"><strong>Data:</strong></td>
-                <td style="padding: 8px 0; color: #2c3e50;">${studentData.contractDate}</td>
               </tr>
               <tr>
                 <td style="padding: 8px 0; color: #495057;"><strong>Categorie:</strong></td>
@@ -260,7 +255,7 @@ export class MailService {
             </p>
             <p style="color: #6c757d; margin: 0;">
               Cu stimă,<br>
-              <strong>Echipa Școlii Auto PROD-AM SERVICE</strong>
+              <strong>Echipa Școlii Auto PROD-AM SERVICE SRL - Instruire Auto</strong>
             </p>
           </div>
 
