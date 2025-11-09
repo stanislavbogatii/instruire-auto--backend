@@ -131,11 +131,11 @@ export class ContractController {
   })
   async generateContracts(@Body() studentDto: CreateStudentDto) {
     try {
-      const contractNumber = this.generateContractNumber();
+      // const contractNumber = this.generateContractNumber();
 
       const studentData = {
         ...studentDto,
-        contractNumber,
+        // contractNumber,
       };
 
       const { applicationPDF, contractPDF } = 
@@ -146,7 +146,7 @@ export class ContractController {
         {
           firstName: studentDto.prenume,
           lastName: studentDto.nume,
-          contractNumber,
+          // contractNumber,
           cutie: studentDto.cutie,
           telefon: studentDto.telefon,
         },
@@ -160,7 +160,7 @@ export class ContractController {
         success: true,
         message: 'Documentele au fost generate și trimise cu succes',
         data: {
-          contractNumber,
+          // contractNumber,
           email: studentDto.email,
           studentName: `${studentDto.prenume} ${studentDto.nume}`,
         },
@@ -217,12 +217,12 @@ export class ContractController {
   })
   async previewContracts(@Body() studentDto: CreateStudentDto) {
     try {
-      const contractNumber = this.generateContractNumber();
+      // const contractNumber = this.generateContractNumber();
       const contractDate = this.getCurrentDate();
 
       const studentData = {
         ...studentDto,
-        contractNumber,
+        // contractNumber,
         contractDate,
       };
 
@@ -233,7 +233,7 @@ export class ContractController {
         success: true,
         message: 'Documentele au fost generate cu succes',
         data: {
-          contractNumber,
+          // contractNumber,
           applicationPDF: applicationPDF.toString('base64'),
           contractPDF: contractPDF.toString('base64'),
         },
@@ -254,17 +254,17 @@ export class ContractController {
   /**
    * Generează număr de contract unic
    */
-  private generateContractNumber(): string {
-    const date = new Date();
-    const year = date.getFullYear();
-    const month = String(date.getMonth() + 1).padStart(2, '0');
-    const day = String(date.getDate()).padStart(2, '0');
-    const random = Math.floor(Math.random() * 1000)
-      .toString()
-      .padStart(3, '0');
+  // private generateContractNumber(): string {
+  //   const date = new Date();
+  //   const year = date.getFullYear();
+  //   const month = String(date.getMonth() + 1).padStart(2, '0');
+  //   const day = String(date.getDate()).padStart(2, '0');
+  //   const random = Math.floor(Math.random() * 1000)
+  //     .toString()
+  //     .padStart(3, '0');
     
-    return `${year}${month}${day}-${random}`;
-  }
+  //   return `${year}${month}${day}-${random}`;
+  // }
 
   /**
    * Obține data curentă în format DD.MM.YYYY

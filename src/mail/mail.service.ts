@@ -137,7 +137,7 @@ export class MailService {
     studentData: {
       firstName: string;
       lastName: string;
-      contractNumber: string;
+      // contractNumber: string;
       cutie: string;
       telefon: string;
     },
@@ -153,7 +153,7 @@ export class MailService {
         <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px;">
           <div style="text-align: center; margin-bottom: 30px;">
             <h1 style="color: #2c3e50; margin-bottom: 10px;">Școala Auto PROD-AM SERVICE</h1>
-            <p style="color: #7f8c8d; margin: 0;">Instruire profesională pentru categoria B</p>
+            <p style="color: #7f8c8d; margin: 0;">Cursul inițial de formare profesională a conducătorilor auto (Conducător / Conducătoare la Categoria B).</p>
           </div>
 
           <div style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; padding: 30px; border-radius: 10px; margin-bottom: 30px;">
@@ -164,22 +164,18 @@ export class MailService {
           <div style="background-color: #f8f9fa; padding: 25px; border-radius: 10px; margin-bottom: 30px;">
             <h3 style="color: #2c3e50; margin-top: 0;">📋 Documentele dumneavoastră</h3>
             <p style="color: #495057; line-height: 1.6;">
-              Vă mulțumim pentru înscrierea la cursurile noastre de conducere auto!<br>
+              Vă mulțumim pentru înscrierea la cursurile noastre de formare inițială a conducătorilor auto.<br>
               Atașat la acest email veți găsi următoarele documente:
             </p>
             <ul style="color: #495057; line-height: 1.8;">
               <li><strong>📄 Cererea de înscriere</strong> - completată cu datele dumneavoastră personale</li>
-              <li><strong>📝 Contractul de prestări servicii</strong> - Nr. ${studentData.contractNumber}</li>
+              <li><strong>📝 Contractul de prestări servicii</strong></li>
             </ul>
           </div>
 
           <div style="background-color: #e7f3ff; padding: 25px; border-radius: 10px; margin-bottom: 30px; border-left: 4px solid #0066cc;">
             <h3 style="color: #0066cc; margin-top: 0;">ℹ️ Detalii contract</h3>
             <table style="width: 100%; border-collapse: collapse;">
-              <tr>
-                <td style="padding: 8px 0; color: #495057;"><strong>Număr contract:</strong></td>
-                <td style="padding: 8px 0; color: #2c3e50;">${studentData.contractNumber}</td>
-              </tr>
               <tr>
                 <td style="padding: 8px 0; color: #495057;"><strong>Categorie:</strong></td>
                 <td style="padding: 8px 0; color: #2c3e50;">B (autoturisme)</td>
@@ -198,9 +194,9 @@ export class MailService {
           <div style="background-color: #d4edda; padding: 20px; border-radius: 10px; margin-bottom: 30px; border-left: 4px solid #28a745;">
             <h3 style="color: #155724; margin-top: 0;">✅ Pașii următori</h3>
             <ol style="color: #155724; line-height: 1.8; margin: 0; padding-left: 20px;">
-              <li>Pregătiți actele necesare (buletin, certificat medical)</li>
-              <li>Așteptați confirmarea pentru programarea primei lecții</li>
-              <li>Prezentați-vă cu toate documentele la prima sesiune</li>
+              <li>Pregătiți actele necesare: Buletinul de identitate în original și actele medicale – Forma 083 E (de la medicul de familie la care sunteți în evidență).</li>
+              <li>Așteptați confirmarea pentru programul lecțiilor teoretice în grupul de Viber, unde veți fi inclus(ă) în baza numărului de contract atașat la cerere.</li>
+              <li>Actele în original trebuie prezentate la prima lecție teoretică, unde veți primi contractul în original, cu bonul fiscal atașat.</li>
             </ol>
           </div>
          
@@ -212,6 +208,12 @@ export class MailService {
                 style="display: inline-block; background-color: #28a745; color: white; text-decoration: none; padding: 10px 20px; border-radius: 6px; margin-top: 10px; font-weight: bold;">
                 👉 Efectuați plata acum
               </a>
+            </p>
+          </div>
+          <div style="background-color: #e2e3e5; padding: 20px; border-radius: 10px; margin-bottom: 30px; border-left: 4px solid #6c757d;">
+            <h3 style="color: #343a40; margin-top: 0;">💵 Achitare numerar</h3>
+            <p style="color: #343a40; line-height: 1.6;">
+              Pentru a achita numerar vă puteți apropia la unul din sediile noastre.
             </p>
           </div>
 
@@ -251,7 +253,7 @@ export class MailService {
 
           <div style="text-align: center; margin-top: 40px; padding-top: 20px; border-top: 2px solid #e9ecef;">
             <p style="color: #2c3e50; font-size: 18px; margin-bottom: 10px;">
-              <strong>Vă dorim succes la examen! 🚗</strong>
+              <strong>Vă dorim mult succes și inspirație la cursurile noastre! 🚗</strong>
             </p>
             <p style="color: #6c757d; margin: 0;">
               Cu stimă,<br>
@@ -274,7 +276,7 @@ export class MailService {
           contentType: 'application/pdf',
         },
         {
-          filename: `Contract_${studentData.contractNumber}_${studentData.lastName}_${studentData.firstName}.pdf`,
+          filename: `Contract_${studentData.lastName}_${studentData.firstName}.pdf`,
           content: attachments.contractPDF,
           contentType: 'application/pdf',
         },

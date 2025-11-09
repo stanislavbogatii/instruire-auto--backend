@@ -22,7 +22,7 @@ export interface StudentData {
   telefonContact: string;
   cutie: 'MECANICĂ' | 'AUTOMATĂ';
   deUndeAflat: string;
-  contractNumber: string;
+  // contractNumber: string;
 }
 
 @Injectable()
@@ -316,7 +316,7 @@ export class ContractService {
   </div>
   
   <div class="contract-info">
-    Nr. ${data.contractNumber}<br>
+    Nr. <br>
     ________________ mun. Chișinău
   </div>
   
