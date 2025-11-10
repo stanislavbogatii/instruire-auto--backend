@@ -195,7 +195,7 @@ export class MailService {
             <h3 style="color: #155724; margin-top: 0;">✅ Pașii următori</h3>
             <ol style="color: #155724; line-height: 1.8; margin: 0; padding-left: 20px;">
               <li>Pregătiți actele necesare: Buletinul de identitate în original și actele medicale – Forma 083 E (de la medicul de familie la care sunteți în evidență).</li>
-              <li>Așteptați confirmarea pentru programul lecțiilor teoretice în grupul de Viber, unde veți fi inclus(ă) în baza numărului de contract atașat la cerere.</li>
+              <li>Așteptați confirmarea pentru programul lecțiilor teoretice în grupul de Viber, unde veți fi inclus(ă) în baza numărului de contact atașat la cerere.</li>
               <li>Actele în original trebuie prezentate la prima lecție teoretică, unde veți primi contractul în original, cu bonul fiscal atașat.</li>
             </ol>
           </div>
@@ -214,6 +214,9 @@ export class MailService {
             <h3 style="color: #343a40; margin-top: 0;">💵 Achitare numerar</h3>
             <p style="color: #343a40; line-height: 1.6;">
               Pentru a achita numerar vă puteți apropia la unul din sediile noastre.
+            </p>
+            <p style="color: #343a40; line-height: 1.6;">Ne găsiți de luni până vineri, între orele 9:00 și 18:00, pe Șos. Muncești 304 sau pe bd. Mircea cel Bătrân 39, 
+              iar în weekend, de la ora 10:00-15:00, pe Strada Pădurii 25\\1.
             </p>
           </div>
 
