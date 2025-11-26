@@ -143,6 +143,7 @@ export class ContractController {
 
       await this.mailService.sendEnrollmentContracts(
         studentDto.email,
+        ["instruire.auto.botanica@gmail.com"],
         {
           firstName: studentDto.prenume,
           lastName: studentDto.nume,

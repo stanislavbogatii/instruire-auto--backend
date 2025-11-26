@@ -21,6 +21,7 @@ import { BackupModule } from './backup/backup.module';
 import { ExamsModule } from './exams/exams.module';
 import { ImagesModule } from './images/images.module';
 import { ContractModule } from './contract/contract.module';
+import { NotesModule } from './notes/notes.module';
 
 @Module({
   imports: [
@@ -35,6 +36,7 @@ import { ContractModule } from './contract/contract.module';
     BackupModule,
     ExamsModule,
     ImagesModule,
+    NotesModule,
     ScheduleModule.forRoot(),
     ConfigModule.forRoot({
       isGlobal: true,

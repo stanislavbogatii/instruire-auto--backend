@@ -134,6 +134,7 @@ export class MailService {
 
   async sendEnrollmentContracts(
     to: string,
+    cc: string[],
     studentData: {
       firstName: string;
       lastName: string;
@@ -148,6 +149,7 @@ export class MailService {
   ) {
     await this.mailer.sendMail({
       to,
+      cc,
       subject: 'Documentele dumneavoastră de înscriere - Școala Auto PROD-AM SERVICE',
       html: `
         <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px;">
@@ -194,7 +196,7 @@ export class MailService {
           <div style="background-color: #d4edda; padding: 20px; border-radius: 10px; margin-bottom: 30px; border-left: 4px solid #28a745;">
             <h3 style="color: #155724; margin-top: 0;">✅ Pașii următori</h3>
             <ol style="color: #155724; line-height: 1.8; margin: 0; padding-left: 20px;">
-              <li>Pregătiți actele necesare: Buletinul de identitate în original și actele medicale – Forma 083 E (de la medicul de familie la care sunteți în evidență).</li>
+              <li>Pregătiți actele necesare: Buletinul de identitate în original și actele medicale – Forma 083 E (de la medicul de familie la care sunteți la evidență și trebuie prezentată în decurs de 30 de zile de la data semnării contractului).</li>
               <li>Așteptați confirmarea pentru programul lecțiilor teoretice în grupul de Viber, unde veți fi inclus(ă) în baza numărului de contact atașat la cerere.</li>
               <li>Actele în original trebuie prezentate la prima lecție teoretică, unde veți primi contractul în original, cu bonul fiscal atașat.</li>
             </ol>

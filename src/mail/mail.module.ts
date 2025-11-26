@@ -21,7 +21,7 @@ import { ConfigModule, ConfigService } from '@nestjs/config';
           },
         },
         defaults: {
-          from: `"No Reply" <${process.env.MAIL_FROM}>`,
+          from: `"Instruire Auto" <${process.env.MAIL_FROM}>`,
         },
         template: {
           dir: join(process.cwd(), 'src/mail/templates'), 
