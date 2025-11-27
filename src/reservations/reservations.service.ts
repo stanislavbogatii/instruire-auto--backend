@@ -95,6 +95,8 @@ export class ReservationsService {
             privateMessage: item.privateMessage || '',
             color: item.color || '',
             instructorsGroupId,
+            isFavorite: item.isFavorite || false,
+            isImportant: item.isImportant || false,
           },
           include: {
             instructor: true,
@@ -222,6 +224,8 @@ export class ReservationsService {
             privateMessage: item.privateMessage || '',
             color: item.color || '',
             instructorsGroupId: null,
+            isFavorite: item.isFavorite || false,
+            isImportant: item.isImportant || false,
           },
           include: {
             instructor: true,
@@ -317,6 +321,8 @@ export class ReservationsService {
         privateMessage: dto.privateMessage,
         color: dto.color,
         isCancelled: dto.isCancelled,
+        isFavorite: dto.isFavorite,
+        isImportant: dto.isImportant,
       },
       include: {
         instructor: true,

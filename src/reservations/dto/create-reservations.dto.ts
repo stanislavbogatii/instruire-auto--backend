@@ -1,6 +1,6 @@
 import { ApiProperty } from '@nestjs/swagger';
 import { ApiPropertyOptional } from '@nestjs/swagger';
-import { IsArray, IsDateString, IsNotEmpty, ValidateNested, IsNumber, IsOptional, IsString } from 'class-validator';
+import { IsArray, IsDateString, IsNotEmpty, ValidateNested, IsNumber, IsOptional, IsString, IsBoolean } from 'class-validator';
 import { Type } from 'class-transformer';
 
 class ReservationItemDto {
@@ -46,6 +46,22 @@ class ReservationItemDto {
   @IsString()
   @IsOptional()
   color?: string;
+
+  @ApiPropertyOptional({ 
+    example: false, 
+    description: 'Mark reservation as favorite'
+  })
+  @IsBoolean()
+  @IsOptional()
+  isFavorite?: boolean;
+
+  @ApiPropertyOptional({ 
+    example: false, 
+    description: 'Mark reservation as important'
+  })
+  @IsBoolean()
+  @IsOptional()
+  isImportant?: boolean;
 
   // @ApiPropertyOptional({
   //   example: 1,

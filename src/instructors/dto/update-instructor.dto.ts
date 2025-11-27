@@ -25,4 +25,12 @@ export class UpdateInstructorDto extends PartialType(CreateInstructorDto) {
   @ApiProperty({example: "20X30"})
   @IsOptional()
   order?: string
+
+  @ApiPropertyOptional({ 
+    example: '#FF5733', 
+    description: 'Color code for instructor'
+  })
+  @IsString()
+  @IsOptional()
+  color?: string;
 }

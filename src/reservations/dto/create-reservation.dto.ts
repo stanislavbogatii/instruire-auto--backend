@@ -1,6 +1,6 @@
 import { ApiProperty, ApiPropertyOptional } from "@nestjs/swagger";
 import { Type } from "class-transformer";
-import { IsDateString, IsNotEmpty, IsNumber, IsOptional, IsString } from "class-validator";
+import { IsDateString, IsNotEmpty, IsNumber, IsOptional, IsString, IsBoolean } from "class-validator";
 
 export class CreateReservationDto {
   @ApiProperty({ example: '2025-07-20T10:00:00Z' })
@@ -54,4 +54,20 @@ export class CreateReservationDto {
   @IsOptional()
   @Type(() => Number)
   instructorsGroupId?: number;
+
+  @ApiPropertyOptional({ 
+    example: false, 
+    description: 'Mark reservation as favorite'
+  })
+  @IsBoolean()
+  @IsOptional()
+  isFavorite?: boolean;
+
+  @ApiPropertyOptional({ 
+    example: false, 
+    description: 'Mark reservation as important'
+  })
+  @IsBoolean()
+  @IsOptional()
+  isImportant?: boolean;
 }

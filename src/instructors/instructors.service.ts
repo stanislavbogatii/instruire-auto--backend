@@ -19,7 +19,7 @@ export class InstructorsService {
   ) {}
 
   async create(createInstructorDto: CreateInstructorDto) {
-    const { firstName, lastName, phone, email, password, sector, order } =
+    const { firstName, lastName, phone, email, password, sector, order, color } =
       createInstructorDto;
 
     const existsPhone = await this.prisma.instructor.findFirst({
@@ -50,6 +50,7 @@ export class InstructorsService {
         lastName,
         phone,
         sector,
+        color,
         userId: user.id,
       },
       include: {
@@ -113,7 +114,8 @@ export class InstructorsService {
         firstName: updateInstructorDto.firstName,
         lastName: updateInstructorDto.lastName,
         phone: updateInstructorDto.phone,
-        sector: updateInstructorDto.sector, // Add sector field
+        sector: updateInstructorDto.sector,
+        color: updateInstructorDto.color,
       },
     });
   }

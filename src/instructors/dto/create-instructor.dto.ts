@@ -39,4 +39,13 @@ export class CreateInstructorDto {
   @IsString()
   @IsOptional()
   sector?: string;
+
+  @ApiProperty({ 
+    example: '#FF5733', 
+    description: 'Color code for instructor',
+    required: false 
+  })
+  @IsString()
+  @IsOptional()
+  color?: string;
 }

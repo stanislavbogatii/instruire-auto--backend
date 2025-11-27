@@ -56,4 +56,20 @@ export class UpdateReservationDto {
     @IsBoolean()
     @IsOptional()
     isCancelled?: boolean;
+
+    @ApiPropertyOptional({ 
+      example: false, 
+      description: 'Mark reservation as favorite'
+    })
+    @IsBoolean()
+    @IsOptional()
+    isFavorite?: boolean;
+
+    @ApiPropertyOptional({ 
+      example: false, 
+      description: 'Mark reservation as important'
+    })
+    @IsBoolean()
+    @IsOptional()
+    isImportant?: boolean;
 }

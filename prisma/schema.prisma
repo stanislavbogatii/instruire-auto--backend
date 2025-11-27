@@ -67,6 +67,8 @@ model Reservation {
   isConfirmed        Boolean              @default(false)
   updatedAt          DateTime             @default(now()) @updatedAt
   isCancelled        Boolean              @default(false)
+  isFavorite         Boolean              @default(false)
+  isImportant        Boolean              @default(false)
   car                Car?                 @relation(fields: [carId], references: [id])
   instructor         Instructor?          @relation(fields: [instructorId], references: [id])
   instructorsGroup   InstructorsGroup?    @relation(fields: [instructorsGroupId], references: [id])
@@ -147,6 +149,7 @@ model Instructor {
   instructorsGroupId Int?
   userId             Int?                    @unique
   order              String?
+  color              String?                 @default("")
   cars               Car[]
   exams              Exam[]
   groups             Group[]
