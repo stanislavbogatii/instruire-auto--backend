@@ -18,6 +18,7 @@ import { HistoryService } from './history.service';
 import { CreateReservationsDto } from './dto/create-reservations.dto';
 import { CreateReservationsForUserDto } from './dto/create-reservations-for-user.dto';
 import { UpdateReservationDto } from './dto/update-reservation.dto';
+import { FilterReservationsDto } from './dto/filter-reservations.dto';
 import {
   ApiTags,
   ApiBearerAuth,
@@ -101,6 +102,25 @@ export class ReservationsController {
   async getMineForInstructor(@Session() session: User) {
     if (session.role !== Role.INSTRUCTOR) throw new ForbiddenException("This user is not instructor");
     return this.reservationsService.getReservationsByInstructorId(session.id);
+  }
+
+  @Get('filter')
+  @ApiOperation({ summary: 'Filter reservations by various criteria' })
+  @ApiResponse({ 
+    status: 200, 
+    description: 'Filtered reservations with pagination',
+    schema: {
+      properties: {
+        data: { type: 'array', items: { $ref: getSchemaPath(ReservationDto) } },
+        total: { type: 'number' },
+        limit: { type: 'number' },
+        skip: { type: 'number' },
+        hasMore: { type: 'boolean' }
+      }
+    }
+  })
+  async filterReservations(@Query() filters: FilterReservationsDto) {
+    return this.reservationsService.findByFilters(filters);
   }
 
   @Get('busy-reservation')

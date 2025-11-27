@@ -2,6 +2,7 @@ import { Injectable, NotFoundException, BadRequestException } from '@nestjs/comm
 import { PrismaService } from 'src/prisma/prisma.service';
 import { CreateReservationsDto } from './dto/create-reservations.dto';
 import { UpdateReservationDto } from './dto/update-reservation.dto';
+import { FilterReservationsDto } from './dto/filter-reservations.dto';
 import { HistoryService } from './history.service';
 import { Car, Instructor, InstructorsGroup, Reservation } from '@prisma/client';
 import { BusyReservationResponse } from './dto/ busy-reservation.dto';
@@ -301,6 +302,128 @@ export class ReservationsService {
         }
       }
     });
+  }
+
+  async findByFilters(filters: FilterReservationsDto) {
+    const where: any = {};
+
+    // Apply filters
+    if (filters.userId !== undefined) {
+      where.userId = filters.userId;
+    }
+
+    if (filters.instructorId !== undefined) {
+      where.instructorId = filters.instructorId;
+    }
+
+    if (filters.instructorsGroupId !== undefined) {
+      where.instructorsGroupId = filters.instructorsGroupId;
+    }
+
+    if (filters.carId !== undefined) {
+      where.carId = filters.carId;
+    }
+
+    if (filters.sector !== undefined) {
+      where.sector = { contains: filters.sector };
+    }
+
+    if (filters.gearbox !== undefined) {
+      where.gearbox = { contains: filters.gearbox };
+    }
+
+    if (filters.color !== undefined) {
+      where.color = filters.color;
+    }
+
+    if (filters.isConfirmed !== undefined) {
+      where.isConfirmed = filters.isConfirmed;
+    }
+
+    if (filters.isCancelled !== undefined) {
+      where.isCancelled = filters.isCancelled;
+    }
+
+    if (filters.isFavorite !== undefined) {
+      where.isFavorite = filters.isFavorite;
+    }
+
+    if (filters.isImportant !== undefined) {
+      where.isImportant = filters.isImportant;
+    }
+
+    // Date range filters
+    if (filters.startDateFrom || filters.startDateTo) {
+      where.startTime = {};
+      if (filters.startDateFrom) {
+        where.startTime.gte = new Date(filters.startDateFrom);
+      }
+      if (filters.startDateTo) {
+        where.startTime.lte = new Date(filters.startDateTo);
+      }
+    }
+
+    // Sorting
+    const sortBy = filters.sortBy || 'startTime';
+    const sortOrder = filters.sortOrder || 'desc';
+    const orderBy: any = { [sortBy]: sortOrder };
+
+    // Pagination
+    const limit = filters.limit || 100;
+    const skip = filters.skip || 0;
+
+    const [reservations, total] = await Promise.all([
+      this.prisma.reservation.findMany({
+        where,
+        include: {
+          instructor: {
+            select: {
+              id: true,
+              phone: true,
+              firstName: true,
+              lastName: true,
+              sector: true,
+              color: true
+            }
+          },
+          user: {
+            select: {
+              id: true,
+              phone: true,
+              firstName: true,
+              lastName: true,
+              email: true
+            }
+          },
+          car: {
+            select: {
+              id: true,
+              plateNumber: true,
+              gearbox: true
+            }
+          },
+          instructorsGroup: {
+            select: {
+              id: true,
+              name: true,
+              sector: true
+            }
+          }
+        },
+        orderBy,
+        take: limit,
+        skip
+      }),
+      this.prisma.reservation.count({ where })
+    ]);
+
+    return {
+      data: reservations,
+      total,
+      limit,
+      skip,
+      hasMore: skip + reservations.length < total
+    };
   }
 
   async update(id: number, dto: UpdateReservationDto, changedBy?: number) {
