@@ -1,7 +1,7 @@
 import { PartialType } from '@nestjs/mapped-types';
 import { CreateUserDto } from './create-user.dto';
 import { ApiPropertyOptional } from '@nestjs/swagger';
-import { IsOptional, IsString, Matches } from 'class-validator';
+import { IsOptional, IsString, Matches, IsInt, Min } from 'class-validator';
 
 export class UpdateUserDto extends PartialType(CreateUserDto) {
   @ApiPropertyOptional({ description: 'New email (optional)' })
@@ -45,4 +45,14 @@ export class UpdateUserDto extends PartialType(CreateUserDto) {
   @IsString()
   @IsOptional()
   privateMessage?: string;
+
+  @ApiPropertyOptional({ 
+    example: 1, 
+    description: 'Desired instructor ID for the user',
+    required: false 
+  })
+  @IsOptional()
+  @IsInt()
+  @Min(1)
+  desiredInstructorId?: number;
 }

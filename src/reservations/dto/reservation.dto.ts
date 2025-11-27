@@ -23,6 +23,9 @@ export class ReservationDto {
   isConfirmed: boolean;
 
   @Expose({ groups: ['ADMIN', 'MANAGER', 'INSTRUCTOR'] })
+  isCancelled: boolean;
+
+  @Expose({ groups: ['ADMIN', 'MANAGER', 'INSTRUCTOR'] })
   userId: number;
 
   @Expose({ groups: ['ADMIN', 'MANAGER', 'INSTRUCTOR'] })

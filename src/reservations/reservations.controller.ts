@@ -270,4 +270,26 @@ export class ReservationsController {
   ) {
     return await this.reservationsService.unconfirmReservation(id, session.id);
   }
+
+  @Patch(':id/cancel')
+  @ApiOperation({ summary: 'Cancel a reservation' })
+  @ApiParam({ name: 'id', type: Number })
+  @ApiResponse({ status: 200, description: 'Reservation cancelled' })
+  async cancelReservation(
+    @Param('id', ParseIntPipe) id: number,
+    @Session() session: User
+  ) {
+    return await this.reservationsService.cancelReservation(id, session.id);
+  }
+
+  @Patch(':id/uncancel')
+  @ApiOperation({ summary: 'Uncancel a reservation' })
+  @ApiParam({ name: 'id', type: Number })
+  @ApiResponse({ status: 200, description: 'Reservation uncancelled' })
+  async uncancelReservation(
+    @Param('id', ParseIntPipe) id: number,
+    @Session() session: User
+  ) {
+    return await this.reservationsService.uncancelReservation(id, session.id);
+  }
 }

@@ -13,6 +13,7 @@ import {
 import { UsersService } from './users.service';
 import { CreateUserDto } from './dto/create-user.dto';
 import { UpdateUserDto } from './dto/update-user.dto';
+import { SetDesiredInstructorDto } from './dto/set-desired-instructor.dto';
 import {
   ApiTags,
   ApiOperation,
@@ -86,5 +87,18 @@ export class UsersController {
   })
   async getUsersByGroup(@Param('groupId', ParseIntPipe) groupId: number) {
     return this.usersService.getUsersByGroup(groupId);
+  }
+
+  @Patch('me/desired-instructor')
+  @ApiOperation({ summary: 'Set desired instructor for the authenticated user' })
+  @ApiResponse({ status: 200, description: 'Desired instructor set successfully.' })
+  @ApiResponse({ status: 401, description: 'Unauthorized.' })
+  @ApiBearerAuth('access-token')
+  @UseGuards(AuthGuard('jwt'))
+  async setDesiredInstructor(
+    @Session() session: User,
+    @Body() dto: SetDesiredInstructorDto
+  ) {
+    return this.usersService.update(session.id, { desiredInstructorId: dto.desiredInstructorId });
   }
 }

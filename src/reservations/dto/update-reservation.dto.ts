@@ -1,5 +1,5 @@
 import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
-import { IsNumber, IsOptional, IsDateString, IsString } from 'class-validator';
+import { IsNumber, IsOptional, IsDateString, IsString, IsBoolean } from 'class-validator';
 import { Type } from 'class-transformer';
 
 export class UpdateReservationDto {
@@ -48,4 +48,12 @@ export class UpdateReservationDto {
     @IsString()
     @IsOptional()
     color?: string;
+
+    @ApiPropertyOptional({ 
+      example: false, 
+      description: 'Whether the reservation is cancelled'
+    })
+    @IsBoolean()
+    @IsOptional()
+    isCancelled?: boolean;
 }

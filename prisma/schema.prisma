@@ -14,26 +14,29 @@ model User {
   hash                String
   role                Role                    @default(USER)
   groupId             Int?
+  desiredInstructorId Int?
   createdAt           DateTime                @default(now())
   updatedAt           DateTime                @updatedAt
   firstName           String?                 @default("")
   lastName            String?                 @default("")
   phone               String?                 @default("")
   privateMessage      String?                 @default("")
-  idnp                String?                 @default("")
   userId              Int?                    @unique
+  idnp                String?                 @default("")
   exams               Exam[]
   instructorProfile   Instructor?             @relation("UserInstructor")
+  desiredInstructor   Instructor?             @relation("DesiredInstructor", fields: [desiredInstructorId], references: [id])
+  Note                Note[]
   reservations        Reservation[]
   changedReservations ReservationHistory[]    @relation("ChangedByUser")
   reservationHistory  ReservationHistory[]
   examPermissions     StudentExamPermission[]
   studentTickets      StudentTicket[]
   group               Group?                  @relation(fields: [groupId], references: [id])
-  notes               Note[]
 
   @@index([groupId], map: "User_groupId_fkey")
   @@index([userId], map: "User_userId_fkey")
+  @@index([desiredInstructorId])
 }
 
 model Group {
@@ -63,6 +66,7 @@ model Reservation {
   instructorsGroupId Int?
   isConfirmed        Boolean              @default(false)
   updatedAt          DateTime             @default(now()) @updatedAt
+  isCancelled        Boolean              @default(false)
   car                Car?                 @relation(fields: [carId], references: [id])
   instructor         Instructor?          @relation(fields: [instructorId], references: [id])
   instructorsGroup   InstructorsGroup?    @relation(fields: [instructorsGroupId], references: [id])
@@ -148,29 +152,27 @@ model Instructor {
   groups             Group[]
   instructorsGroup   InstructorsGroup?       @relation(fields: [instructorsGroupId], references: [id])
   user               User?                   @relation("UserInstructor", fields: [userId], references: [id])
+  desiredByUsers     User[]                  @relation("DesiredInstructor")
+  blackouts          InstructorBlackout[]
   reservations       Reservation[]
   reservationHistory ReservationHistory[]
   examPermissions    StudentExamPermission[]
-  blackouts          InstructorBlackout[]
 
   @@index([instructorsGroupId])
   @@index([userId], map: "Instructor_userId_fkey")
 }
 
 model InstructorBlackout {
-  id                 Int                  @id @default(autoincrement())
-  dateTime           DateTime
-  instructorId       Int 
-  instructor         Instructor           @relation(fields: [instructorId], references: [id])
-
-  type               InstructorBlackoutType  @default(SINGLE)
-  startDateTime      DateTime?
-  endDateTime        DateTime?
-
-  repeatEveryDays    Int                  @default(0)
-  
-  createdAt          DateTime             @default(now())
-  updatedAt          DateTime             @updatedAt
+  id              Int                    @id @default(autoincrement())
+  dateTime        DateTime
+  instructorId    Int
+  createdAt       DateTime               @default(now())
+  updatedAt       DateTime               @updatedAt
+  endDateTime     DateTime?
+  startDateTime   DateTime?
+  type            InstructorBlackoutType @default(SINGLE)
+  repeatEveryDays Int                    @default(0)
+  instructor      Instructor             @relation(fields: [instructorId], references: [id])
 
   @@unique([instructorId, dateTime])
 }
@@ -305,20 +307,32 @@ model StudentExamPermission {
   id           Int         @id @default(autoincrement())
   userId       Int
   instructorId Int?
-  granterId    Int         @default(0)
-  granterType  Role        @default(INSTRUCTOR)
   isActive     Boolean     @default(true)
   validUntil   DateTime
   maxAttempts  Int         @default(3)
   usedAttempts Int         @default(0)
   createdAt    DateTime    @default(now())
   updatedAt    DateTime    @updatedAt
+  granterId    Int         @default(0)
+  granterType  Role        @default(INSTRUCTOR)
   instructor   Instructor? @relation(fields: [instructorId], references: [id], onDelete: Cascade)
   user         User        @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   @@index([userId])
   @@index([instructorId])
   @@index([granterId])
+}
+
+model Note {
+  id        Int      @id @default(autoincrement())
+  title     String
+  content   String   @db.Text
+  userId    Int
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
 }
 
 enum Role {
@@ -359,16 +373,4 @@ enum QuestionType {
 enum InstructorBlackoutType {
   SINGLE
   REPEAT
-}
-
-model Note {
-  id        Int      @id @default(autoincrement())
-  title     String
-  content   String   @db.Text
-  userId    Int
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
-  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
-
-  @@index([userId])
 }

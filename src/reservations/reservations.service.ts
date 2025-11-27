@@ -315,7 +315,8 @@ export class ReservationsService {
         sector: dto.sector,
         gearbox: dto.gearbox,
         privateMessage: dto.privateMessage,
-        color: dto.color,  
+        color: dto.color,
+        isCancelled: dto.isCancelled,
       },
       include: {
         instructor: true,
@@ -420,6 +421,74 @@ export class ReservationsService {
       await this.historyService.createHistoryRecord(
         id,
         'UNCONFIRM' as any,
+        updatedReservation,
+        changedBy,
+        oldReservation
+      );
+    } catch (error) {
+      console.warn('Failed to create history record:', error.message);
+    }
+
+    return updatedReservation;
+  }
+
+  async cancelReservation(id: number, changedBy?: number) {
+    const oldReservation = await this.prisma.reservation.findUnique({
+      where: { id },
+    });
+    if (!oldReservation) {
+      throw new NotFoundException(`Reservation #${id} not found`);
+    }
+
+    const updatedReservation = await this.prisma.reservation.update({
+      where: { id },
+      data: { isCancelled: true },
+      include: {
+        instructor: true,
+        car: true,
+        user: true
+      }
+    });
+
+    // Create history record for the cancellation
+    try {
+      await this.historyService.createHistoryRecord(
+        id,
+        'UPDATE' as any,
+        updatedReservation,
+        changedBy,
+        oldReservation
+      );
+    } catch (error) {
+      console.warn('Failed to create history record:', error.message);
+    }
+
+    return updatedReservation;
+  }
+
+  async uncancelReservation(id: number, changedBy?: number) {
+    const oldReservation = await this.prisma.reservation.findUnique({
+      where: { id },
+    });
+    if (!oldReservation) {
+      throw new NotFoundException(`Reservation #${id} not found`);
+    }
+
+    const updatedReservation = await this.prisma.reservation.update({
+      where: { id },
+      data: { isCancelled: false },
+      include: {
+        instructor: true,
+        car: true,
+        user: true
+      }
+    });
+
+    // Create history record for the uncancellation
+    try {
+      await this.historyService.createHistoryRecord(
+        id,
+        'UPDATE' as any,
         updatedReservation,
         changedBy,
         oldReservation
