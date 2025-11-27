@@ -36,6 +36,9 @@ import { plainToInstance } from 'class-transformer';
 import { ReservationDto } from './dto/reservation.dto';
 import { BusyReservationResponse } from './dto/ busy-reservation.dto';
 import { ReservationHistoryDto } from './dto/reservation-history.dto';
+import { WsService } from 'src/ws/ws.service';
+import { ConnectedSocket } from '@nestjs/websockets';
+import { Socket } from 'socket.io';
 
 
 @ApiTags('reservations')
@@ -45,8 +48,12 @@ import { ReservationHistoryDto } from './dto/reservation-history.dto';
 export class ReservationsController {
   constructor(
     private reservationsService: ReservationsService,
-    private historyService: HistoryService
+    private historyService: HistoryService,
+    private wsService: WsService,
   ) {}
+
+
+  
 
   @Post()
   @ApiOperation({ summary: 'Create multiple reservations for current user' })
@@ -56,7 +63,12 @@ export class ReservationsController {
     @Body() dto: CreateReservationsDto, 
     @Session() session: User
   ) {
-    return this.reservationsService.createReservations(session.id, dto);
+    const reservations = await this.reservationsService.createReservations(session.id, dto);
+
+    if (reservations.length > 0)
+        this.wsService.emitReservationsCreated(reservations, session); 
+
+    return reservations;
   }
 
   @Post('for-user')
@@ -86,7 +98,11 @@ export class ReservationsController {
       throw new ForbiddenException("Only admins, managers, and instructors can create reservations for other users");
     }
     
-    return this.reservationsService.createReservationsForUser(dto.userId, dto);
+    const reservations = await this.reservationsService.createReservationsForUser(dto.userId, dto);
+    if (reservations && reservations.length > 0)
+        this.wsService.emitReservationsCreated(reservations, session);
+
+    return reservations;
   }
 
   @Get()
@@ -181,13 +197,15 @@ export class ReservationsController {
   @ApiOperation({ summary: 'Update a reservation by ID' })
   @ApiParam({ name: 'id', type: Number })
   @ApiBody({ type: UpdateReservationDto })
-  @ApiResponse({ status: 200, description: 'Reservation updated' })
+  @ApiResponse({ status: 200, description: 'Reservation updated' }) 
   async update(
     @Param('id', ParseIntPipe) id: number,
     @Body() dto: UpdateReservationDto,
     @Session() session: User
   ) {
-    return await this.reservationsService.update(id, dto, session.id);
+    const reservation = await this.reservationsService.update(id, dto, session.id);
+    this.wsService.emitReservationUpdated([reservation], session);
+    return reservation;
   }
 
   @Delete(':id')
@@ -199,7 +217,11 @@ export class ReservationsController {
     @Param('id', ParseIntPipe) id: number,
     @Session() session: User
   ) {
-    await this.reservationsService.delete(id, session.id);
+    const response = await this.reservationsService.delete(id, session.id);
+    if (response)
+      this.wsService.emitReservationDeleted(+id, session);
+
+    return response;
   }
 
   @Get('user/:userId')

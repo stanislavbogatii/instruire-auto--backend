@@ -37,8 +37,8 @@ export class ReservationsService {
     return this.createReservations(userId, dto);
   }
 
-  async createReservations(userId: number, dto: CreateReservationsDto) {
-    const created: any = [];
+  async createReservations(userId: number, dto: CreateReservationsDto): Promise<Reservation[]> {
+    const created: Array<Reservation> = [];
     let instructorId = dto.instructorId;
     let instructorsGroupId = dto.instructorsGroupId;
 
@@ -488,7 +488,7 @@ export class ReservationsService {
       console.warn('Failed to create history record:', error.message);
     }
 
-    await this.prisma.reservation.delete({
+    return await this.prisma.reservation.delete({
       where: {id}
     });
   }

@@ -4,6 +4,8 @@ import { ValidationPipe } from '@nestjs/common';
 import { SwaggerModule, DocumentBuilder } from '@nestjs/swagger';
 import { NestExpressApplication } from '@nestjs/platform-express';
 import { join } from 'path';
+import { JwtService } from '@nestjs/jwt';
+import { WsAdapter } from './ws/ws-adapter';
 
 async function bootstrap() {
   const app = await NestFactory.create<NestExpressApplication>(AppModule);
@@ -12,6 +14,9 @@ async function bootstrap() {
     origin: ['http://31.97.76.142:3000', 'http://localhost:3000', 'https://instruireauto.site'],
     credentials: true,
   });
+
+  // const jwt = app.get(JwtService);
+  // app.useWebSocketAdapter(new WsAdapter(jwt));
 
   app.useGlobalPipes(new ValidationPipe({ whitelist: true }));
   app.setGlobalPrefix('api'); // Your API endpoints will be prefixed with /api

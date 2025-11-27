@@ -3,9 +3,10 @@ import { ReservationsService } from './reservations.service';
 import { ReservationsController } from './reservations.controller';
 import { HistoryService } from './history.service';
 import { PrismaModule } from 'src/prisma/prisma.module';
+import { WsModule } from 'src/ws/ws.module';
 
 @Module({
-  imports: [PrismaModule],
+  imports: [PrismaModule, WsModule],
   controllers: [ReservationsController],
   providers: [ReservationsService, HistoryService],
 })

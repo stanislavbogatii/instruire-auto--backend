@@ -22,6 +22,7 @@ import { ExamsModule } from './exams/exams.module';
 import { ImagesModule } from './images/images.module';
 import { ContractModule } from './contract/contract.module';
 import { NotesModule } from './notes/notes.module';
+import { WsModule } from './ws/ws.module';
 
 @Module({
   imports: [
@@ -68,6 +69,7 @@ import { NotesModule } from './notes/notes.module';
     MailModule,
     ReservationsModule,
     ContractModule,
+    WsModule,
   ],
   controllers: [AppController],
   providers: [AppService],
