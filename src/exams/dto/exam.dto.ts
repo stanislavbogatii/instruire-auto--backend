@@ -134,3 +134,15 @@ export class SubmitPracticeAnswerDto {
   @Min(0)
   selectedAnswer: number;
 }
+
+export class StartPracticeByCategoryDto {
+  @ApiProperty({ description: 'Category ID to practice' })
+  @IsInt()
+  categoryId: number;
+
+  @ApiProperty({ description: 'Number of questions (default: 20)', required: false, default: 20 })
+  @IsOptional()
+  @IsInt()
+  @Min(1)
+  questionCount?: number;
+}

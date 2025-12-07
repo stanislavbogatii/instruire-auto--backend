@@ -17,7 +17,8 @@ import {
   BulkCreateStudentPermissionDto,
   ReactivateStudentDto,
   StartPracticeDto,
-  SubmitPracticeAnswerDto
+  SubmitPracticeAnswerDto,
+  StartPracticeByCategoryDto
 } from './dto/exam.dto';
 import { TicketsService } from './tickets.service';
 import { Cron, CronExpression } from '@nestjs/schedule';
@@ -1151,5 +1152,198 @@ export class ExamsService {
         },
       },
     });
+  }
+
+  // ================================
+  // CATEGORY-BASED PRACTICE METHODS
+  // ================================
+
+  async startPracticeByCategory(
+    userId: number,
+    startPracticeByCategoryDto: StartPracticeByCategoryDto,
+    lang: Language = 'ro',
+  ) {
+    const { categoryId, questionCount = 20 } = startPracticeByCategoryDto;
+
+    // Verify category exists
+    const category = await this.prisma.questionCategory.findUnique({
+      where: { id: categoryId },
+    });
+
+    if (!category) {
+      throw new NotFoundException('Category not found');
+    }
+
+    // Get questions from this category
+    const questions = await this.prisma.question.findMany({
+      where: {
+        categoryId,
+        ticketQuestions: {
+          some: {
+            ticket: {
+              type: 'PRACTICE',
+            },
+          },
+        },
+      },
+      take: questionCount,
+      orderBy: { id: 'asc' },
+    });
+
+    if (questions.length === 0) {
+      throw new NotFoundException(
+        `No practice questions found for category ${category.nameRo}`,
+      );
+    }
+
+    // Create a temporary ticket name for this category practice session
+    const ticketName = `Category_Practice_${categoryId}_${Date.now()}`;
+
+    // Create a temporary ticket for this practice session
+    const ticket = await this.prisma.ticket.create({
+      data: {
+        name: ticketName,
+        type: 'PRACTICE',
+      },
+    });
+
+    // Link questions to the ticket
+    await this.prisma.ticketQuestion.createMany({
+      data: questions.map((question, index) => ({
+        ticketId: ticket.id,
+        questionId: question.id,
+        order: index + 1,
+      })),
+    });
+
+    // Check if user already has a practice session for this temporary ticket
+    const existingPractice = await this.prisma.studentTicket.findUnique({
+      where: {
+        userId_ticketId: { userId, ticketId: ticket.id },
+      },
+    });
+
+    if (existingPractice) {
+      // Return existing practice session
+      return this.getPracticeDetails(existingPractice.id, lang);
+    }
+
+    // Create new practice session
+    const practiceSession = await this.prisma.$transaction(async (tx) => {
+      const session = await tx.studentTicket.create({
+        data: {
+          userId,
+          ticketId: ticket.id,
+          status: 'IN_PROGRESS',
+          totalQuestions: questions.length,
+          startedAt: new Date(),
+          lastQuestionIndex: 0,
+        },
+      });
+
+      // Create answer placeholders for all questions
+      await tx.studentTicketAnswer.createMany({
+        data: questions.map((question, index) => ({
+          studentTicketId: session.id,
+          questionId: question.id,
+          order: index + 1,
+        })),
+      });
+
+      return session;
+    });
+
+    return this.getPracticeDetails(practiceSession.id, lang);
+  }
+
+  async getCategoryPracticeHistory(
+    userId: number,
+    categoryId: number,
+    page: number = 1,
+    limit: number = 10,
+    lang: Language = 'ro',
+  ) {
+    const skip = (page - 1) * limit;
+
+    // Verify category exists
+    const category = await this.prisma.questionCategory.findUnique({
+      where: { id: categoryId },
+    });
+
+    if (!category) {
+      throw new NotFoundException('Category not found');
+    }
+
+    // Find all practice sessions where questions belong to this category
+    const [practices, total] = await Promise.all([
+      this.prisma.studentTicket.findMany({
+        where: {
+          userId,
+          ticket: {
+            type: 'PRACTICE',
+            questions: {
+              some: {
+                question: {
+                  categoryId,
+                },
+              },
+            },
+          },
+        },
+        skip,
+        take: limit,
+        orderBy: { updatedAt: 'desc' },
+        include: {
+          ticket: {
+            include: {
+              questions: {
+                include: {
+                  question: {
+                    include: {
+                      category: true,
+                    },
+                  },
+                },
+              },
+            },
+          },
+        },
+      }),
+      this.prisma.studentTicket.count({
+        where: {
+          userId,
+          ticket: {
+            type: 'PRACTICE',
+            questions: {
+              some: {
+                question: {
+                  categoryId,
+                },
+              },
+            },
+          },
+        },
+      }),
+    ]);
+
+    return {
+      data: practices.map((practice) => ({
+        id: practice.id,
+        ticketName: practice.ticket.name,
+        categoryName: lang === 'ru' ? category.nameRu : category.nameRo,
+        status: practice.status,
+        score: practice.score,
+        totalQuestions: practice.totalQuestions,
+        startedAt: practice.startedAt,
+        completedAt: practice.completedAt,
+        lastQuestionIndex: practice.lastQuestionIndex,
+      })),
+      pagination: {
+        page,
+        limit,
+        total,
+        totalPages: Math.ceil(total / limit),
+      },
+    };
   }
 }

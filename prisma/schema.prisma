@@ -186,11 +186,24 @@ model Question {
   image                String?
   answers              String                @db.Text
   correctAnswer        Int
+  categoryId           Int?
   createdAt            DateTime              @default(now())
   updatedAt            DateTime              @updatedAt
+  category             QuestionCategory?     @relation(fields: [categoryId], references: [id])
   examQuestions        ExamQuestion[]
   studentTicketAnswers StudentTicketAnswer[]
   ticketQuestions      TicketQuestion[]
+
+  @@index([categoryId])
+}
+
+model QuestionCategory {
+  id        Int        @id @default(autoincrement())
+  nameRo    String
+  nameRu    String
+  createdAt DateTime   @default(now())
+  updatedAt DateTime   @updatedAt
+  questions Question[]
 }
 
 model Ticket {

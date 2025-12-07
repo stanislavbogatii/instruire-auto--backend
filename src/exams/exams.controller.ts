@@ -34,6 +34,7 @@ import {
   StartPracticeDto,
   SubmitPracticeAnswerDto,
   LanguageQueryDto,
+  StartPracticeByCategoryDto,
 } from './dto/exam.dto';
 import { CreateQuestionDto, UpdateQuestionDto } from './dto/question.dto';
 import { CreateTicketDto, UpdateTicketDto } from './dto/ticket.dto';
@@ -390,6 +391,48 @@ export class ExamsController {
     @Param('ticketId', ParseIntPipe) ticketId: number,
   ) {
     return this.examsService.getPracticesByTicket(req.user.id, ticketId);
+  }
+
+  // ================================
+  // CATEGORY-BASED PRACTICE ENDPOINTS
+  // ================================
+
+  @Post('practice/by-category')
+  @ApiOperation({ summary: 'Start practice session with questions from a specific category' })
+  @ApiQuery({ 
+    name: 'lang', 
+    required: false, 
+    enum: ['ro', 'ru'],
+    description: 'Language for questions and answers (ro or ru). Defaults to Romanian.'
+  })
+  @ApiBearerAuth('access-token')
+  @UseGuards(AuthGuard('jwt'))
+  startPracticeByCategory(
+    @Request() req, 
+    @Body() startPracticeByCategoryDto: StartPracticeByCategoryDto,
+    @Query() query: LanguageQueryDto,
+  ) {
+    return this.examsService.startPracticeByCategory(req.user.id, startPracticeByCategoryDto, query.lang);
+  }
+
+  @Get('practice/category/:categoryId/history')
+  @ApiOperation({ summary: 'Get practice history for a specific category' })
+  @ApiQuery({ 
+    name: 'lang', 
+    required: false, 
+    enum: ['ro', 'ru'],
+    description: 'Language for category names (ro or ru). Defaults to Romanian.'
+  })
+  @ApiBearerAuth('access-token')
+  @UseGuards(AuthGuard('jwt'))
+  getCategoryPracticeHistory(
+    @Request() req,
+    @Param('categoryId', ParseIntPipe) categoryId: number,
+    @Query('page', ParseIntPipe) page: number = 1,
+    @Query('limit', ParseIntPipe) limit: number = 10,
+    @Query() query: LanguageQueryDto,
+  ) {
+    return this.examsService.getCategoryPracticeHistory(req.user.id, categoryId, page, limit, query.lang);
   }
 
   @Get(':examId/download-pdf')

@@ -17,6 +17,10 @@ export class QuestionsService {
         image: createQuestionDto.image,
         answers: JSON.stringify(createQuestionDto.answers),
         correctAnswer: createQuestionDto.correctAnswer,
+        categoryId: createQuestionDto.categoryId,
+      },
+      include: {
+        category: true,
       },
     });
   }
@@ -29,6 +33,9 @@ export class QuestionsService {
         skip,
         take: limit,
         orderBy: { createdAt: 'desc' },
+        include: {
+          category: true,
+        },
       }),
       this.prisma.question.count(),
     ]);
@@ -51,6 +58,9 @@ export class QuestionsService {
   async findOne(id: number) {
     const question = await this.prisma.question.findUnique({
       where: { id },
+      include: {
+        category: true,
+      },
     });
 
     if (!question) {
@@ -74,6 +84,10 @@ export class QuestionsService {
         image: updateQuestionDto.image,
         answers: updateQuestionDto.answers ? JSON.stringify(updateQuestionDto.answers) : undefined,
         correctAnswer: updateQuestionDto.correctAnswer,
+        categoryId: updateQuestionDto.categoryId,
+      },
+      include: {
+        category: true,
       },
     });
   }

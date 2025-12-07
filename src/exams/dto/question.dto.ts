@@ -25,6 +25,11 @@ export class CreateQuestionDto {
   @IsInt()
   @Min(0)
   correctAnswer: number;
+
+  @ApiProperty({ description: 'Category ID for the question', required: false })
+  @IsOptional()
+  @IsInt()
+  categoryId?: number;
 }
 
 export class UpdateQuestionDto {
@@ -54,4 +59,9 @@ export class UpdateQuestionDto {
   @IsInt()
   @Min(0)
   correctAnswer?: number;
+
+  @ApiProperty({ description: 'Category ID for the question', required: false })
+  @IsOptional()
+  @IsInt()
+  categoryId?: number;
 }

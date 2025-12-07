@@ -23,6 +23,7 @@ import { ImagesModule } from './images/images.module';
 import { ContractModule } from './contract/contract.module';
 import { NotesModule } from './notes/notes.module';
 import { WsModule } from './ws/ws.module';
+import { QuestionCategoriesModule } from './question-categories/question-categories.module';
 
 @Module({
   imports: [
@@ -36,6 +37,7 @@ import { WsModule } from './ws/ws.module';
     NotificationsModule,
     BackupModule,
     ExamsModule,
+    QuestionCategoriesModule,
     ImagesModule,
     NotesModule,
     ScheduleModule.forRoot(),
