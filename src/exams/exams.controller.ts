@@ -435,6 +435,33 @@ export class ExamsController {
     return this.examsService.getCategoryPracticeHistory(req.user.id, categoryId, page, limit, query.lang);
   }
 
+  // ================================
+  // PROFESSOR ENDPOINTS
+  // ================================
+
+  @Get('practice/student/:studentId/detailed')
+  @ApiOperation({ 
+    summary: 'Get detailed practice session for a student (Professor only)',
+    description: 'Allows professors to view detailed practice sessions of students in their group, including individual answers'
+  })
+  @ApiQuery({ 
+    name: 'lang', 
+    required: false, 
+    enum: ['ro', 'ru'],
+    description: 'Language for questions and answers (ro or ru). Defaults to Romanian.'
+  })
+  @ApiBearerAuth('access-token')
+  @UseGuards(AuthGuard('jwt'), RolesGuard)
+  @Roles(Role.PROFESSOR)
+  getStudentPracticeDetailed(
+    @Request() req,
+    @Param('studentId', ParseIntPipe) studentId: number,
+    @Query('practiceId', ParseIntPipe) practiceId: number,
+    @Query() query: LanguageQueryDto,
+  ) {
+    return this.examsService.getProfessorStudentPracticeDetails(req.user.id, studentId, practiceId, query.lang);
+  }
+
   @Get(':examId/download-pdf')
   @ApiOperation({ 
     summary: 'Download exam results as PDF form',

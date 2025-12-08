@@ -1346,4 +1346,116 @@ export class ExamsService {
       },
     };
   }
+
+  // ================================
+  // PROFESSOR METHODS
+  // ================================
+
+  /**
+   * Get detailed practice session for a student (for professors)
+   * Professors can only view students in their group
+   */
+  async getProfessorStudentPracticeDetails(
+    professorUserId: number,
+    studentId: number,
+    practiceId: number,
+    lang: Language = 'ro',
+  ) {
+    // Verify professor and get their group
+    const professor = await this.prisma.user.findUnique({
+      where: { id: professorUserId },
+      select: { groupId: true },
+    });
+
+    if (!professor || !professor.groupId) {
+      throw new BadRequestException('Professor is not assigned to a group');
+    }
+
+    // Verify student is in the same group
+    const student = await this.prisma.user.findUnique({
+      where: { id: studentId },
+      select: {
+        id: true,
+        firstName: true,
+        lastName: true,
+        email: true,
+        groupId: true,
+      },
+    });
+
+    if (!student) {
+      throw new NotFoundException('Student not found');
+    }
+
+    if (student.groupId !== professor.groupId) {
+      throw new ForbiddenException('Student is not in your group');
+    }
+
+    // Get the practice session
+    const practice = await this.prisma.studentTicket.findUnique({
+      where: { id: practiceId },
+      include: {
+        ticket: true,
+        user: {
+          select: {
+            id: true,
+            firstName: true,
+            lastName: true,
+            email: true,
+          },
+        },
+        answers: {
+          include: {
+            question: {
+              include: {
+                category: true,
+              },
+            },
+          },
+          orderBy: { order: 'asc' },
+        },
+      },
+    });
+
+    if (!practice) {
+      throw new NotFoundException('Practice session not found');
+    }
+
+    // Verify the practice belongs to the student
+    if (practice.userId !== studentId) {
+      throw new BadRequestException('Practice does not belong to this student');
+    }
+
+    return {
+      id: practice.id,
+      student: practice.user,
+      ticketName: practice.ticket.name,
+      ticketType: practice.ticket.type,
+      status: practice.status,
+      score: practice.score,
+      totalQuestions: practice.totalQuestions,
+      lastQuestionIndex: practice.lastQuestionIndex,
+      startedAt: practice.startedAt,
+      completedAt: practice.completedAt,
+      questions: practice.answers.map((answer) => ({
+        id: answer.question.id,
+        text: parseQuestionText(answer.question.text, lang),
+        image: answer.question.image,
+        imageUrl: this.imageService.getImageUrl(answer.question.image),
+        answers: parseAnswers(answer.question.answers, lang),
+        correctAnswer: answer.question.correctAnswer,
+        category: answer.question.category
+          ? {
+              id: answer.question.category.id,
+              name: lang === 'ru' ? answer.question.category.nameRu : answer.question.category.nameRo,
+            }
+          : null,
+        order: answer.order,
+        selectedAnswer: answer.selectedAnswer,
+        isCorrect: answer.isCorrect,
+        isAnswered: answer.selectedAnswer !== null,
+        answeredAt: answer.answeredAt,
+      })),
+    };
+  }
 }

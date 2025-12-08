@@ -7,6 +7,9 @@ import {
   Param,
   Delete,
   ParseIntPipe,
+  UseGuards,
+  Request,
+  Query,
 } from '@nestjs/common';
 import { GroupsService } from './groups.service';
 import { CreateGroupDto } from './dto/create-group.dto';
@@ -16,7 +19,12 @@ import {
   ApiOperation,
   ApiResponse,
   ApiParam,
+  ApiBearerAuth,
 } from '@nestjs/swagger';
+import { AuthGuard } from '@nestjs/passport';
+import { RolesGuard } from '../auth/guards/roles.guard';
+import { Roles } from '../auth/decorators/roles.decorator';
+import { Role } from '@prisma/client';
 
 @ApiTags('groups')
 @Controller('groups')
@@ -65,5 +73,56 @@ export class GroupsController {
   @ApiResponse({ status: 404, description: 'Group not found.' })
   remove(@Param('id', ParseIntPipe) id: number) {
     return this.groupsService.remove(id);
+  }
+
+  // ================================
+  // PROFESSOR ENDPOINTS
+  // ================================
+
+  @Get('my-group/students')
+  @ApiOperation({ 
+    summary: 'Get students in my group (Professor only)',
+    description: 'Returns all students in the professor\'s group with their basic information'
+  })
+  @ApiBearerAuth('access-token')
+  @UseGuards(AuthGuard('jwt'), RolesGuard)
+  @Roles(Role.PROFESSOR)
+  @ApiResponse({ status: 200, description: 'List of students in the group.' })
+  @ApiResponse({ status: 403, description: 'User is not a professor or not assigned to a group.' })
+  getMyGroupStudents(@Request() req) {
+    return this.groupsService.getProfessorGroupStudents(req.user.id);
+  }
+
+  @Get('my-group/students/:studentId/practice-progress')
+  @ApiOperation({ 
+    summary: 'Get practice progress for a specific student (Professor only)',
+    description: 'Returns detailed practice statistics and history for a student in the professor\'s group'
+  })
+  @ApiBearerAuth('access-token')
+  @UseGuards(AuthGuard('jwt'), RolesGuard)
+  @Roles(Role.PROFESSOR)
+  @ApiParam({ name: 'studentId', type: Number })
+  @ApiResponse({ status: 200, description: 'Student practice progress data.' })
+  @ApiResponse({ status: 403, description: 'Student not in professor\'s group.' })
+  getStudentPracticeProgress(
+    @Request() req,
+    @Param('studentId', ParseIntPipe) studentId: number,
+    @Query('page', ParseIntPipe) page: number = 1,
+    @Query('limit', ParseIntPipe) limit: number = 20,
+  ) {
+    return this.groupsService.getStudentPracticeProgress(req.user.id, studentId, page, limit);
+  }
+
+  @Get('my-group/overview')
+  @ApiOperation({ 
+    summary: 'Get group practice overview (Professor only)',
+    description: 'Returns aggregate statistics for all students in the professor\'s group'
+  })
+  @ApiBearerAuth('access-token')
+  @UseGuards(AuthGuard('jwt'), RolesGuard)
+  @Roles(Role.PROFESSOR)
+  @ApiResponse({ status: 200, description: 'Group practice overview.' })
+  getGroupOverview(@Request() req) {
+    return this.groupsService.getGroupPracticeOverview(req.user.id);
   }
 }
