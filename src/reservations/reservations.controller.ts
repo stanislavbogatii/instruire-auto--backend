@@ -334,4 +334,16 @@ export class ReservationsController {
   ) {
     return await this.reservationsService.uncancelReservation(id, session.id);
   }
+
+  @Patch(':id/restore')
+  @ApiOperation({ summary: 'Restore a soft-deleted reservation' })
+  @ApiParam({ name: 'id', type: Number })
+  @ApiResponse({ status: 200, description: 'Reservation restored' })
+  @ApiResponse({ status: 404, description: 'Reservation not found' })
+  async restoreReservation(
+    @Param('id', ParseIntPipe) id: number,
+    @Session() session: User
+  ) {
+    return await this.reservationsService.restoreReservation(id, session.id);
+  }
 }

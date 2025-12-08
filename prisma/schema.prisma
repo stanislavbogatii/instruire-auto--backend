@@ -69,6 +69,7 @@ model Reservation {
   isCancelled        Boolean              @default(false)
   isFavorite         Boolean              @default(false)
   isImportant        Boolean              @default(false)
+  deletedAt          DateTime?
   car                Car?                 @relation(fields: [carId], references: [id])
   instructor         Instructor?          @relation(fields: [instructorId], references: [id])
   instructorsGroup   InstructorsGroup?    @relation(fields: [instructorsGroupId], references: [id])
@@ -79,6 +80,7 @@ model Reservation {
   @@index([userId], map: "Reservation_userId_fkey")
   @@index([carId], map: "Reservation_carId_fkey")
   @@index([instructorsGroupId])
+  @@index([deletedAt])
 }
 
 model ReservationHistory {
@@ -365,6 +367,7 @@ enum HistoryAction {
   DELETE
   CONFIRM
   UNCONFIRM
+  RESTORE
 }
 
 enum ExamStatus {

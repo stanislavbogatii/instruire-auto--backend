@@ -142,7 +142,7 @@ export class ReservationsService {
       const N = Math.min(7, reservations.length);
 
       const userReservationsCount = await this.prisma.reservation.count({
-        where: { userId },
+        where: { userId, deletedAt: null },
       });
 
       const allCiocana = reservations.every(r => ((r.sector || '').toLowerCase() === 'ciocana'));
@@ -175,6 +175,7 @@ export class ReservationsService {
           where: {
             instructorId,
             startTime: { in: ciocanaTimes },
+            deletedAt: null,
           },
           select: { startTime: true },
         });
@@ -192,6 +193,7 @@ export class ReservationsService {
           where: {
             instructorId: botanicaInstructor.id,
             startTime: { in: startTimes.slice(0, N) },
+            deletedAt: null,
           },
           select: { startTime: true },
         });
@@ -269,7 +271,7 @@ export class ReservationsService {
 
   async getUserReservations(userId: number) {
     return await this.prisma.reservation.findMany({
-      where: { userId },
+      where: { userId, deletedAt: null },
       orderBy: { startTime: 'asc' },
       include: {
         instructor: {
@@ -285,6 +287,7 @@ export class ReservationsService {
 
   async findAll() {
     return await this.prisma.reservation.findMany({
+      where: { deletedAt: null },
       include: {
         instructor: {
           select: {
@@ -374,7 +377,7 @@ export class ReservationsService {
 
     const [reservations, total] = await Promise.all([
       this.prisma.reservation.findMany({
-        where,
+        where: { ...where, deletedAt: null },
         include: {
           instructor: {
             select: {
@@ -414,7 +417,7 @@ export class ReservationsService {
         take: limit,
         skip
       }),
-      this.prisma.reservation.count({ where })
+      this.prisma.reservation.count({ where: { ...where, deletedAt: null } })
     ]);
 
     return {
@@ -427,8 +430,8 @@ export class ReservationsService {
   }
 
   async update(id: number, dto: UpdateReservationDto, changedBy?: number) {
-    const oldReservation = await this.prisma.reservation.findUnique({
-      where: { id },
+    const oldReservation = await this.prisma.reservation.findFirst({
+      where: { id, deletedAt: null },
     });
     if (!oldReservation) {
       throw new NotFoundException(`Reservation #${id} not found`);
@@ -471,31 +474,81 @@ export class ReservationsService {
 
 
   async delete(id: number, changedBy?: number) {
-    const reservation = await this.prisma.reservation.findUnique({ where: { id } });
+    const reservation = await this.prisma.reservation.findUnique({ 
+      where: { id, deletedAt: null } 
+    });
     if (!reservation) {
       throw new NotFoundException(`Reservation with id=${id} not found`);
     }
 
-    // Create history record for the deletion before deleting
+    // Soft delete: set deletedAt timestamp
+    const deletedReservation = await this.prisma.reservation.update({
+      where: { id },
+      data: { deletedAt: new Date() },
+      include: {
+        instructor: true,
+        car: true,
+        user: true
+      }
+    });
+
+    // Create history record for the deletion
     try {
       await this.historyService.createHistoryRecord(
         id,
-        'DELETE' as any, // We'll fix this enum issue later
-        reservation,
-        changedBy
+        'DELETE' as any,
+        deletedReservation,
+        changedBy,
+        reservation
       );
     } catch (error) {
       console.warn('Failed to create history record:', error.message);
     }
 
-    return await this.prisma.reservation.delete({
-      where: {id}
+    return deletedReservation;
+  }
+
+  async restoreReservation(id: number, changedBy?: number) {
+    const reservation = await this.prisma.reservation.findUnique({ 
+      where: { id } 
     });
+    if (!reservation) {
+      throw new NotFoundException(`Reservation with id=${id} not found`);
+    }
+    if (!reservation.deletedAt) {
+      throw new BadRequestException(`Reservation with id=${id} is not deleted`);
+    }
+
+    // Restore: clear deletedAt timestamp
+    const restoredReservation = await this.prisma.reservation.update({
+      where: { id },
+      data: { deletedAt: null },
+      include: {
+        instructor: true,
+        car: true,
+        user: true
+      }
+    });
+
+    // Create history record for the restoration
+    try {
+      await this.historyService.createHistoryRecord(
+        id,
+        'RESTORE' as any,
+        restoredReservation,
+        changedBy,
+        reservation
+      );
+    } catch (error) {
+      console.warn('Failed to create history record:', error.message);
+    }
+
+    return restoredReservation;
   }
 
   async confirmReservation(id: number, changedBy?: number) {
-    const oldReservation = await this.prisma.reservation.findUnique({
-      where: { id },
+    const oldReservation = await this.prisma.reservation.findFirst({
+      where: { id, deletedAt: null },
     });
     if (!oldReservation) {
       throw new NotFoundException(`Reservation #${id} not found`);
@@ -528,8 +581,8 @@ export class ReservationsService {
   }
 
   async unconfirmReservation(id: number, changedBy?: number) {
-    const oldReservation = await this.prisma.reservation.findUnique({
-      where: { id },
+    const oldReservation = await this.prisma.reservation.findFirst({
+      where: { id, deletedAt: null },
     });
     if (!oldReservation) {
       throw new NotFoundException(`Reservation #${id} not found`);
@@ -562,8 +615,8 @@ export class ReservationsService {
   }
 
   async cancelReservation(id: number, changedBy?: number) {
-    const oldReservation = await this.prisma.reservation.findUnique({
-      where: { id },
+    const oldReservation = await this.prisma.reservation.findFirst({
+      where: { id, deletedAt: null },
     });
     if (!oldReservation) {
       throw new NotFoundException(`Reservation #${id} not found`);
@@ -596,8 +649,8 @@ export class ReservationsService {
   }
 
   async uncancelReservation(id: number, changedBy?: number) {
-    const oldReservation = await this.prisma.reservation.findUnique({
-      where: { id },
+    const oldReservation = await this.prisma.reservation.findFirst({
+      where: { id, deletedAt: null },
     });
     if (!oldReservation) {
       throw new NotFoundException(`Reservation #${id} not found`);
@@ -632,7 +685,8 @@ export class ReservationsService {
   async getReservationsByUserId(userId: number) {
     return this.prisma.reservation.findMany({
       where: {
-        userId
+        userId,
+        deletedAt: null
       },
       include: {
         instructor: {
@@ -665,7 +719,8 @@ export class ReservationsService {
   async getReservationsByInstructorId(instructorId: number) {
     return this.prisma.reservation.findMany({
       where: {
-        instructorId
+        instructorId,
+        deletedAt: null
       },
       include: {
         instructor: {
