@@ -1,5 +1,5 @@
-import { IsNotEmpty, IsString, MaxLength } from 'class-validator';
-import { ApiProperty } from '@nestjs/swagger';
+import { IsNotEmpty, IsString, MaxLength, IsOptional, IsDateString } from 'class-validator';
+import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
 
 export class CreateNoteDto {
   @ApiProperty({ 
@@ -19,4 +19,12 @@ export class CreateNoteDto {
   @IsNotEmpty()
   @IsString()
   content: string;
+
+  @ApiPropertyOptional({ 
+    example: '2024-01-01T00:00:00.000Z', 
+    description: 'Note date (defaults to current date if not provided)'
+  })
+  @IsOptional()
+  @IsDateString()
+  date?: string;
 }

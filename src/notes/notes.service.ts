@@ -13,6 +13,7 @@ export class NotesService {
       data: {
         title: dto.title,
         content: dto.content,
+        date: dto.date ? new Date(dto.date) : new Date(),
         userId: userId,
       },
     });
@@ -92,6 +93,7 @@ export class NotesService {
       data: {
         ...(dto.title && { title: dto.title }),
         ...(dto.content && { content: dto.content }),
+        ...(dto.date && { date: new Date(dto.date) }),
       },
     });
 

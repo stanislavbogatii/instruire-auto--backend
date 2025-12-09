@@ -10,6 +10,9 @@ export class NoteResponseDto {
   @ApiProperty({ example: 'This is the content of my note...', description: 'Note content' })
   content: string;
 
+  @ApiProperty({ example: '2024-01-01T00:00:00.000Z', description: 'Note date' })
+  date: Date;
+
   @ApiProperty({ example: 1, description: 'User ID who created the note' })
   userId: number;
 
