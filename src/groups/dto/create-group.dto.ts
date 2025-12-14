@@ -1,4 +1,4 @@
-import { IsNotEmpty, MaxLength } from 'class-validator';
+import { IsNotEmpty, IsOptional, MaxLength } from 'class-validator';
 import { ApiProperty } from '@nestjs/swagger';
 
 export class CreateGroupDto {
@@ -7,7 +7,7 @@ export class CreateGroupDto {
   @MaxLength(100)
   name: string;
 
-  @ApiProperty({ example: 1, description: 'Instructor ID' })
-  @IsNotEmpty()
-  instructorId: number;
+  @ApiProperty({ example: 1, description: 'Professor ID' })
+  @IsOptional()
+  professorId: number;
 }

@@ -28,6 +28,7 @@ import {
   ApiParam,
   ApiOkResponse,
   getSchemaPath,
+  ApiQuery,
 } from '@nestjs/swagger';
 import { AuthGuard } from '@nestjs/passport';
 import { Session } from 'src/common/session.decorator';
@@ -140,12 +141,16 @@ export class ReservationsController {
   }
 
   @Get('busy-reservation')
+  @ApiQuery({ name: 'startDate', required: false, type: String })
+  @ApiQuery({ name: 'endDate', required: false, type: String })
   @ApiResponse({ status: 200})
   async getBusyReservations(
     @Query('days') days: string,
     @Query('gearbox') gearbox: string,
     @Query('sector') sector: string,
     @Query('type') type: "single" | "group",
+    @Query('startDate') startDate?: string,
+    @Query('endDate') endDate?: string,
   ): Promise<BusyReservationResponse | null> {
     const minFreeDays = parseInt(days, 10) || 15;
     return await this.reservationsService.findBusyReservation(
@@ -153,6 +158,8 @@ export class ReservationsController {
       gearbox, 
       sector, 
       type,
+      startDate ? new Date(startDate) : undefined,
+      endDate ? new Date(endDate) : undefined,
     );
   }
 

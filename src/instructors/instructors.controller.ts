@@ -8,6 +8,7 @@ import {
   Delete,
   ParseIntPipe,
   UseGuards,
+  Query,
 } from '@nestjs/common';
 import { InstructorsService } from './instructors.service';
 import { CreateInstructorDto } from './dto/create-instructor.dto';
@@ -18,6 +19,7 @@ import {
   ApiResponse,
   ApiParam,
   ApiBearerAuth,
+  ApiQuery,
 } from '@nestjs/swagger';
 import { AuthGuard } from '@nestjs/passport';
 import { plainToInstance } from 'class-transformer';
@@ -56,9 +58,16 @@ export class InstructorsController {
   @Get('blackouts/:instructorId')
   @ApiOperation({ summary: 'Get blackouts for an instructor' })
   @ApiParam({ name: 'instructorId', type: Number })
+  @ApiQuery({ name: 'startDate', required: false, type: String })
+  @ApiQuery({ name: 'endDate', required: false, type: String })
   @ApiResponse({ status: 200, description: 'List of blackouts.', type: [InstructorBlackoutResponseDto] })
-  async getBlackouts(@Param('instructorId', ParseIntPipe) instructorId: number, @Session() session: User) {
-    const blackouts = await this.instructorsService.getBlackoutsByInstructor(instructorId);
+  async getBlackouts(
+    @Param('instructorId', ParseIntPipe) instructorId: number, 
+    @Session() session: User,
+    @Query('startDate') startDate?: string,
+    @Query('endDate') endDate?: string
+  ) {
+    const blackouts = await this.instructorsService.getBlackoutsByInstructor(instructorId, startDate, endDate);
     return plainToInstance(InstructorBlackoutResponseDto, blackouts, { groups: [session.role] });
   }
 

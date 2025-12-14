@@ -51,6 +51,7 @@ export class UsersService {
         phone: true,
         privateMessage: true,
         idnp: true,
+        color: true,
         createdAt: true,
         updatedAt: true,
         groupId: true,
@@ -84,8 +85,7 @@ export class UsersService {
       throw new NotFoundException(`User with id=${id} not found`);
     }
 
-    const data: { email?: string; hash?: string; phone?: string; privateMessage?: string; idnp?: string; groupId?: number; desiredInstructorId?: number } = {};
-    // 2) If updating email, check conflict
+    const data: { email?: string; color?: string; hash?: string; phone?: string; privateMessage?: string; idnp?: string; groupId?: number; desiredInstructorId?: number } = {};
     if (dto.email && dto.email !== user.email) {
       const conflict = await this.prisma.user.findUnique({
         where: { email: dto.email },
@@ -100,6 +100,10 @@ export class UsersService {
 
     if (dto.password) {
       data.hash = await bcrypt.hash(dto.password, 10);
+    }
+
+    if (dto.color) {
+      data.color = dto.color;
     }
 
     // Add phone to update data if provided
@@ -148,6 +152,7 @@ export class UsersService {
         email: true,
         firstName: true,
         lastName: true,
+        color: true,
         role: true,
         groupId: true,
         group: true,

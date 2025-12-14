@@ -809,10 +809,14 @@ export class ReservationsService {
     gearbox: string, 
     sector: string,  
     type: string,
+    startDate?: Date,
+    endDate?: Date,
   ): Promise<BusyReservationResponse | null> { 
     const today = new Date(); 
+    const start = startDate ? new Date(startDate) : today;
     const threeMonthsLater = new Date(); 
     threeMonthsLater.setMonth(today.getMonth() + 3); 
+    const end = endDate ? new Date(endDate) : threeMonthsLater;
     if (type === 'group') { 
       const groups = await this.prisma.instructorsGroup.findMany({ 
         where: { 
@@ -833,8 +837,8 @@ export class ReservationsService {
               reservations: {
                 where: { 
                   startTime: { 
-                    gte: today, 
-                    lte: threeMonthsLater 
+                    gte: start, 
+                    lte: end 
                   } 
                 }
               }

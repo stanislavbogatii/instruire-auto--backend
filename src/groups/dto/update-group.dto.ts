@@ -7,8 +7,8 @@ export class UpdateGroupDto extends PartialType(CreateGroupDto) {
   @ApiPropertyOptional({ description: 'New name for the group' })
   name?: string;
 
-  @ApiPropertyOptional({ description: 'New instructor ID' })
-  instructorId?: number;
+  @ApiPropertyOptional({ description: 'New professor ID' })
+  professorId?: number;
 
   @ApiPropertyOptional({ description: 'New token for the group', example: 'abc12345' })
   @IsOptional()

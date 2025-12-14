@@ -23,15 +23,15 @@ export class CreateUserDto {
   lastName: string;
 
   @ApiProperty({ 
-    example: '+37369000000', 
+    example: '069123456', 
     description: 'User phone number',
     required: false 
   })
 
   @IsOptional()
   @IsString()
-  @Matches(/^\+?[1-9]\d{1,14}$/, {
-    message: 'Phone number must be in international format (e.g. +37369000000)'
+  @Matches(/^[\+]?[0-9]{6,15}$/, {
+    message: 'Phone number must be 6-15 digits, optionally starting with +'
   })
   phone?: string;
 

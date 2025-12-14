@@ -12,9 +12,11 @@ model User {
   id                  Int                     @id @default(autoincrement())
   email               String                  @unique
   hash                String
+  color               String?                 @default("")
   role                Role                    @default(USER)
   groupId             Int?
   desiredInstructorId Int?
+  professorGroups     Group[]   @relation("ProfessorGroups")
   createdAt           DateTime                @default(now())
   updatedAt           DateTime                @updatedAt
   firstName           String?                 @default("")
@@ -44,9 +46,11 @@ model Group {
   name         String
   token        String      @unique
   instructorId Int?
+  professorId   Int?
   createdAt    DateTime    @default(now())
   updatedAt    DateTime    @updatedAt
   instructor   Instructor? @relation(fields: [instructorId], references: [id])
+  professor    User?        @relation("ProfessorGroups", fields: [professorId], references: [id])
   users        User[]
 
   @@index([instructorId], map: "Group_instructorId_fkey")

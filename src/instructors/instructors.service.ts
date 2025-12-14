@@ -176,19 +176,21 @@ export class InstructorsService {
     });
   }
 
-  async getBlackoutsByInstructor(instructorId: number) {
+  async getBlackoutsByInstructor(instructorId: number, startDate?: string, endDate?: string) {
     const now = new Date();
     now.setHours(now.getHours() - 2);
+    const start = startDate ? new Date(startDate) : now;
+    const end = endDate ? new Date(endDate) : null;
 
     return this.prisma.instructorBlackout.findMany({
       where: {
         instructorId,
         OR: [
           {
-            AND: [{ dateTime: { gte: now } }, { endDateTime: null }],
+            AND: [{ dateTime: { gte: start } }, { endDateTime: end }],
           },
           {
-            endDateTime: { gte: now } ,
+            endDateTime: { gte: start } ,
           },
         ],
       },

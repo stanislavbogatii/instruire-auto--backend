@@ -3,20 +3,21 @@ import { PrismaService } from '../prisma/prisma.service';
 import { CreateGroupDto } from './dto/create-group.dto';
 import { UpdateGroupDto } from './dto/update-group.dto';
 import { nanoid } from 'nanoid';
-import { InstructorsService } from '../instructors/instructors.service';
 
 @Injectable()
 export class GroupsService {
-  constructor(private prisma: PrismaService, private instructorsService: InstructorsService) {}
+  constructor(
+    private prisma: PrismaService, 
+  ) {}
 
   /** Create a group with a short unique token */
   async create(dto: CreateGroupDto) {
-    await this.instructorsService.findOne(dto.instructorId);
-    const token = nanoid(8); // 8-char random ID
+    await this.prisma.user.findFirst({where: {id: dto.professorId}});
+    const token = nanoid(8); 
 
     try {
       const group = await this.prisma.group.create({
-        data: { name: dto.name, token, instructorId: dto.instructorId },
+        data: { name: dto.name, token, professorId: dto.professorId },
       });
       return group;
     } catch (e: any) {
@@ -71,20 +72,19 @@ export class GroupsService {
     return group;
   }
 
-  /** Update group (name, instructor, and/or token) */
   async update(id: number, dto: UpdateGroupDto) {
     await this.findOne(id);
     
-    if (dto.instructorId === undefined) {
-      throw new BadRequestException('instructorId is required');
+    if (dto.professorId === undefined) {
+      throw new BadRequestException('professorId is required');
     }
     
-    await this.instructorsService.findOne(dto.instructorId);
+    await this.prisma.user.findFirst({where: {id: dto.professorId}});
 
     // Prepare update data
     const updateData: any = {
       name: dto.name,
-      instructorId: dto.instructorId,
+      professorId: dto.professorId,
     };
 
     // If token is provided, validate it's unique
