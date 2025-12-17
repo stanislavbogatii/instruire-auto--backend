@@ -13,6 +13,7 @@ import { Server, Socket } from 'socket.io';
 import { WsJwtGuard } from './ws-jwt.guard';
 import { ReservationLockStore } from './reservation-lock.store';
 import { UseGuards } from '@nestjs/common';
+import { CreateReservationsDto } from '../reservations/dto/create-reservations.dto';
 
 interface AuthenticatedSocket extends Socket {
   user?: {
@@ -82,6 +83,27 @@ export class WsGateway implements OnGatewayConnection, OnGatewayDisconnect {
     this.server.emit('reservation:left', {
       reservationId,
       userId,
+    });
+  }
+
+  @SubscribeMessage('reservation:create:started')
+  handleReservationCreationStarted(
+    @MessageBody() reservationDraft: CreateReservationsDto,
+    @ConnectedSocket() client: AuthenticatedSocket
+  ) {
+    const user = client.user;
+    if (!user) {
+      return;
+    }
+
+    this.server.emit('reservation:create:started', {
+      reservationDraft,
+      startedBy: {
+        id: user.sub,
+        email: user.email,
+        role: user.role,
+        name: user.name,
+      },
     });
   }
 }

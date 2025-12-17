@@ -14,9 +14,10 @@ export class NotificationsService {
   ) {}
 
   // Run every day at 11:00 AM Chisinau time
-  @Cron('0 11 * * *', {
-    timeZone: 'Europe/Chisinau'
-  })
+  // TEMPORARILY DISABLED - Uncomment to re-enable daily notifications
+  // @Cron('0 11 * * *', {
+  //   timeZone: 'Europe/Chisinau'
+  // })
   async sendDailyNotifications() {
     await this.sendNotificationsForNextDay();
   }
