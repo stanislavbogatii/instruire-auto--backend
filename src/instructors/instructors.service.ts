@@ -176,23 +176,44 @@ export class InstructorsService {
     });
   }
 
-  async getBlackoutsByInstructor(instructorId: number, startDate?: string, endDate?: string) {
+  async getBlackoutsByInstructor(
+    instructorId: number,
+    startDate?: string,
+    endDate?: string,
+  ) {
     const now = new Date();
     now.setHours(now.getHours() - 2);
     const start = startDate ? new Date(startDate) : now;
     const end = endDate ? new Date(endDate) : null;
 
+    const blackoutFilters =
+      end === null
+        ? [
+            {
+              // Single-date blackout that starts after the requested start
+              dateTime: { gte: start },
+            },
+            {
+              // Range blackout that starts after the requested start
+              startDateTime: { gte: start },
+            },
+          ]
+        : [
+            {
+              // Single-date blackout that falls within the requested window
+              dateTime: { gte: start, lte: end },
+            },
+            {
+              // Range blackout fully contained within the requested window
+              startDateTime: { gte: start },
+              endDateTime: { lte: end },
+            },
+          ];
+
     return this.prisma.instructorBlackout.findMany({
       where: {
         instructorId,
-        OR: [
-          {
-            AND: [{ dateTime: { gte: start } }, { endDateTime: end }],
-          },
-          {
-            endDateTime: { gte: start } ,
-          },
-        ],
+        OR: blackoutFilters,
       },
       orderBy: {
         dateTime: 'asc',
