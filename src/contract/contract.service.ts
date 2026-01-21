@@ -636,7 +636,7 @@ export class ContractService {
         '--ignore-certificate-errors-spki-list',
         '--disable-extensions'
       ],
-      executablePath: process.env.CHROME_BIN || '/snap/bin/chromium',
+      executablePath: process.env.CHROME_BIN || '/usr/bin/chromium-browser',
     });
     
     try {

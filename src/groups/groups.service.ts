@@ -120,47 +120,38 @@ export class GroupsService {
   /**
    * Get all students in professor's group
    */
-  async getProfessorGroupStudents(professorUserId: number) {
-    // Find the professor's user record and their group
-    const professor = await this.prisma.user.findUnique({
-      where: { id: professorUserId },
+  async getProfessorGroupStudents(professorUserId: number, groupId: number) {
+    const group = await this.prisma.group.findFirst({
+      where: { id: groupId, professorId: professorUserId },
       include: {
-        group: {
-          include: {
-            users: {
-              where: {
-                role: 'USER', // Only get students
-              },
-              select: {
-                id: true,
-                email: true,
-                firstName: true,
-                lastName: true,
-                phone: true,
-                createdAt: true,
-              },
-              orderBy: {
-                lastName: 'asc',
-              },
-            },
+        users: {
+          where: {
+            role: 'USER', 
+          },
+          select: {
+            id: true,
+            email: true,
+            firstName: true,
+            lastName: true,
+            phone: true,
+            createdAt: true,
+          },
+          orderBy: {
+            lastName: 'asc',
           },
         },
       },
     });
 
-    if (!professor) {
-      throw new NotFoundException('Professor not found');
-    }
-
-    if (!professor.group) {
+    if (!group) {
       throw new BadRequestException('Professor is not assigned to a group');
     }
 
     return {
-      groupId: professor.group.id,
-      groupName: professor.group.name,
-      studentCount: professor.group.users.length,
-      students: professor.group.users,
+      groupId: group.id,
+      groupName: group.name,
+      studentCount: group.users.length,
+      students: group.users,
     };
   }
 
@@ -174,13 +165,12 @@ export class GroupsService {
     page: number = 1,
     limit: number = 20,
   ) {
-    // Verify professor and get their group
-    const professor = await this.prisma.user.findUnique({
-      where: { id: professorUserId },
-      select: { groupId: true },
+    const group = await this.prisma.group.findFirst({
+      where: { professorId: professorUserId },
+      select: { id: true },
     });
 
-    if (!professor || !professor.groupId) {
+    if (!group) {
       throw new BadRequestException('Professor is not assigned to a group');
     }
 
@@ -200,7 +190,7 @@ export class GroupsService {
       throw new NotFoundException('Student not found');
     }
 
-    if (student.groupId !== professor.groupId) {
+    if (student.groupId !== group.id) {
       throw new BadRequestException('Student is not in your group');
     }
 
@@ -288,86 +278,76 @@ export class GroupsService {
    * Get aggregate overview of all students' practice progress in professor's group
    */
   async getGroupPracticeOverview(professorUserId: number) {
-    // Find professor's group
-    const professor = await this.prisma.user.findUnique({
-      where: { id: professorUserId },
-      include: {
-        group: {
-          include: {
+    const groups = await this.prisma.group.findMany({
+      where: { professorId: professorUserId },
+      select: {
+        id: true,
+        name: true,
+        token: true,
+        professorId: true,
+        _count: {
+          select: {
             users: {
               where: { role: 'USER' },
-              select: { id: true },
             },
           },
         },
       },
+      orderBy: { name: 'asc' },
     });
 
-    if (!professor || !professor.group) {
-      throw new BadRequestException('Professor is not assigned to a group');
-    }
+    return {
+      totalGroups: groups.length,
+      groups: groups.map((group) => ({
+        id: group.id,
+        name: group.name,
+        token: group.token,
+        professorId: group.professorId,
+        studentCount: group._count.users,
+      })),
+    };
+  }
 
-    const studentIds = professor.group.users.map((u) => u.id);
+  /**
+   * Get all students across professor's groups
+   */
+  async getProfessorAllGroupStudents(professorUserId: number) {
+    const groups = await this.prisma.group.findMany({
+      where: { professorId: professorUserId },
+      select: {
+        id: true,
+        users: {
+          where: { role: 'USER' },
+          select: {
+            id: true,
+            email: true,
+            firstName: true,
+            lastName: true,
+            phone: true,
+            createdAt: true,
+          },
+          orderBy: { lastName: 'asc' },
+        },
+      },
+      orderBy: { id: 'asc' },
+    });
 
-    if (studentIds.length === 0) {
-      return {
-        groupId: professor.group.id,
-        groupName: professor.group.name,
-        totalStudents: 0,
-        overview: [],
-      };
-    }
-
-    // Get practice stats for all students
-    const studentStats = await Promise.all(
-      studentIds.map(async (studentId) => {
-        const [student, totalPractices, completedPractices, avgScore] =
-          await Promise.all([
-            this.prisma.user.findUnique({
-              where: { id: studentId },
-              select: {
-                id: true,
-                firstName: true,
-                lastName: true,
-                email: true,
-              },
-            }),
-            this.prisma.studentTicket.count({
-              where: { userId: studentId },
-            }),
-            this.prisma.studentTicket.count({
-              where: {
-                userId: studentId,
-                status: { in: ['COMPLETED', 'PASSED', 'FAILED'] },
-              },
-            }),
-            this.prisma.studentTicket.aggregate({
-              where: {
-                userId: studentId,
-                status: { in: ['COMPLETED', 'PASSED', 'FAILED'] },
-              },
-              _avg: { score: true },
-            }),
-          ]);
-
-        return {
-          student: student,
-          totalPractices,
-          completedPractices,
-          averageScore: avgScore._avg.score || 0,
-        };
-      }),
+    const students = groups.flatMap((group) =>
+      group.users.map((user) => ({
+        groupId: group.id,
+        id: user.id,
+        email: user.email,
+        firstName: user.firstName,
+        lastName: user.lastName,
+        phone: user.phone,
+        createdAt: user.createdAt,
+      })),
     );
 
     return {
-      groupId: professor.group.id,
-      groupName: professor.group.name,
-      totalStudents: studentIds.length,
-      overview: studentStats.sort((a, b) => {
-        const lastNameA = a.student?.lastName || '';
-        const lastNameB = b.student?.lastName || '';
-        return lastNameA.localeCompare(lastNameB);
-      }),
+      totalGroups: groups.length,
+      totalStudents: students.length,
+      students,
     };
   }
 }

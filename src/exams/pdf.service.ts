@@ -36,7 +36,7 @@ export class PdfService {
         '--disable-web-security',
         '--disable-features=VizDisplayCompositor'
       ],
-      executablePath: process.env.CHROME_BIN || '/snap/bin/chromium',
+      executablePath: process.env.CHROME_BIN || '/usr/bin/chromium-browser',
     });
 
     try {
@@ -268,7 +268,7 @@ export class PdfService {
           '--ignore-certificate-errors-spki-list',
           '--disable-extensions'
         ],
-        executablePath: process.env.CHROME_BIN || '/snap/bin/chromium',
+        executablePath: process.env.CHROME_BIN || '/usr/bin/chromium-browser',
       });
     } catch (launchError) {
       console.error('Failed to launch browser:', launchError.message);

@@ -75,22 +75,28 @@ export class GroupsController {
     return this.groupsService.remove(id);
   }
 
+
+
   // ================================
   // PROFESSOR ENDPOINTS
   // ================================
 
-  @Get('my-group/students')
+  @Get('my-group/:groupId/students')
   @ApiOperation({ 
-    summary: 'Get students in my group (Professor only)',
-    description: 'Returns all students in the professor\'s group with their basic information'
+    summary: 'Get students in a professor group (Professor only)',
+    description: 'Returns all students in the specified professor group with their basic information'
   })
   @ApiBearerAuth('access-token')
   @UseGuards(AuthGuard('jwt'), RolesGuard)
   @Roles(Role.PROFESSOR)
+  @ApiParam({ name: 'groupId', type: Number })
   @ApiResponse({ status: 200, description: 'List of students in the group.' })
   @ApiResponse({ status: 403, description: 'User is not a professor or not assigned to a group.' })
-  getMyGroupStudents(@Request() req) {
-    return this.groupsService.getProfessorGroupStudents(req.user.id);
+  getMyGroupStudents(
+    @Request() req,
+    @Param('groupId', ParseIntPipe) groupId: number,
+  ) {
+    return this.groupsService.getProfessorGroupStudents(req.user.id, groupId);
   }
 
   @Get('my-group/students/:studentId/practice-progress')
@@ -124,5 +130,18 @@ export class GroupsController {
   @ApiResponse({ status: 200, description: 'Group practice overview.' })
   getGroupOverview(@Request() req) {
     return this.groupsService.getGroupPracticeOverview(req.user.id);
+  }
+
+  @Get('my-groups/students')
+  @ApiOperation({ 
+    summary: 'Get all students across professor groups (Professor only)',
+    description: 'Returns all students across all groups owned by the professor'
+  })
+  @ApiBearerAuth('access-token')
+  @UseGuards(AuthGuard('jwt'), RolesGuard)
+  @Roles(Role.PROFESSOR)
+  @ApiResponse({ status: 200, description: 'List of students across groups.' })
+  getAllGroupStudents(@Request() req) {
+    return this.groupsService.getProfessorAllGroupStudents(req.user.id);
   }
 }
