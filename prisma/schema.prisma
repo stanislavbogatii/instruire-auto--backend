@@ -12,11 +12,16 @@ model User {
   id                  Int                     @id @default(autoincrement())
   email               String                  @unique
   hash                String
+
+  medical_documents   Boolean                 @default(false)
+  individual_work     Boolean                 @default(false)
+  number_of_absences  Int                     @default(0)
+
   color               String?                 @default("")
   role                Role                    @default(USER)
   groupId             Int?
   desiredInstructorId Int?
-  professorGroups     Group[]   @relation("ProfessorGroups")
+  professorGroups     Group[]                 @relation("ProfessorGroups")
   createdAt           DateTime                @default(now())
   updatedAt           DateTime                @updatedAt
   firstName           String?                 @default("")

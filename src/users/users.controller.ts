@@ -8,7 +8,6 @@ import {
   Delete,
   ParseIntPipe,
   UseGuards,
-  Req,
 } from '@nestjs/common';
 import { UsersService } from './users.service';
 import { CreateUserDto } from './dto/create-user.dto';
@@ -23,7 +22,7 @@ import {
 } from '@nestjs/swagger';
 import { AuthGuard } from '@nestjs/passport';
 import { Session } from 'src/common/session.decorator';
-import { Role, User } from '@prisma/client';
+import { User } from '@prisma/client';
 import { UserResponseDto } from './dto/user-response.dto'; // Import the UserResponseDto
 
 @ApiTags('users')
@@ -60,12 +59,17 @@ export class UsersController {
   @ApiOperation({ summary: 'Update a user' })
   @ApiParam({ name: 'id', type: Number })
   @ApiResponse({ status: 200, description: 'User updated.' })
+  @ApiResponse({ status: 401, description: 'Unauthorized.' })
+  @ApiResponse({ status: 403, description: 'Forbidden.' })
   @ApiResponse({ status: 404, description: 'User not found.' })
+  @ApiBearerAuth('access-token')
+  @UseGuards(AuthGuard('jwt'))
   update(
     @Param('id', ParseIntPipe) id: number,
     @Body() updateUserDto: UpdateUserDto,
+    @Session() session: User,
   ) {
-    return this.usersService.update(id, updateUserDto);
+    return this.usersService.updateByActor(session, id, updateUserDto);
   }
 
   @Delete(':id')
@@ -99,6 +103,8 @@ export class UsersController {
     @Session() session: User,
     @Body() dto: SetDesiredInstructorDto
   ) {
-    return this.usersService.update(session.id, { desiredInstructorId: dto.desiredInstructorId });
+    return this.usersService.updateByActor(session, session.id, {
+      desiredInstructorId: dto.desiredInstructorId,
+    });
   }
 }

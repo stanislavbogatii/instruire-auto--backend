@@ -1,7 +1,8 @@
 import { PartialType } from '@nestjs/mapped-types';
 import { CreateUserDto } from './create-user.dto';
 import { ApiPropertyOptional } from '@nestjs/swagger';
-import { IsOptional, IsString, Matches, IsInt, Min } from 'class-validator';
+import { IsOptional, IsString, Matches, IsInt, Min, IsEnum, IsBoolean } from 'class-validator';
+import { Role } from '@prisma/client';
 
 export class UpdateUserDto extends PartialType(CreateUserDto) {
   @ApiPropertyOptional({ description: 'New email (optional)' })
@@ -12,6 +13,11 @@ export class UpdateUserDto extends PartialType(CreateUserDto) {
 
   @ApiPropertyOptional({ description: 'New password (optional, min 6 chars)' })
   password?: string;
+
+  @ApiPropertyOptional({ enum: Role, description: 'User role (optional)' })
+  @IsOptional()
+  @IsEnum(Role, { message: 'role must be a valid Role value' })
+  role?: Role;
 
   @ApiPropertyOptional({ example: 'Alice', description: 'New first name (optional)' })
   firstName?: string;
@@ -58,4 +64,32 @@ export class UpdateUserDto extends PartialType(CreateUserDto) {
   @IsInt()
   @Min(1)
   desiredInstructorId?: number;
+
+  @ApiPropertyOptional({ 
+    example: false, 
+    description: 'Indicates if medical documents are provided',
+    required: false
+  })
+  @IsOptional()
+  @IsBoolean()
+  medical_documents?: boolean;
+
+  @ApiPropertyOptional({ 
+    example: false, 
+    description: 'Indicates if individual work is required',
+    required: false
+  })
+  @IsOptional()
+  @IsBoolean()
+  individual_work?: boolean;
+
+  @ApiPropertyOptional({ 
+    example: 0, 
+    description: 'Number of absences',
+    required: false
+  })
+  @IsOptional()
+  @IsInt()
+  @Min(0)
+  number_of_absences?: number;
 }
