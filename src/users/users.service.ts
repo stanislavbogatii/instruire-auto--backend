@@ -175,6 +175,9 @@ export class UsersService {
       email?: string;
       color?: string;
       hash?: string;
+      individual_work?: boolean;
+      medical_documents?: boolean;
+      number_of_absences?: number;
       phone?: string;
       privateMessage?: string;
       idnp?: string;
@@ -230,7 +233,16 @@ export class UsersService {
     if (dto.role !== undefined) {
       data.role = dto.role;
     }
-
+    if (dto.medical_documents !== undefined) {
+      data.medical_documents = dto.medical_documents;
+    }
+    if (dto.individual_work !== undefined) {
+      data.individual_work = dto.individual_work;
+    }
+    if (dto.number_of_absences !== undefined) {
+      data.number_of_absences = dto.number_of_absences;
+    }
+    console.log(data)
     const updated = await this.prisma.user.update({
       where: { id },
       data,
