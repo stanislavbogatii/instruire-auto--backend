@@ -112,6 +112,7 @@ export class InstructorsService {
       where: { id },
       data: {
         firstName: updateInstructorDto.firstName,
+        order: updateInstructorDto.order,
         lastName: updateInstructorDto.lastName,
         phone: updateInstructorDto.phone,
         sector: updateInstructorDto.sector,
