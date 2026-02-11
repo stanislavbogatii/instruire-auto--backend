@@ -17,9 +17,11 @@ const UPDATE_POLICY_FIELDS: Record<UpdatePolicy, (keyof UpdateUserDto)[]> = {
     'firstName',
     'lastName',
     'phone',
-    'privateMessage',
     'desiredInstructorId',
     'color',
+    'medical_documents',
+    'individual_work',
+    'number_of_absences'
   ],
   ADMIN: [
     'email',
