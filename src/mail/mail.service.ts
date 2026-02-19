@@ -206,7 +206,7 @@ export class MailService {
             <h3 style="color: #856404; margin-top: 0;">💳 Achitare curs</h3>
             <p style="color: #856404; line-height: 1.6;">
               Puteți achita taxa de instruire online în siguranță folosind platforma MAIB Pay.<br>
-              <a href="https://maibpay.md/pay/BV1ar" 
+              <a href="https://maibpay.md/pay/Zk39K" 
                 style="display: inline-block; background-color: #28a745; color: white; text-decoration: none; padding: 10px 20px; border-radius: 6px; margin-top: 10px; font-weight: bold;">
                 👉 Efectuați plata acum
               </a>

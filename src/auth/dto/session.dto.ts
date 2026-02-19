@@ -46,7 +46,15 @@ export class SessionDto {
 
   @ApiProperty()
   @Expose()
-  privateMessage: string;
+  medical_documents: boolean;
+  
+  @ApiProperty()
+  @Expose()
+  individual_work: boolean;
+
+  @ApiProperty()
+  @Expose()
+  number_of_absences: number;
 
   @ApiProperty()
   @Expose()
