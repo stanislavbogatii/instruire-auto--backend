@@ -868,19 +868,19 @@ export class ReservationsService {
         }
       }
 
-      const allGroupReservations = [
-        ...leastBusyGroup.instructors.flatMap(instructor => instructor.reservations)
-      ];
+      const allGroupReservations = leastBusyGroup.instructors.flatMap(instructor =>
+        instructor.reservations.map(r => ({
+          id: r.id,
+          startTime: r.startTime,
+          instructorId: r.instructorId,
+          instructorSector: instructor.sector
+        }))
+      );
 
-      const reservations = allGroupReservations.map(r => ({ 
-        id: r.id, 
-        startTime: r.startTime,
-        instructorId: r.instructorId
-      })); 
       return { 
         instructorsIds: leastBusyGroup.instructors.map(i => i.id),
         groupId: leastBusyGroup.id, 
-        reservations 
+        reservations: allGroupReservations 
       }; 
     } 
   
@@ -920,7 +920,8 @@ export class ReservationsService {
     const reservations = leastBusyInstructor.reservations.map(r => ({ 
       id: r.id, 
       startTime: r.startTime,
-      instructorId: r.instructorId
+      instructorId: r.instructorId,
+      instructorSector: leastBusyInstructor.sector
     })); 
   
     return { 
