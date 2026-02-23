@@ -874,7 +874,8 @@ export class ReservationsService {
 
       const reservations = allGroupReservations.map(r => ({ 
         id: r.id, 
-        startTime: r.startTime 
+        startTime: r.startTime,
+        instructorId: r.instructorId
       })); 
       return { 
         instructorsIds: leastBusyGroup.instructors.map(i => i.id),
@@ -918,7 +919,8 @@ export class ReservationsService {
   
     const reservations = leastBusyInstructor.reservations.map(r => ({ 
       id: r.id, 
-      startTime: r.startTime 
+      startTime: r.startTime,
+      instructorId: r.instructorId
     })); 
   
     return { 
