@@ -83,7 +83,6 @@ export class CreateReservationsDto {
   @Type(() => Number)
   instructorsGroupId?: number;
 
-
   @ApiProperty({ example: 1, description: 'Instructor ID (optional - will be assigned randomly if not provided)', required: false })
   @IsOptional()
   @Type(() => Number)
@@ -95,4 +94,14 @@ export class CreateReservationsDto {
   @ValidateNested({ each: true })
   @Type(() => ReservationItemDto)
   reservations: ReservationItemDto[];
+
+  @ApiPropertyOptional({ 
+    example: [2, 3], 
+    description: 'List of instructor IDs to exclude from assignment (optional)'
+  })
+  @IsArray()
+  @IsNumber({}, { each: true })
+  @IsOptional()
+  @Type(() => Number)
+  excludedInstructorIds?: number[]; 
 }

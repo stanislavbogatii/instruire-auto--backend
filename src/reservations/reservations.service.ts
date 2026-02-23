@@ -41,10 +41,12 @@ export class ReservationsService {
     const created: Array<Reservation> = [];
     let instructorId = dto.instructorId;
     let instructorsGroupId = dto.instructorsGroupId;
+    let excludedInstructorIds = dto.excludedInstructorIds || [];
 
     if (instructorsGroupId) {
       const instructors = await this.prisma.instructor.findMany({
         where: {
+          id: { notIn: excludedInstructorIds },
           isActive: true,
           instructorsGroupId
         }
