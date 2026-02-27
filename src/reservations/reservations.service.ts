@@ -38,235 +38,229 @@ export class ReservationsService {
   }
 
   async createReservations(userId: number, dto: CreateReservationsDto): Promise<Reservation[]> {
-    const created: Array<Reservation> = [];
-    let instructorId = dto.instructorId;
-    let instructorsGroupId = dto.instructorsGroupId;
-    let excludedInstructorIds = dto.excludedInstructorIds || [];
+    let created: Array<Reservation> = [];
+    const instructorId = dto.instructorId;
+    const instructorsGroupId = dto.instructorsGroupId;
+    const excludedInstructorIds = dto.excludedInstructorIds || [];
 
     if (instructorsGroupId) {
-      const instructors = await this.prisma.instructor.findMany({
-        where: {
-          id: { notIn: excludedInstructorIds },
-          isActive: true,
-          instructorsGroupId
+      created = await this.prisma.$transaction(async (tx) => {
+        const instructors = await tx.instructor.findMany({
+          where: {
+            id: { notIn: excludedInstructorIds },
+            isActive: true,
+            instructorsGroupId,
+          },
+        });
+
+        if (!instructors.length) {
+          throw new NotFoundException("Instructors in this group not found");
         }
-      });
 
-      if (!instructors.length) {
-        throw new NotFoundException("Instructors in this group not found");
-      }
+        const createdInTransaction: Array<Reservation> = [];
+        let instructorIndex = 0;
 
-      let instructorIndex = 0;
+        for (const item of dto.reservations) {
+          const startTime = new Date(item.startTime);
 
-      for (const item of dto.reservations) {
-        const startTime = new Date(item.startTime);
+          let assignedInstructor: Instructor | null = null;
+          let tries = 0;
 
-        let assignedInstructor: Instructor | null = null;
-        let tries = 0;
+          while (!assignedInstructor && tries < instructors.length) {
+            const currentInstructor = instructors[instructorIndex % instructors.length];
 
-        while (!assignedInstructor && tries < instructors.length) {
-          const currentInstructor = instructors[instructorIndex % instructors.length];
+            const existing = await tx.reservation.findFirst({
+              where: {
+                instructorId: currentInstructor.id,
+                startTime,
+              },
+            });
 
-          const existing = await this.prisma.reservation.findFirst({
-            where: {
-              instructorId: currentInstructor.id,
-              startTime
+            if (!existing) {
+              assignedInstructor = currentInstructor;
+            } else {
+              instructorIndex++;
+              tries++;
             }
+          }
+
+          if (!assignedInstructor) {
+            throw new BadRequestException(
+              `No available instructor at ${startTime.toISOString()}`
+            );
+          }
+
+          const reservation = await tx.reservation.create({
+            data: {
+              userId,
+              instructorId: assignedInstructor.id,
+              startTime,
+              sector: item.sector || '',
+              gearbox: item.gearbox || '',
+              privateMessage: item.privateMessage || '',
+              color: item.color || '',
+              instructorsGroupId,
+              isFavorite: item.isFavorite || false,
+              isImportant: item.isImportant || false,
+            },
+            include: {
+              instructor: true,
+              instructorsGroup: true,
+              user: {
+                select: {
+                  id: true,
+                  email: true,
+                  firstName: true,
+                  lastName: true,
+                  phone: true,
+                },
+              },
+            },
           });
 
-          if (!existing) {
-            assignedInstructor = currentInstructor;
-          } else {
-            instructorIndex++;
-            tries++;
-          }
+          createdInTransaction.push(reservation);
+          instructorIndex++;
         }
 
-        if (!assignedInstructor) {
-          throw new BadRequestException(
-            `No available instructor at ${startTime.toISOString()}`
-          );
-        }
-
-        const reservation = await this.prisma.reservation.create({
-          data: {
-            userId,
-            instructorId: assignedInstructor.id,
-            startTime,
-            sector: item.sector || '',
-            gearbox: item.gearbox || '',
-            privateMessage: item.privateMessage || '',
-            color: item.color || '',
-            instructorsGroupId,
-            isFavorite: item.isFavorite || false,
-            isImportant: item.isImportant || false,
-          },
-          include: {
-            instructor: true,
-            instructorsGroup: true,
-            user: {
-              select: {
-                id: true,
-                email: true,
-                firstName: true,
-                lastName: true,
-                phone: true
-              }
-            }
-          }
-        });
-
-        try {
-          await this.historyService.createHistoryRecord(
-            reservation.id,
-            'CREATE' as any, 
-            reservation,
-            userId
-          );
-        } catch (error) {
-          console.warn('Failed to create history record:', error.message);
-        }
-
-        created.push(reservation);
-        instructorIndex++; 
-      }
+        return createdInTransaction;
+      });
     } else if (instructorId) {
-      const instructor = await this.prisma.instructor.findFirst({
-        where: { id: instructorId },
-      });
-      if (!instructor) throw new NotFoundException("Instructor not found");
+      created = await this.prisma.$transaction(async (tx) => {
+        const instructor = await tx.instructor.findFirst({
+          where: { id: instructorId },
+        });
+        if (!instructor) throw new NotFoundException("Instructor not found");
 
-      const reservations = dto.reservations || [];
-      if (reservations.length === 0) return []; 
+        const reservations = dto.reservations || [];
+        if (reservations.length === 0) return [];
 
-      const startTimes = reservations.map(r => new Date(r.startTime));
+        const startTimes = reservations.map(r => new Date(r.startTime));
+        const N = Math.min(7, reservations.length);
 
-      const N = Math.min(7, reservations.length);
+        const userReservationsCount = await tx.reservation.count({
+          where: { userId, deletedAt: null },
+        });
 
-      const userReservationsCount = await this.prisma.reservation.count({
-        where: { userId, deletedAt: null },
-      });
+        const allCiocana = reservations.every(r => ((r.sector || '').toLowerCase() === 'ciocana'));
 
-      const allCiocana = reservations.every(r => ((r.sector || '').toLowerCase() === 'ciocana'));
+        let botanicaInstructor: Instructor | null = null;
+        if (userReservationsCount === 0 && allCiocana && N > 0) {
+          const firstNStartTimes = startTimes.slice(0, N);
 
-      let botanicaInstructor: Instructor | null = null;
-      if (userReservationsCount === 0 && allCiocana && N > 0) {
-        const firstNStartTimes = startTimes.slice(0, N);
-
-        botanicaInstructor = await this.prisma.instructor.findFirst({
-          where: {
-            sector: 'Botanica',
-            reservations: {
-              none: {
-                startTime: { in: firstNStartTimes },
+          botanicaInstructor = await tx.instructor.findFirst({
+            where: {
+              sector: 'Botanica',
+              reservations: {
+                none: {
+                  startTime: { in: firstNStartTimes },
+                },
               },
             },
-          },
-        });
+          });
 
-        if (!botanicaInstructor) {
-          throw new BadRequestException(
-            `No available Botanica instructor found for first ${N} reservations`
-          );
-        }
-      }
-
-      const ciocanaTimes = botanicaInstructor ? startTimes.slice(N) : startTimes;
-      if (ciocanaTimes.length > 0) {
-        const existingCiocana = await this.prisma.reservation.findMany({
-          where: {
-            instructorId,
-            startTime: { in: ciocanaTimes },
-            deletedAt: null,
-          },
-          select: { startTime: true },
-        });
-
-        if (existingCiocana.length > 0) {
-          const conflictTimes = existingCiocana.map(r => r.startTime.toISOString());
-          throw new BadRequestException(
-            `Instructor ${instructorId} is already reserved at: ${conflictTimes.join(', ')}`
-          );
-        }
-      }
-
-      if (botanicaInstructor) {
-        const existingBotanica = await this.prisma.reservation.findMany({
-          where: {
-            instructorId: botanicaInstructor.id,
-            startTime: { in: startTimes.slice(0, N) },
-            deletedAt: null,
-          },
-          select: { startTime: true },
-        });
-        if (existingBotanica.length > 0) {
-          const conflictTimes = existingBotanica.map(r => r.startTime.toISOString());
-          throw new BadRequestException(
-            `Botanica instructor ${botanicaInstructor.id} is already reserved at: ${conflictTimes.join(', ')}`
-          );
-        }
-      }
-
-
-      for (const [index, item] of reservations.entries()) {
-        const startTime = new Date(item.startTime);
-
-        let usedInstructorId = instructorId;
-        let usedSector = item.sector || '';
-
-        if (botanicaInstructor && index < N) {
-          usedInstructorId = botanicaInstructor.id;
-          usedSector = 'Botanica';
+          if (!botanicaInstructor) {
+            throw new BadRequestException(
+              `No available Botanica instructor found for first ${N} reservations`
+            );
+          }
         }
 
-        const reservation = await this.prisma.reservation.create({
-          data: {
-            userId,
-            instructorId: usedInstructorId,
-            startTime,
-            sector: usedSector,
-            gearbox: item.gearbox || '',
-            privateMessage: item.privateMessage || '',
-            color: item.color || '',
-            instructorsGroupId: null,
-            isFavorite: item.isFavorite || false,
-            isImportant: item.isImportant || false,
-          },
-          include: {
-            instructor: true,
-            instructorsGroup: true,
-            user: {
-              select: {
-                id: true,
-                email: true,
-                firstName: true,
-                lastName: true,
-                phone: true,
+        const ciocanaTimes = botanicaInstructor ? startTimes.slice(N) : startTimes;
+        if (ciocanaTimes.length > 0) {
+          const existingCiocana = await tx.reservation.findMany({
+            where: {
+              instructorId,
+              startTime: { in: ciocanaTimes },
+              deletedAt: null,
+            },
+            select: { startTime: true },
+          });
+
+          if (existingCiocana.length > 0) {
+            const conflictTimes = existingCiocana.map(r => r.startTime.toISOString());
+            throw new BadRequestException(
+              `Instructor ${instructorId} is already reserved at: ${conflictTimes.join(', ')}`
+            );
+          }
+        }
+
+        if (botanicaInstructor) {
+          const existingBotanica = await tx.reservation.findMany({
+            where: {
+              instructorId: botanicaInstructor.id,
+              startTime: { in: startTimes.slice(0, N) },
+              deletedAt: null,
+            },
+            select: { startTime: true },
+          });
+          if (existingBotanica.length > 0) {
+            const conflictTimes = existingBotanica.map(r => r.startTime.toISOString());
+            throw new BadRequestException(
+              `Botanica instructor ${botanicaInstructor.id} is already reserved at: ${conflictTimes.join(', ')}`
+            );
+          }
+        }
+
+        const createdInTransaction: Array<Reservation> = [];
+
+        for (const [index, item] of reservations.entries()) {
+          const startTime = new Date(item.startTime);
+
+          let usedInstructorId = instructorId;
+          let usedSector = item.sector || '';
+
+          if (botanicaInstructor && index < N) {
+            usedInstructorId = botanicaInstructor.id;
+            usedSector = 'Botanica';
+          }
+
+          const reservation = await tx.reservation.create({
+            data: {
+              userId,
+              instructorId: usedInstructorId,
+              startTime,
+              sector: usedSector,
+              gearbox: item.gearbox || '',
+              privateMessage: item.privateMessage || '',
+              color: item.color || '',
+              instructorsGroupId: null,
+              isFavorite: item.isFavorite || false,
+              isImportant: item.isImportant || false,
+            },
+            include: {
+              instructor: true,
+              instructorsGroup: true,
+              user: {
+                select: {
+                  id: true,
+                  email: true,
+                  firstName: true,
+                  lastName: true,
+                  phone: true,
+                },
               },
             },
-          },
-        });
+          });
 
-        try {
-          await this.historyService.createHistoryRecord(
-            reservation.id,
-            'CREATE' as any,
-            reservation,
-            userId
-          );
-        } catch (error) {
-          console.warn('Failed to create history record:', error?.message ?? error);
+          createdInTransaction.push(reservation);
         }
 
-        created.push(reservation);
-      }
-
-      return created;
-
+        return createdInTransaction;
+      });
     }
 
-
-
+    for (const reservation of created) {
+      try {
+        await this.historyService.createHistoryRecord(
+          reservation.id,
+          'CREATE' as any,
+          reservation,
+          userId
+        );
+      } catch (error) {
+        console.warn('Failed to create history record:', error?.message ?? error);
+      }
+    }
 
     return created;
   }

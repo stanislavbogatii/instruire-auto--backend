@@ -54,8 +54,6 @@ export class ReservationsController {
   ) {}
 
 
-  
-
   @Post()
   @ApiOperation({ summary: 'Create multiple reservations for current user' })
   @ApiBody({ type: CreateReservationsDto })
@@ -102,7 +100,6 @@ export class ReservationsController {
     const reservations = await this.reservationsService.createReservationsForUser(dto.userId, dto);
     if (reservations && reservations.length > 0)
         this.wsService.emitReservationsCreated(reservations, session);
-
     return reservations;
   }
 

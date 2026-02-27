@@ -17,6 +17,7 @@ const UPDATE_POLICY_FIELDS: Record<UpdatePolicy, (keyof UpdateUserDto)[]> = {
     'firstName',
     'lastName',
     'phone',
+    'idnp',
     'desiredInstructorId',
     'color',
     'medical_documents',

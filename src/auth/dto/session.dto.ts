@@ -38,6 +38,10 @@ export class SessionDto {
 
   @ApiProperty()
   @Expose()
+  idnp: number;
+
+  @ApiProperty()
+  @Expose()
   firstName: string;
 
   @ApiProperty()
