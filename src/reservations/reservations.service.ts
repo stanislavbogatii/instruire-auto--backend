@@ -7,6 +7,23 @@ import { HistoryService } from './history.service';
 import { Car, Instructor, InstructorsGroup, Reservation } from '@prisma/client';
 import { BusyReservationResponse } from './dto/ busy-reservation.dto';
 
+type ReservationConflict = {
+  index: number;
+  startTime: string;
+  instructorId: number | null;
+  sector: string;
+  message: string;
+  reservation: CreateReservationsDto['reservations'][number];
+};
+
+type PendingReservationCreate = {
+  item: CreateReservationsDto['reservations'][number];
+  instructorId: number;
+  startTime: Date;
+  sector: string;
+  instructorsGroupId: number | null;
+};
+
 @Injectable()
 export class ReservationsService {
   constructor(
@@ -41,13 +58,181 @@ export class ReservationsService {
     let created: Array<Reservation> = [];
     const instructorId = dto.instructorId;
     const instructorsGroupId = dto.instructorsGroupId;
-    const excludedInstructorIds = dto.excludedInstructorIds || [];
+    const reservations = dto.reservations || [];
 
     if (instructorsGroupId) {
       created = await this.prisma.$transaction(async (tx) => {
+        const instructorsGroup = await tx.instructorsGroup.findUnique({
+          where: { id: instructorsGroupId },
+          select: { sector: true },
+        });
+
+        const isCiocanaGroup = ((instructorsGroup?.sector || '').trim().toLowerCase() === 'ciocana');
+
+        if (isCiocanaGroup) {
+          if (reservations.length === 0) return [];
+
+          // For Ciocana groups use dedicated Botanica/Ciocana split logic.
+          const groupInstructors = await tx.instructor.findMany({
+            where: {
+              isActive: true,
+              instructorsGroupId,
+            },
+          });
+
+          if (!groupInstructors.length) {
+            throw new NotFoundException("Instructors in this group not found");
+          }
+
+          const botanicaInstructor = groupInstructors.find(
+            instructor => (instructor.sector || '').trim().toLowerCase() === 'botanica'
+          );
+
+          if (!botanicaInstructor) {
+            throw new NotFoundException("Botanica instructor in this group not found");
+          }
+
+          const ciocanaInstructors = groupInstructors.filter(
+            instructor => (instructor.sector || '').trim().toLowerCase() === 'ciocana'
+          );
+
+          const botanicaReservationsCount = await tx.reservation.count({
+            where: {
+              userId,
+              sector: 'Botanica',
+              deletedAt: null,
+            },
+          });
+
+          const botanicaSlotsToFill = Math.max(0, 7 - botanicaReservationsCount);
+          const botanicaAssignmentsCount = Math.min(botanicaSlotsToFill, reservations.length);
+          const hasCiocanaAssignments = reservations.length > botanicaAssignmentsCount;
+
+          if (hasCiocanaAssignments && !ciocanaInstructors.length) {
+            throw new NotFoundException("Ciocana instructors in this group not found");
+          }
+
+          const requestedStartTimes = reservations.map(item => new Date(item.startTime));
+          const existingReservations = await tx.reservation.findMany({
+            where: {
+              instructorId: { in: groupInstructors.map(instructor => instructor.id) },
+              startTime: { in: requestedStartTimes },
+              deletedAt: null,
+            },
+            select: {
+              instructorId: true,
+              startTime: true,
+            },
+          });
+
+          const occupiedSlots = new Set(
+            existingReservations
+              .filter((reservation): reservation is { instructorId: number; startTime: Date } => reservation.instructorId !== null)
+              .map(reservation => this.buildReservationSlotKey(reservation.instructorId, reservation.startTime))
+          );
+          const plannedSlots = new Set<string>();
+          const plannedReservations: PendingReservationCreate[] = [];
+          const reservationErrors: ReservationConflict[] = [];
+          let ciocanaInstructorIndex = 0;
+
+          for (const [index, item] of reservations.entries()) {
+            const startTime = new Date(item.startTime);
+
+            if (index < botanicaAssignmentsCount) {
+              const slotKey = this.buildReservationSlotKey(botanicaInstructor.id, startTime);
+
+              if (occupiedSlots.has(slotKey) || plannedSlots.has(slotKey)) {
+                reservationErrors.push(
+                  this.buildReservationConflict(
+                    index,
+                    item,
+                    `Botanica instructor ${botanicaInstructor.id} is already reserved at: ${startTime.toISOString()}`,
+                    botanicaInstructor.id,
+                    'Botanica'
+                  )
+                );
+                continue;
+              }
+
+              plannedSlots.add(slotKey);
+              plannedReservations.push({
+                item,
+                instructorId: botanicaInstructor.id,
+                startTime,
+                sector: 'Botanica',
+                instructorsGroupId,
+              });
+              continue;
+            }
+
+            let assignedCiocanaInstructor: Instructor | null = null;
+            let assignedSlotKey = '';
+            let tries = 0;
+
+            while (!assignedCiocanaInstructor && tries < ciocanaInstructors.length) {
+              const currentInstructor = ciocanaInstructors[ciocanaInstructorIndex % ciocanaInstructors.length];
+              const slotKey = this.buildReservationSlotKey(currentInstructor.id, startTime);
+
+              if (!occupiedSlots.has(slotKey) && !plannedSlots.has(slotKey)) {
+                assignedCiocanaInstructor = currentInstructor;
+                assignedSlotKey = slotKey;
+              } else {
+                ciocanaInstructorIndex++;
+                tries++;
+              }
+            }
+
+            if (!assignedCiocanaInstructor) {
+              reservationErrors.push(
+                this.buildReservationConflict(
+                  index,
+                  item,
+                  `No available Ciocana instructor at ${startTime.toISOString()}`,
+                  null,
+                  'Ciocana'
+                )
+              );
+              continue;
+            }
+
+            plannedSlots.add(assignedSlotKey);
+            plannedReservations.push({
+              item,
+              instructorId: assignedCiocanaInstructor.id,
+              startTime,
+              sector: 'Ciocana',
+              instructorsGroupId,
+            });
+            ciocanaInstructorIndex++;
+          }
+
+          if (reservationErrors.length > 0) {
+            this.throwReservationConflicts(reservationErrors);
+          }
+
+          return Promise.all(
+            plannedReservations.map(plannedReservation =>
+              tx.reservation.create({
+                data: {
+                  userId,
+                  instructorId: plannedReservation.instructorId,
+                  startTime: plannedReservation.startTime,
+                  sector: plannedReservation.sector,
+                  gearbox: plannedReservation.item.gearbox || '',
+                  privateMessage: plannedReservation.item.privateMessage || '',
+                  color: plannedReservation.item.color || '',
+                  instructorsGroupId: plannedReservation.instructorsGroupId,
+                  isFavorite: plannedReservation.item.isFavorite || false,
+                  isImportant: plannedReservation.item.isImportant || false,
+                },
+                include: this.getReservationCreateInclude(),
+              })
+            )
+          );
+        }
+
         const instructors = await tx.instructor.findMany({
           where: {
-            id: { notIn: excludedInstructorIds },
             isActive: true,
             instructorsGroupId,
           },
@@ -57,27 +242,45 @@ export class ReservationsService {
           throw new NotFoundException("Instructors in this group not found");
         }
 
-        const createdInTransaction: Array<Reservation> = [];
+        if (reservations.length === 0) return [];
+
+        const requestedStartTimes = reservations.map(item => new Date(item.startTime));
+        const existingReservations = await tx.reservation.findMany({
+          where: {
+            instructorId: { in: instructors.map(instructor => instructor.id) },
+            startTime: { in: requestedStartTimes },
+            deletedAt: null,
+          },
+          select: {
+            instructorId: true,
+            startTime: true,
+          },
+        });
+
+        const occupiedSlots = new Set(
+          existingReservations
+            .filter((reservation): reservation is { instructorId: number; startTime: Date } => reservation.instructorId !== null)
+            .map(reservation => this.buildReservationSlotKey(reservation.instructorId, reservation.startTime))
+        );
+        const plannedSlots = new Set<string>();
+        const plannedReservations: PendingReservationCreate[] = [];
+        const reservationErrors: ReservationConflict[] = [];
         let instructorIndex = 0;
 
-        for (const item of dto.reservations) {
+        for (const [index, item] of reservations.entries()) {
           const startTime = new Date(item.startTime);
 
           let assignedInstructor: Instructor | null = null;
+          let assignedSlotKey = '';
           let tries = 0;
 
           while (!assignedInstructor && tries < instructors.length) {
             const currentInstructor = instructors[instructorIndex % instructors.length];
+            const slotKey = this.buildReservationSlotKey(currentInstructor.id, startTime);
 
-            const existing = await tx.reservation.findFirst({
-              where: {
-                instructorId: currentInstructor.id,
-                startTime,
-              },
-            });
-
-            if (!existing) {
+            if (!occupiedSlots.has(slotKey) && !plannedSlots.has(slotKey)) {
               assignedInstructor = currentInstructor;
+              assignedSlotKey = slotKey;
             } else {
               instructorIndex++;
               tries++;
@@ -85,44 +288,50 @@ export class ReservationsService {
           }
 
           if (!assignedInstructor) {
-            throw new BadRequestException(
-              `No available instructor at ${startTime.toISOString()}`
+            reservationErrors.push(
+              this.buildReservationConflict(
+                index,
+                item,
+                `No available instructor at ${startTime.toISOString()}`
+              )
             );
+            continue;
           }
 
-          const reservation = await tx.reservation.create({
-            data: {
-              userId,
-              instructorId: assignedInstructor.id,
-              startTime,
-              sector: item.sector || '',
-              gearbox: item.gearbox || '',
-              privateMessage: item.privateMessage || '',
-              color: item.color || '',
-              instructorsGroupId,
-              isFavorite: item.isFavorite || false,
-              isImportant: item.isImportant || false,
-            },
-            include: {
-              instructor: true,
-              instructorsGroup: true,
-              user: {
-                select: {
-                  id: true,
-                  email: true,
-                  firstName: true,
-                  lastName: true,
-                  phone: true,
-                },
-              },
-            },
+          plannedSlots.add(assignedSlotKey);
+          plannedReservations.push({
+            item,
+            instructorId: assignedInstructor.id,
+            startTime,
+            sector: item.sector || '',
+            instructorsGroupId,
           });
-
-          createdInTransaction.push(reservation);
           instructorIndex++;
         }
 
-        return createdInTransaction;
+        if (reservationErrors.length > 0) {
+          this.throwReservationConflicts(reservationErrors);
+        }
+
+        return Promise.all(
+          plannedReservations.map(plannedReservation =>
+            tx.reservation.create({
+              data: {
+                userId,
+                instructorId: plannedReservation.instructorId,
+                startTime: plannedReservation.startTime,
+                sector: plannedReservation.sector,
+                gearbox: plannedReservation.item.gearbox || '',
+                privateMessage: plannedReservation.item.privateMessage || '',
+                color: plannedReservation.item.color || '',
+                instructorsGroupId: plannedReservation.instructorsGroupId,
+                isFavorite: plannedReservation.item.isFavorite || false,
+                isImportant: plannedReservation.item.isImportant || false,
+              },
+              include: this.getReservationCreateInclude(),
+            })
+          )
+        );
       });
     } else if (instructorId) {
       created = await this.prisma.$transaction(async (tx) => {
@@ -131,7 +340,6 @@ export class ReservationsService {
         });
         if (!instructor) throw new NotFoundException("Instructor not found");
 
-        const reservations = dto.reservations || [];
         if (reservations.length === 0) return [];
 
         const startTimes = reservations.map(r => new Date(r.startTime));
@@ -141,111 +349,131 @@ export class ReservationsService {
           where: { userId, deletedAt: null },
         });
 
-        const allCiocana = reservations.every(r => ((r.sector || '').toLowerCase() === 'ciocana'));
+        const allCiocana = reservations.every(r => ((r.sector || '').trim().toLowerCase() === 'ciocana'));
 
         let botanicaInstructor: Instructor | null = null;
-        if (userReservationsCount === 0 && allCiocana && N > 0) {
-          const firstNStartTimes = startTimes.slice(0, N);
+        const reservationErrors: ReservationConflict[] = [];
+        let botanicaUnavailableForBatch = false;
 
+        if (userReservationsCount === 0 && allCiocana && N > 0) {
           botanicaInstructor = await tx.instructor.findFirst({
             where: {
               sector: 'Botanica',
               reservations: {
                 none: {
-                  startTime: { in: firstNStartTimes },
+                  startTime: { in: startTimes.slice(0, N) },
+                  deletedAt: null,
                 },
               },
             },
           });
 
           if (!botanicaInstructor) {
-            throw new BadRequestException(
-              `No available Botanica instructor found for first ${N} reservations`
-            );
+            botanicaUnavailableForBatch = true;
+
+            for (let index = 0; index < N; index++) {
+              const item = reservations[index];
+              reservationErrors.push(
+                this.buildReservationConflict(
+                  index,
+                  item,
+                  `No available Botanica instructor for ${new Date(item.startTime).toISOString()}`,
+                  null,
+                  'Botanica'
+                )
+              );
+            }
           }
         }
 
-        const ciocanaTimes = botanicaInstructor ? startTimes.slice(N) : startTimes;
-        if (ciocanaTimes.length > 0) {
-          const existingCiocana = await tx.reservation.findMany({
-            where: {
-              instructorId,
-              startTime: { in: ciocanaTimes },
-              deletedAt: null,
-            },
-            select: { startTime: true },
-          });
+        const relevantInstructorIds = botanicaInstructor
+          ? [instructorId, botanicaInstructor.id]
+          : [instructorId];
 
-          if (existingCiocana.length > 0) {
-            const conflictTimes = existingCiocana.map(r => r.startTime.toISOString());
-            throw new BadRequestException(
-              `Instructor ${instructorId} is already reserved at: ${conflictTimes.join(', ')}`
-            );
-          }
-        }
+        const existingReservations = await tx.reservation.findMany({
+          where: {
+            instructorId: { in: relevantInstructorIds },
+            startTime: { in: startTimes },
+            deletedAt: null,
+          },
+          select: {
+            instructorId: true,
+            startTime: true,
+          },
+        });
 
-        if (botanicaInstructor) {
-          const existingBotanica = await tx.reservation.findMany({
-            where: {
-              instructorId: botanicaInstructor.id,
-              startTime: { in: startTimes.slice(0, N) },
-              deletedAt: null,
-            },
-            select: { startTime: true },
-          });
-          if (existingBotanica.length > 0) {
-            const conflictTimes = existingBotanica.map(r => r.startTime.toISOString());
-            throw new BadRequestException(
-              `Botanica instructor ${botanicaInstructor.id} is already reserved at: ${conflictTimes.join(', ')}`
-            );
-          }
-        }
-
-        const createdInTransaction: Array<Reservation> = [];
+        const occupiedSlots = new Set(
+          existingReservations
+            .filter((reservation): reservation is { instructorId: number; startTime: Date } => reservation.instructorId !== null)
+            .map(reservation => this.buildReservationSlotKey(reservation.instructorId, reservation.startTime))
+        );
+        const plannedSlots = new Set<string>();
+        const plannedReservations: PendingReservationCreate[] = [];
 
         for (const [index, item] of reservations.entries()) {
           const startTime = new Date(item.startTime);
 
-          let usedInstructorId = instructorId;
-          let usedSector = item.sector || '';
-
-          if (botanicaInstructor && index < N) {
-            usedInstructorId = botanicaInstructor.id;
-            usedSector = 'Botanica';
+          if (botanicaUnavailableForBatch && index < N) {
+            continue;
           }
 
-          const reservation = await tx.reservation.create({
-            data: {
-              userId,
-              instructorId: usedInstructorId,
-              startTime,
-              sector: usedSector,
-              gearbox: item.gearbox || '',
-              privateMessage: item.privateMessage || '',
-              color: item.color || '',
-              instructorsGroupId: null,
-              isFavorite: item.isFavorite || false,
-              isImportant: item.isImportant || false,
-            },
-            include: {
-              instructor: true,
-              instructorsGroup: true,
-              user: {
-                select: {
-                  id: true,
-                  email: true,
-                  firstName: true,
-                  lastName: true,
-                  phone: true,
-                },
-              },
-            },
-          });
+          let usedInstructorId = instructorId;
+          let usedSector = item.sector || '';
+          let conflictMessage = `Instructor ${instructorId} is already reserved at: ${startTime.toISOString()}`;
 
-          createdInTransaction.push(reservation);
+          if (botanicaInstructor && !botanicaUnavailableForBatch && index < N) {
+            usedInstructorId = botanicaInstructor.id;
+            usedSector = 'Botanica';
+            conflictMessage = `Botanica instructor ${botanicaInstructor.id} is already reserved at: ${startTime.toISOString()}`;
+          }
+
+          const slotKey = this.buildReservationSlotKey(usedInstructorId, startTime);
+          if (occupiedSlots.has(slotKey) || plannedSlots.has(slotKey)) {
+            reservationErrors.push(
+              this.buildReservationConflict(
+                index,
+                item,
+                conflictMessage,
+                usedInstructorId,
+                usedSector
+              )
+            );
+            continue;
+          }
+
+          plannedSlots.add(slotKey);
+          plannedReservations.push({
+            item,
+            instructorId: usedInstructorId,
+            startTime,
+            sector: usedSector,
+            instructorsGroupId: null,
+          });
         }
 
-        return createdInTransaction;
+        if (reservationErrors.length > 0) {
+          this.throwReservationConflicts(reservationErrors);
+        }
+
+        return Promise.all(
+          plannedReservations.map(plannedReservation =>
+            tx.reservation.create({
+              data: {
+                userId,
+                instructorId: plannedReservation.instructorId,
+                startTime: plannedReservation.startTime,
+                sector: plannedReservation.sector,
+                gearbox: plannedReservation.item.gearbox || '',
+                privateMessage: plannedReservation.item.privateMessage || '',
+                color: plannedReservation.item.color || '',
+                instructorsGroupId: plannedReservation.instructorsGroupId,
+                isFavorite: plannedReservation.item.isFavorite || false,
+                isImportant: plannedReservation.item.isImportant || false,
+              },
+              include: this.getReservationCreateInclude(),
+            })
+          )
+        );
       });
     }
 
@@ -263,6 +491,52 @@ export class ReservationsService {
     }
 
     return created;
+  }
+
+  private buildReservationSlotKey(instructorId: number, startTime: Date): string {
+    return `${instructorId}:${startTime.toISOString()}`;
+  }
+
+  private buildReservationConflict(
+    index: number,
+    reservation: CreateReservationsDto['reservations'][number],
+    message: string,
+    instructorId: number | null = null,
+    sector?: string,
+  ): ReservationConflict {
+    return {
+      index,
+      startTime: new Date(reservation.startTime).toISOString(),
+      instructorId,
+      sector: sector || reservation.sector || '',
+      message,
+      reservation,
+    };
+  }
+
+  private throwReservationConflicts(reservationErrors: ReservationConflict[]): never {
+    throw new BadRequestException({
+      statusCode: 400,
+      error: 'Bad Request',
+      message: 'Some reservations could not be created',
+      reservationErrors,
+    });
+  }
+
+  private getReservationCreateInclude() {
+    return {
+      instructor: true,
+      instructorsGroup: true,
+      user: {
+        select: {
+          id: true,
+          email: true,
+          firstName: true,
+          lastName: true,
+          phone: true,
+        },
+      },
+    };
   }
 
   async getUserReservations(userId: number) {
