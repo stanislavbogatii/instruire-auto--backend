@@ -210,11 +210,12 @@ export class ExamsService {
       );
       console.log('Used ticket IDs:', usedTicketIds);
 
-      // Get 2 random EXAM-type tickets that haven't been used before
+      // Get 2 random EXAM-type tickets that haven't been used before.
+      // If the user has exhausted all tickets, cycling is handled inside getRandomTickets.
       const tickets = await this.ticketsService.getRandomTickets(2, usedTicketIds, 'EXAM');
 
       if (tickets.length < 2) {
-        throw new BadRequestException('Not enough available EXAM tickets for exam');
+        throw new BadRequestException('Nu există suficiente bilete de examen disponibile. Contactați administratorul.');
       }
 
       // Get current attempt number
@@ -1196,35 +1197,39 @@ export class ExamsService {
       );
     }
 
-    // Create a temporary ticket name for this category practice session
-    const ticketName = `Category_Practice_${categoryId}_${Date.now()}`;
+    // Use a deterministic ticket name per (categoryId, questionCount) — reused across all sessions
+    const ticketName = `Category_Practice_${categoryId}_${questionCount}`;
 
-    // Create a temporary ticket for this practice session
-    const ticket = await this.prisma.ticket.create({
-      data: {
-        name: ticketName,
-        type: 'PRACTICE',
-      },
+    // Find or create the shared ticket for this category + question count
+    let ticket = await this.prisma.ticket.findFirst({
+      where: { name: ticketName, type: 'PRACTICE' },
     });
 
-    // Link questions to the ticket
-    await this.prisma.ticketQuestion.createMany({
-      data: questions.map((question, index) => ({
-        ticketId: ticket.id,
-        questionId: question.id,
-        order: index + 1,
-      })),
-    });
+    if (!ticket) {
+      const newTicket = await this.prisma.ticket.create({
+        data: { name: ticketName, type: 'PRACTICE' },
+      });
 
-    // Check if user already has a practice session for this temporary ticket
+      await this.prisma.ticketQuestion.createMany({
+        data: questions.map((question, index) => ({
+          ticketId: newTicket.id,
+          questionId: question.id,
+          order: index + 1,
+        })),
+      });
+
+      ticket = newTicket;
+    }
+
+    // Check if user already has an in-progress session for this ticket
     const existingPractice = await this.prisma.studentTicket.findUnique({
       where: {
         userId_ticketId: { userId, ticketId: ticket.id },
       },
     });
 
-    if (existingPractice) {
-      // Return existing practice session
+    if (existingPractice && existingPractice.status === 'IN_PROGRESS') {
+      // Return existing in-progress session
       return this.getPracticeDetails(existingPractice.id, lang);
     }
 

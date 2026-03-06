@@ -170,25 +170,40 @@ export class TicketsService {
   }
 
   async getRandomTickets(count: number = 2, excludeTicketIds: number[] = [], type: 'EXAM' | 'PRACTICE' = 'EXAM') {
-    const tickets = await this.prisma.ticket.findMany({
-      where: {
-        id: {
-          notIn: excludeTicketIds,
-        },
-        type: type, // Filter by ticket type
-      },
-      include: {
-        questions: {
-          include: {
-            question: true,
-          },
-          orderBy: { order: 'asc' },
-        },
-      },
-    });
+    const MIN_QUESTIONS = 24;
 
-    // Shuffle and take random tickets
-    const shuffled = tickets.sort(() => 0.5 - Math.random());
-    return shuffled.slice(0, count);
+    const fetchTickets = async (excludeIds: number[]) => {
+      return this.prisma.ticket.findMany({
+        where: {
+          id: { notIn: excludeIds },
+          type,
+        },
+        include: {
+          questions: {
+            include: { question: true },
+            orderBy: { order: 'asc' },
+          },
+        },
+      });
+    };
+
+    let tickets = await fetchTickets(excludeTicketIds);
+
+    // Filter out tickets that don't have the required number of questions
+    tickets = tickets.filter(t => t.questions.length >= MIN_QUESTIONS);
+
+    // If not enough fresh tickets, cycle back and pick from all tickets (excluding last used)
+    if (tickets.length < count) {
+      const allTickets = await fetchTickets([]);
+      tickets = allTickets.filter(t => t.questions.length >= MIN_QUESTIONS);
+    }
+
+    // Fisher-Yates shuffle for uniform distribution
+    for (let i = tickets.length - 1; i > 0; i--) {
+      const j = Math.floor(Math.random() * (i + 1));
+      [tickets[i], tickets[j]] = [tickets[j], tickets[i]];
+    }
+
+    return tickets.slice(0, count);
   }
 }
