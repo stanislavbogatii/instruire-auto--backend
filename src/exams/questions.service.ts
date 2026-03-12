@@ -11,13 +11,14 @@ export class QuestionsService {
   ) {}
 
   async create(createQuestionDto: CreateQuestionDto) {
+    const categoryId = createQuestionDto.categoryId || undefined;
     return this.prisma.question.create({
       data: {
         text: createQuestionDto.text,
         image: createQuestionDto.image,
         answers: JSON.stringify(createQuestionDto.answers),
         correctAnswer: createQuestionDto.correctAnswer,
-        categoryId: createQuestionDto.categoryId,
+        categoryId,
       },
       include: {
         category: true,
@@ -84,7 +85,7 @@ export class QuestionsService {
         image: updateQuestionDto.image,
         answers: updateQuestionDto.answers ? JSON.stringify(updateQuestionDto.answers) : undefined,
         correctAnswer: updateQuestionDto.correctAnswer,
-        categoryId: updateQuestionDto.categoryId,
+        categoryId: updateQuestionDto.categoryId || undefined,
       },
       include: {
         category: true,

@@ -97,7 +97,7 @@ export class ReservationsController {
       throw new ForbiddenException("Only admins, managers, and instructors can create reservations for other users");
     }
     
-    const reservations = await this.reservationsService.createReservationsForUser(dto.userId, dto);
+    const reservations = await this.reservationsService.createReservationsForUser(dto.userId, dto, session.id);
     if (reservations && reservations.length > 0)
         this.wsService.emitReservationsCreated(reservations, session);
     return reservations;

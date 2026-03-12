@@ -42,7 +42,7 @@ export class ReservationsService {
     '19:30',
   ];
 
-  async createReservationsForUser(userId: number, dto: CreateReservationsDto) {
+  async createReservationsForUser(userId: number, dto: CreateReservationsDto, createdBy?: number) {
     const targetUser = await this.prisma.user.findUnique({
       where: { id: userId },
     });
@@ -51,10 +51,10 @@ export class ReservationsService {
       throw new NotFoundException(`User with ID ${userId} not found`);
     }
 
-    return this.createReservations(userId, dto);
+    return this.createReservations(userId, dto, createdBy);
   }
 
-  async createReservations(userId: number, dto: CreateReservationsDto): Promise<Reservation[]> {
+  async createReservations(userId: number, dto: CreateReservationsDto, createdBy?: number): Promise<Reservation[]> {
     let created: Array<Reservation> = [];
     const instructorId = dto.instructorId;
     const instructorsGroupId = dto.instructorsGroupId;
@@ -483,7 +483,7 @@ export class ReservationsService {
           reservation.id,
           'CREATE' as any,
           reservation,
-          userId
+          createdBy ?? userId
         );
       } catch (error) {
         console.warn('Failed to create history record:', error?.message ?? error);
