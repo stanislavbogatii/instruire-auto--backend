@@ -211,11 +211,10 @@ export class ExamsService {
       console.log('Used ticket IDs:', usedTicketIds);
 
       // Get 2 random EXAM-type tickets that haven't been used before.
-      // If the user has exhausted all tickets, cycling is handled inside getRandomTickets.
       const tickets = await this.ticketsService.getRandomTickets(2, usedTicketIds, 'EXAM');
 
       if (tickets.length < 2) {
-        throw new BadRequestException('Nu există suficiente bilete de examen disponibile. Contactați administratorul.');
+        throw new BadRequestException('Ai parcurs toate biletele de examen disponibile. Încercările de examen au fost epuizate. Contactați administratorul pentru a reseta accesul.');
       }
 
       // Get current attempt number

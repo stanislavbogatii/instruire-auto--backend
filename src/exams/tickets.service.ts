@@ -192,12 +192,6 @@ export class TicketsService {
     // Filter out tickets that don't have the required number of questions
     tickets = tickets.filter(t => t.questions.length >= MIN_QUESTIONS);
 
-    // If not enough fresh tickets, cycle back and pick from all tickets (excluding last used)
-    if (tickets.length < count) {
-      const allTickets = await fetchTickets([]);
-      tickets = allTickets.filter(t => t.questions.length >= MIN_QUESTIONS);
-    }
-
     // Fisher-Yates shuffle for uniform distribution
     for (let i = tickets.length - 1; i > 0; i--) {
       const j = Math.floor(Math.random() * (i + 1));
