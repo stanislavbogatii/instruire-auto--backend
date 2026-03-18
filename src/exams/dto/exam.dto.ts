@@ -25,7 +25,7 @@ export class CreateExamDto {
   @Min(1)
   timeLimit?: number;
 
-  @ApiProperty({ description: 'Pass score required', required: false, default: 22 })
+  @ApiProperty({ description: 'Pass score required', required: false, default: 44 })
   @IsOptional()
   @IsInt()
   @Min(1)

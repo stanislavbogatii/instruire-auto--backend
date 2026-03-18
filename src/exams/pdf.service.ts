@@ -324,10 +324,8 @@ export class PdfService {
                 <div class="field-line"></div>`
       );
       
-      // Calificativ field
-      const incorrectAnswers = examData.totalQuestions - (examData.score || 0);
-      const isRespins = incorrectAnswers >= 3;
-      const calificativ = isRespins ? 'Respins' : 'Admis';
+      // Calificativ field — based on exam status set by the server
+      const calificativ = passed ? 'Admis' : 'Respins';
       html = html.replace(
         /(<label>Calificativ<\/label>\s*<div class="field-line"[^>]*><\/div>)/,
         `<label>Calificativ</label>

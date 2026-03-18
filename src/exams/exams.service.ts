@@ -228,7 +228,7 @@ export class ExamsService {
             userId,
             status: ExamStatus.IN_PROGRESS,
             timeLimit: createExamDto.timeLimit || 30,
-            passScore: createExamDto.passScore || 22,
+            passScore: createExamDto.passScore || 44,
             attemptNumber,
             totalQuestions: tickets.reduce((sum, ticket) => sum + ticket.questions.length, 0),
           },
@@ -334,16 +334,20 @@ export class ExamsService {
     }
     console.log('✅ Exam found successfully');
 
+    const isFinished = exam.status !== ExamStatus.IN_PROGRESS;
+
     return {
       ...exam,
       questions: exam.questions.map(eq => ({
         id: eq.question.id,
         text: parseQuestionText(eq.question.text, lang),
-        image: (eq as any).image || eq.question.image, // Prioritize ExamQuestion image, fallback to Question image
+        image: (eq as any).image || eq.question.image,
         answers: parseAnswers(eq.question.answers, lang),
         order: eq.order,
         selectedAnswer: eq.selectedAnswer,
         isAnswered: eq.selectedAnswer !== null,
+        isCorrect: isFinished ? eq.isCorrect : undefined,
+        correctAnswer: isFinished ? eq.question.correctAnswer : undefined,
       })),
     };
   }
@@ -447,15 +451,19 @@ export class ExamsService {
       },
     });
 
-    // Check if exam is completed
-    const answeredQuestions = await this.prisma.examQuestion.count({
-      where: {
-        examId,
-        selectedAnswer: { not: null },
-      },
-    });
+    // Check if exam should be completed:
+    // 1. Student reached passScore correct answers (early success)
+    // 2. All questions have been answered
+    const [answeredQuestions, correctAnswers] = await Promise.all([
+      this.prisma.examQuestion.count({
+        where: { examId, selectedAnswer: { not: null } },
+      }),
+      this.prisma.examQuestion.count({
+        where: { examId, isCorrect: true },
+      }),
+    ]);
 
-    if (answeredQuestions === exam.totalQuestions) {
+    if (correctAnswers >= exam.passScore || answeredQuestions === exam.totalQuestions) {
       await this.completeExam(examId);
     }
 
