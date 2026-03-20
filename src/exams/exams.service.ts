@@ -220,7 +220,7 @@ export class ExamsService {
       // Get current attempt number
       const attemptNumber = previousExams.length + 1;
       console.log('Starting database transaction...');
-
+      console.log(createExamDto.timeLimit)
       return this.prisma.$transaction(async (tx) => {
         // Create exam
         const exam = await tx.exam.create({
@@ -867,14 +867,13 @@ export class ExamsService {
     });
   }
 
-  // Cron job to automatically expire exams that exceed time limit
   @Cron(CronExpression.EVERY_MINUTE)
   async handleExamTimeouts() {
     const expiredExams = await this.prisma.exam.findMany({
       where: {
         status: ExamStatus.IN_PROGRESS,
         startedAt: {
-          lt: new Date(Date.now() - 30 * 60 * 1000), // 30 minutes ago
+          lt: new Date(Date.now() - 60 * 60 * 1000), // 60 minutes ago
         },
       },
     });
