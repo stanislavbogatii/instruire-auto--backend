@@ -210,10 +210,10 @@ export class ExamsService {
       );
       console.log('Used ticket IDs:', usedTicketIds);
 
-      // Get 2 random EXAM-type tickets that haven't been used before.
-      const tickets = await this.ticketsService.getRandomTickets(2, usedTicketIds, 'EXAM');
+      // Get 1 random EXAM-type ticket that hasn't been used before.
+      const tickets = await this.ticketsService.getRandomTickets(1, usedTicketIds, 'EXAM');
 
-      if (tickets.length < 2) {
+      if (tickets.length < 1) {
         throw new BadRequestException('Ai parcurs toate biletele de examen disponibile. Încercările de examen au fost epuizate. Contactați administratorul pentru a reseta accesul.');
       }
 
