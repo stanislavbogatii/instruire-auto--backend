@@ -259,7 +259,6 @@ model StudentTicket {
   user              User                  @relation(fields: [userId], references: [id], onDelete: Cascade)
   answers           StudentTicketAnswer[]
 
-  @@unique([userId, ticketId])
   @@index([userId])
   @@index([ticketId])
 }

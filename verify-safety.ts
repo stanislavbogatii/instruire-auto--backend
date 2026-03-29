@@ -40,12 +40,10 @@ async function verifyDataSafety() {
     
     if (firstUser && firstTicket) {
       // Check if this combination already exists
-      const existingPractice = await prisma.studentTicket.findUnique({
+      const existingPractice = await prisma.studentTicket.findFirst({
         where: {
-          userId_ticketId: {
-            userId: firstUser.id,
-            ticketId: firstTicket.id,
-          },
+          userId: firstUser.id,
+          ticketId: firstTicket.id,
         },
       });
       

@@ -905,37 +905,14 @@ export class ExamsService {
       throw new NotFoundException('Practice ticket not found');
     }
 
-    // Check if user already has a practice session for this ticket
-    const existingPractice = await this.prisma.studentTicket.findUnique({
-      where: {
-        userId_ticketId: { userId, ticketId },
-      },
-      include: {
-        answers: {
-          include: { question: true },
-          orderBy: { order: 'asc' },
-        },
-      },
+    // Check if user already has an in-progress session for this ticket
+    const existingPractice = await this.prisma.studentTicket.findFirst({
+      where: { userId, ticketId, status: 'IN_PROGRESS' },
     });
 
     if (existingPractice) {
-      // If practice is completed, delete it and create a new one
-      if (existingPractice.status === 'PASSED' || existingPractice.status === 'FAILED') {
-        // Delete the completed practice session and all its answers
-        await this.prisma.$transaction(async (tx) => {
-          await tx.studentTicketAnswer.deleteMany({
-            where: { studentTicketId: existingPractice.id },
-          });
-          await tx.studentTicket.delete({
-            where: { id: existingPractice.id },
-          });
-        });
-        
-        // Continue to create new practice session below
-      } else {
-        // Return existing incomplete practice session
-        return this.getPracticeDetails(existingPractice.id, lang);
-      }
+      // Resume in-progress session
+      return this.getPracticeDetails(existingPractice.id, lang);
     }
 
     // Create new practice session
@@ -1147,10 +1124,8 @@ export class ExamsService {
   }
 
   async getPracticesByTicket(userId: number, ticketId: number) {
-    return this.prisma.studentTicket.findUnique({
-      where: {
-        userId_ticketId: { userId, ticketId },
-      },
+    return this.prisma.studentTicket.findMany({
+      where: { userId, ticketId },
       include: {
         ticket: true,
         answers: {
@@ -1158,6 +1133,7 @@ export class ExamsService {
           orderBy: { order: 'asc' },
         },
       },
+      orderBy: { startedAt: 'desc' },
     });
   }
 
@@ -1227,27 +1203,13 @@ export class ExamsService {
       ticket = newTicket;
     }
 
-    // Check if user already has a session for this ticket
-    const existingPractice = await this.prisma.studentTicket.findUnique({
-      where: {
-        userId_ticketId: { userId, ticketId: ticket.id },
-      },
+    // Check if user already has an in-progress session for this ticket
+    const existingPractice = await this.prisma.studentTicket.findFirst({
+      where: { userId, ticketId: ticket.id, status: 'IN_PROGRESS' },
     });
 
     if (existingPractice) {
-      if (existingPractice.status === 'IN_PROGRESS') {
-        // Return existing in-progress session
-        return this.getPracticeDetails(existingPractice.id, lang);
-      }
-      // PASSED or FAILED — delete so the user can start fresh
-      await this.prisma.$transaction(async (tx) => {
-        await tx.studentTicketAnswer.deleteMany({
-          where: { studentTicketId: existingPractice.id },
-        });
-        await tx.studentTicket.delete({
-          where: { id: existingPractice.id },
-        });
-      });
+      return this.getPracticeDetails(existingPractice.id, lang);
     }
 
     // Create new practice session
