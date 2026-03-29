@@ -1,5 +1,6 @@
-import { IsNotEmpty, MaxLength, IsString, IsOptional, IsEmail } from 'class-validator';
+import { IsNotEmpty, MaxLength, IsString, IsOptional, IsEmail, IsEnum, IsBoolean } from 'class-validator';
 import { ApiProperty } from '@nestjs/swagger';
+import { InstructorType } from '@prisma/client';
 
 export class CreateInstructorDto {
   @ApiProperty({ example: 'John', description: 'First name' })
@@ -48,4 +49,23 @@ export class CreateInstructorDto {
   @IsString()
   @IsOptional()
   color?: string;
+
+  @ApiProperty({
+    enum: InstructorType,
+    example: InstructorType.BAZA,
+    description: 'Instructor type: SCHIMB, BAZA, EXAMEN, SUPERIOR',
+    required: false,
+  })
+  @IsEnum(InstructorType)
+  @IsOptional()
+  instructorType?: InstructorType;
+
+  @ApiProperty({
+    example: false,
+    description: 'Whether the instructor also handles exams (used alongside SUPERIOR type)',
+    required: false,
+  })
+  @IsBoolean()
+  @IsOptional()
+  isExamen?: boolean;
 }

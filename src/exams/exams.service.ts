@@ -1227,16 +1227,27 @@ export class ExamsService {
       ticket = newTicket;
     }
 
-    // Check if user already has an in-progress session for this ticket
+    // Check if user already has a session for this ticket
     const existingPractice = await this.prisma.studentTicket.findUnique({
       where: {
         userId_ticketId: { userId, ticketId: ticket.id },
       },
     });
 
-    if (existingPractice && existingPractice.status === 'IN_PROGRESS') {
-      // Return existing in-progress session
-      return this.getPracticeDetails(existingPractice.id, lang);
+    if (existingPractice) {
+      if (existingPractice.status === 'IN_PROGRESS') {
+        // Return existing in-progress session
+        return this.getPracticeDetails(existingPractice.id, lang);
+      }
+      // PASSED or FAILED — delete so the user can start fresh
+      await this.prisma.$transaction(async (tx) => {
+        await tx.studentTicketAnswer.deleteMany({
+          where: { studentTicketId: existingPractice.id },
+        });
+        await tx.studentTicket.delete({
+          where: { id: existingPractice.id },
+        });
+      });
     }
 
     // Create new practice session
@@ -1361,6 +1372,145 @@ export class ExamsService {
   // ================================
   // PROFESSOR METHODS
   // ================================
+
+  /**
+   * Monthly cron: resets (deletes) completed practice sessions for all professors
+   * so they can start fresh each month.
+   * Runs at 00:00 on the 1st of every month, Chisinau time.
+   */
+  @Cron('0 0 1 * *', { timeZone: 'Europe/Chisinau' })
+  async resetProfessorMonthlyPractice() {
+    const professors = await this.prisma.user.findMany({
+      where: { role: 'PROFESSOR' },
+      select: { id: true },
+    });
+
+    if (professors.length === 0) return;
+
+    const professorIds = professors.map((p) => p.id);
+
+    await this.prisma.$transaction(async (tx) => {
+      const completed = await tx.studentTicket.findMany({
+        where: {
+          userId: { in: professorIds },
+          status: { in: ['PASSED', 'FAILED'] },
+        },
+        select: { id: true },
+      });
+
+      const ids = completed.map((s) => s.id);
+      if (ids.length === 0) return;
+
+      await tx.studentTicketAnswer.deleteMany({
+        where: { studentTicketId: { in: ids } },
+      });
+      await tx.studentTicket.deleteMany({
+        where: { id: { in: ids } },
+      });
+    });
+  }
+
+  /**
+   * Get practice statistics for a single professor (for Admin/Manager).
+   */
+  async getProfessorPracticeStats(professorId: number) {
+    const professor = await this.prisma.user.findUnique({
+      where: { id: professorId },
+      select: { id: true, firstName: true, lastName: true, email: true, role: true },
+    });
+
+    if (!professor) throw new NotFoundException('Professor not found');
+    if (professor.role !== 'PROFESSOR')
+      throw new BadRequestException('User is not a professor');
+
+    const practices = await this.prisma.studentTicket.findMany({
+      where: { userId: professorId },
+      include: { ticket: { select: { id: true, name: true, type: true } } },
+      orderBy: { updatedAt: 'desc' },
+    });
+
+    const passed = practices.filter((p) => p.status === 'PASSED').length;
+    const failed = practices.filter((p) => p.status === 'FAILED').length;
+    const inProgress = practices.filter((p) => p.status === 'IN_PROGRESS').length;
+    const total = practices.length;
+
+    const isCategoryTicket = (name: string) => name.startsWith('Category_Practice_');
+
+    return {
+      professor: {
+        id: professor.id,
+        firstName: professor.firstName,
+        lastName: professor.lastName,
+        email: professor.email,
+      },
+      summary: {
+        total,
+        passed,
+        failed,
+        inProgress,
+        passRate: total > 0 ? Math.round((passed / total) * 100) : 0,
+      },
+      ticketPractices: practices
+        .filter((p) => !isCategoryTicket(p.ticket.name))
+        .map((p) => ({
+          id: p.id,
+          ticketId: p.ticket.id,
+          ticketName: p.ticket.name,
+          status: p.status,
+          score: p.score,
+          totalQuestions: p.totalQuestions,
+          startedAt: p.startedAt,
+          completedAt: p.completedAt,
+        })),
+      categoryPractices: practices
+        .filter((p) => isCategoryTicket(p.ticket.name))
+        .map((p) => ({
+          id: p.id,
+          ticketId: p.ticket.id,
+          ticketName: p.ticket.name,
+          status: p.status,
+          score: p.score,
+          totalQuestions: p.totalQuestions,
+          startedAt: p.startedAt,
+          completedAt: p.completedAt,
+        })),
+    };
+  }
+
+  /**
+   * Get a summary of all professors' practice statistics (for Admin/Manager).
+   */
+  async getAllProfessorsStats() {
+    const professors = await this.prisma.user.findMany({
+      where: { role: 'PROFESSOR' },
+      select: { id: true, firstName: true, lastName: true, email: true },
+    });
+
+    return Promise.all(
+      professors.map(async (prof) => {
+        const practices = await this.prisma.studentTicket.findMany({
+          where: { userId: prof.id },
+          select: { status: true },
+        });
+
+        const total = practices.length;
+        const passed = practices.filter((p) => p.status === 'PASSED').length;
+        const failed = practices.filter((p) => p.status === 'FAILED').length;
+        const inProgress = practices.filter((p) => p.status === 'IN_PROGRESS').length;
+
+        return {
+          professor: prof,
+          summary: {
+            total,
+            passed,
+            failed,
+            inProgress,
+            passRate: total > 0 ? Math.round((passed / total) * 100) : 0,
+          },
+        };
+      }),
+    );
+  }
 
   /**
    * Get detailed practice session for a student (for professors)

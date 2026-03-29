@@ -555,6 +555,18 @@ export class ReservationsService {
     });
   }
 
+  /**
+   * Returns true if the user is an INSTRUCTOR with instructorType = SUPERIOR.
+   * Used by the controller to block update/delete for SUPERIOR instructors.
+   */
+  async isInstructorSuperior(userId: number): Promise<boolean> {
+    const instructor = await this.prisma.instructor.findUnique({
+      where: { userId },
+      select: { instructorType: true },
+    });
+    return instructor?.instructorType === 'SUPERIOR';
+  }
+
   async findAll() {
     return await this.prisma.reservation.findMany({
       where: { deletedAt: null },

@@ -200,6 +200,34 @@ export class ExamsController {
     return this.examsService.createExam(req.user.id, createExamDto, query.lang);
   }
 
+  // ================================
+  // PROFESSOR ENDPOINTS
+  // ================================
+
+  @Get('professor-stats')
+  @ApiOperation({
+    summary: 'Get practice statistics for all professors',
+    description: 'Returns a summary of practice sessions (tickets + categories) for every professor. Available for ADMIN and MANAGER roles.',
+  })
+  @ApiBearerAuth('access-token')
+  @UseGuards(AuthGuard('jwt'), RolesGuard)
+  @Roles(Role.ADMIN, Role.MANAGER)
+  getAllProfessorsStats() {
+    return this.examsService.getAllProfessorsStats();
+  }
+
+  @Get('professor-stats/:professorId')
+  @ApiOperation({
+    summary: 'Get detailed practice statistics for a single professor',
+    description: 'Returns ticket and category practice details for the given professor. Available for ADMIN and MANAGER roles.',
+  })
+  @ApiBearerAuth('access-token')
+  @UseGuards(AuthGuard('jwt'), RolesGuard)
+  @Roles(Role.ADMIN, Role.MANAGER)
+  getProfessorStats(@Param('professorId', ParseIntPipe) professorId: number) {
+    return this.examsService.getProfessorPracticeStats(professorId);
+  }
+
   @Get(':id')
   @ApiOperation({ summary: 'Get exam details' })
   @ApiQuery({ 
@@ -434,10 +462,6 @@ export class ExamsController {
   ) {
     return this.examsService.getCategoryPracticeHistory(req.user.id, categoryId, page, limit, query.lang);
   }
-
-  // ================================
-  // PROFESSOR ENDPOINTS
-  // ================================
 
   @Get('practice/student/:studentId/detailed')
   @ApiOperation({ 

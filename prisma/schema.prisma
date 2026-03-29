@@ -161,6 +161,8 @@ model Instructor {
   userId             Int?                    @unique
   order              String?
   color              String?                 @default("")
+  instructorType     InstructorType          @default(BAZA)
+  isExamen           Boolean                 @default(false)
   cars               Car[]
   exams              Exam[]
   groups             Group[]
@@ -398,6 +400,13 @@ enum PracticeStatus {
 enum QuestionType {
   EXAM
   PRACTICE
+}
+
+enum InstructorType {
+  SCHIMB
+  BAZA
+  EXAMEN
+  SUPERIOR
 }
 
 enum InstructorBlackoutType {

@@ -207,6 +207,10 @@ export class ReservationsController {
     @Body() dto: UpdateReservationDto,
     @Session() session: User
   ) {
+    if (session.role === Role.INSTRUCTOR) {
+      const isSuperior = await this.reservationsService.isInstructorSuperior(session.id);
+      if (isSuperior) throw new ForbiddenException('Instructorii superiori nu pot modifica programările');
+    }
     const reservation = await this.reservationsService.update(id, dto, session.id);
     this.wsService.emitReservationUpdated([reservation], session);
     return reservation;
@@ -221,6 +225,10 @@ export class ReservationsController {
     @Param('id', ParseIntPipe) id: number,
     @Session() session: User
   ) {
+    if (session.role === Role.INSTRUCTOR) {
+      const isSuperior = await this.reservationsService.isInstructorSuperior(session.id);
+      if (isSuperior) throw new ForbiddenException('Instructorii superiori nu pot șterge programările');
+    }
     const response = await this.reservationsService.delete(id, session.id);
     if (response)
       this.wsService.emitReservationDeleted(+id, session);
