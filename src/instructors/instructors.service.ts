@@ -227,6 +227,49 @@ export class InstructorsService {
     });
   }
 
+  async getBlackouts(
+    startDate?: string,
+    endDate?: string,
+  ) {
+    const now = new Date();
+    now.setHours(now.getHours() - 2);
+    const start = startDate ? new Date(startDate) : now;
+    const end = endDate ? new Date(endDate) : null;
+
+    const blackoutFilters =
+      end === null
+        ? [
+            {
+              // Single-date blackout that starts after the requested start
+              dateTime: { gte: start },
+            },
+            {
+              // Range blackout that starts after the requested start
+              startDateTime: { gte: start },
+            },
+          ]
+        : [
+            {
+              // Single-date blackout that falls within the requested window
+              dateTime: { gte: start, lte: end },
+            },
+            {
+              // Range blackout fully contained within the requested window
+              startDateTime: { gte: start },
+              endDateTime: { lte: end },
+            },
+          ];
+
+    return this.prisma.instructorBlackout.findMany({
+      where: {
+        OR: blackoutFilters
+      },
+      orderBy: {
+        dateTime: 'asc',
+      },
+    });
+  }
+
   async addBlackouts(blackouts: InstructorBlackoutDto[]) {
     for (const blackout of blackouts) {
       const { instructorId, dateTime } = blackout;
@@ -278,5 +321,51 @@ export class InstructorsService {
       where: { id: blackoutId },
       data: dto,
     });
+  }
+
+  async getSectorSchedule(instructorId: number) {
+    const instructor = await this.prisma.instructor.findUnique({ where: { id: instructorId } });
+    if (!instructor) throw new NotFoundException(`Instructor ${instructorId} not found`);
+
+    const schedule = await this.prisma.instructorSectorSchedule.findMany({
+      where: { instructorId },
+      orderBy: { dayOfWeek: 'asc' },
+    });
+
+    return { instructorId, schedule };
+  }
+
+  async setSectorSchedule(
+    instructorId: number,
+    entries: { dayOfWeek: number; sector: string }[],
+  ) {
+    const instructor = await this.prisma.instructor.findUnique({ where: { id: instructorId } });
+    if (!instructor) throw new NotFoundException(`Instructor ${instructorId} not found`);
+
+    // Upsert fiecare zi trimisă
+    await this.prisma.$transaction(
+      entries.map((entry) =>
+        this.prisma.instructorSectorSchedule.upsert({
+          where: { instructorId_dayOfWeek: { instructorId, dayOfWeek: entry.dayOfWeek } },
+          create: { instructorId, dayOfWeek: entry.dayOfWeek, sector: entry.sector },
+          update: { sector: entry.sector },
+        }),
+      ),
+    );
+
+    return this.getSectorSchedule(instructorId);
+  }
+
+  async deleteSectorScheduleDay(instructorId: number, dayOfWeek: number) {
+    const existing = await this.prisma.instructorSectorSchedule.findUnique({
+      where: { instructorId_dayOfWeek: { instructorId, dayOfWeek } },
+    });
+    if (!existing) throw new NotFoundException(`No schedule found for instructor ${instructorId} on day ${dayOfWeek}`);
+
+    await this.prisma.instructorSectorSchedule.delete({
+      where: { instructorId_dayOfWeek: { instructorId, dayOfWeek } },
+    });
+
+    return { message: `Schedule for day ${dayOfWeek} deleted` };
   }
 }

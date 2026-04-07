@@ -30,6 +30,7 @@ import { AddBlackoutsDto } from './dto/add-blackouts.dto';
 import { Roles } from 'src/auth/decorators/roles.decorator';
 import { RolesGuard } from 'src/auth/guards/roles.guard';
 import { UpdateInstructorBlackoutDto } from './dto/update-instructor-blackout.dto';
+import { SetSectorScheduleDto } from './dto/sector-schedule.dto';
 
 @ApiTags('instructors')
 @ApiBearerAuth('access-token') 
@@ -61,13 +62,27 @@ export class InstructorsController {
   @ApiQuery({ name: 'startDate', required: false, type: String })
   @ApiQuery({ name: 'endDate', required: false, type: String })
   @ApiResponse({ status: 200, description: 'List of blackouts.', type: [InstructorBlackoutResponseDto] })
-  async getBlackouts(
+  async getBlackoutsByInstructorId(
     @Param('instructorId', ParseIntPipe) instructorId: number, 
     @Session() session: User,
     @Query('startDate') startDate?: string,
     @Query('endDate') endDate?: string
   ) {
     const blackouts = await this.instructorsService.getBlackoutsByInstructor(instructorId, startDate, endDate);
+    return plainToInstance(InstructorBlackoutResponseDto, blackouts, { groups: [session.role] });
+  }
+
+  @Get('blackouts')
+  @ApiOperation({ summary: 'Get blackouts' })
+  @ApiQuery({ name: 'startDate', required: false, type: String })
+  @ApiQuery({ name: 'endDate', required: false, type: String })
+  @ApiResponse({ status: 200, description: 'List of blackouts.', type: [InstructorBlackoutResponseDto] })
+  async getBlackouts(
+    @Session() session: User,
+    @Query('startDate') startDate?: string,
+    @Query('endDate') endDate?: string
+  ) {
+    const blackouts = await this.instructorsService.getBlackouts(startDate, endDate);
     return plainToInstance(InstructorBlackoutResponseDto, blackouts, { groups: [session.role] });
   }
 
@@ -148,6 +163,38 @@ export class InstructorsController {
   @ApiResponse({ status: 200, description: 'List of completed reservations.' })
   getCompletedReservations(@Param('id', ParseIntPipe) id: number) {
     return this.instructorsService.getInstructorReservations(id, true);
+  }
+
+  @Get(':id/sector-schedule')
+  @ApiOperation({ summary: 'Get weekly sector schedule for an instructor' })
+  @ApiParam({ name: 'id', type: Number })
+  getSectorSchedule(@Param('id', ParseIntPipe) id: number) {
+    return this.instructorsService.getSectorSchedule(id);
+  }
+
+  @Post(':id/sector-schedule')
+  @Roles(Role.ADMIN, Role.MANAGER)
+  @UseGuards(RolesGuard)
+  @ApiOperation({ summary: 'Set weekly sector schedule for an instructor (replaces/upserts entries)' })
+  @ApiParam({ name: 'id', type: Number })
+  setSectorSchedule(
+    @Param('id', ParseIntPipe) id: number,
+    @Body() dto: SetSectorScheduleDto,
+  ) {
+    return this.instructorsService.setSectorSchedule(id, dto.schedule);
+  }
+
+  @Delete(':id/sector-schedule/:dayOfWeek')
+  @Roles(Role.ADMIN, Role.MANAGER)
+  @UseGuards(RolesGuard)
+  @ApiOperation({ summary: 'Delete sector schedule for a specific day (1=Luni...7=Duminica)' })
+  @ApiParam({ name: 'id', type: Number })
+  @ApiParam({ name: 'dayOfWeek', type: Number })
+  deleteSectorScheduleDay(
+    @Param('id', ParseIntPipe) id: number,
+    @Param('dayOfWeek', ParseIntPipe) dayOfWeek: number,
+  ) {
+    return this.instructorsService.deleteSectorScheduleDay(id, dayOfWeek);
   }
 }
 

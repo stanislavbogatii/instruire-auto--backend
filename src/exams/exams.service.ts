@@ -1375,6 +1375,62 @@ export class ExamsService {
   /**
    * Get practice statistics for a single professor (for Admin/Manager).
    */
+  /**
+   * Full practice history for any user — accessible by Admin/Manager.
+   * Returns ticket practices + category practices + summary stats.
+   */
+  async getUserPracticeHistoryAdmin(userId: number) {
+    const user = await this.prisma.user.findUnique({
+      where: { id: userId },
+      select: { id: true, firstName: true, lastName: true, email: true, role: true },
+    });
+
+    if (!user) throw new NotFoundException('User not found');
+
+    const practices = await this.prisma.studentTicket.findMany({
+      where: { userId },
+      include: { ticket: { select: { id: true, name: true, type: true } } },
+      orderBy: { updatedAt: 'desc' },
+    });
+
+    const passed = practices.filter((p) => p.status === 'PASSED').length;
+    const failed = practices.filter((p) => p.status === 'FAILED').length;
+    const inProgress = practices.filter((p) => p.status === 'IN_PROGRESS').length;
+    const total = practices.length;
+
+    const isCategoryTicket = (name: string) => name.startsWith('Category_Practice_');
+
+    const mapPractice = (p: (typeof practices)[0]) => ({
+      id: p.id,
+      ticketId: p.ticket.id,
+      ticketName: p.ticket.name,
+      status: p.status,
+      score: p.score,
+      totalQuestions: p.totalQuestions,
+      startedAt: p.startedAt,
+      completedAt: p.completedAt,
+    });
+
+    return {
+      user: {
+        id: user.id,
+        firstName: user.firstName,
+        lastName: user.lastName,
+        email: user.email,
+        role: user.role,
+      },
+      summary: {
+        total,
+        passed,
+        failed,
+        inProgress,
+        passRate: total > 0 ? Math.round((passed / total) * 100) : 0,
+      },
+      ticketPractices: practices.filter((p) => !isCategoryTicket(p.ticket.name)).map(mapPractice),
+      categoryPractices: practices.filter((p) => isCategoryTicket(p.ticket.name)).map(mapPractice),
+    };
+  }
+
   async getProfessorPracticeStats(professorId: number) {
     const professor = await this.prisma.user.findUnique({
       where: { id: professorId },

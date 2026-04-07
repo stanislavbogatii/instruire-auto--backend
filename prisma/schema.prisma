@@ -151,31 +151,43 @@ model InstructorsGroup {
 }
 
 model Instructor {
-  id                 Int                     @id @default(autoincrement())
+  id                 Int                          @id @default(autoincrement())
   firstName          String
   lastName           String
   phone              String
-  sector             String?                 @default("")
-  isActive           Boolean                 @default(true)
+  sector             String?                      @default("")
+  isActive           Boolean                      @default(true)
   instructorsGroupId Int?
-  userId             Int?                    @unique
+  userId             Int?                         @unique
   order              String?
-  color              String?                 @default("")
-  instructorType     InstructorType          @default(BAZA)
-  isExamen           Boolean                 @default(false)
+  color              String?                      @default("")
+  instructorType     InstructorType               @default(BAZA)
+  isExamen           Boolean                      @default(false)
   cars               Car[]
   exams              Exam[]
   groups             Group[]
-  instructorsGroup   InstructorsGroup?       @relation(fields: [instructorsGroupId], references: [id])
-  user               User?                   @relation("UserInstructor", fields: [userId], references: [id])
-  desiredByUsers     User[]                  @relation("DesiredInstructor")
+  instructorsGroup   InstructorsGroup?            @relation(fields: [instructorsGroupId], references: [id])
+  user               User?                        @relation("UserInstructor", fields: [userId], references: [id])
+  desiredByUsers     User[]                       @relation("DesiredInstructor")
   blackouts          InstructorBlackout[]
   reservations       Reservation[]
   reservationHistory ReservationHistory[]
   examPermissions    StudentExamPermission[]
+  sectorSchedule     InstructorSectorSchedule[]
 
   @@index([instructorsGroupId])
   @@index([userId], map: "Instructor_userId_fkey")
+}
+
+model InstructorSectorSchedule {
+  id           Int        @id @default(autoincrement())
+  instructorId Int
+  dayOfWeek    Int        // 1=Luni, 2=Marti, 3=Miercuri, 4=Joi, 5=Vineri, 6=Sambata, 7=Duminica
+  sector       String
+  instructor   Instructor @relation(fields: [instructorId], references: [id], onDelete: Cascade)
+
+  @@unique([instructorId, dayOfWeek])
+  @@index([instructorId])
 }
 
 model InstructorBlackout {

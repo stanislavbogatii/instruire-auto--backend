@@ -92,4 +92,15 @@ export class UpdateUserDto extends PartialType(CreateUserDto) {
   @IsInt()
   @Min(0)
   number_of_absences?: number;
+
+  @ApiPropertyOptional({ 
+    example: 3, 
+    description: 'Group ID to assign the user to (Admin/Manager only). Pass null to remove from group.',
+    required: false,
+    nullable: true,
+  })
+  @IsOptional()
+  @IsInt()
+  @Min(1)
+  groupId?: number | null;
 }

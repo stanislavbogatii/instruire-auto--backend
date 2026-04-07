@@ -37,7 +37,8 @@ const UPDATE_POLICY_FIELDS: Record<UpdatePolicy, (keyof UpdateUserDto)[]> = {
     'role',
     'medical_documents',
     'individual_work',
-    'number_of_absences'
+    'number_of_absences',
+    'groupId',
   ],
   MANAGER: [
     'email',
@@ -50,7 +51,8 @@ const UPDATE_POLICY_FIELDS: Record<UpdatePolicy, (keyof UpdateUserDto)[]> = {
     'color',
     'medical_documents',
     'individual_work',
-    'number_of_absences'
+    'number_of_absences',
+    'groupId',
   ],
   PROFESSOR: [
     'firstName',
@@ -188,6 +190,7 @@ export class UsersService {
       firstName?: string;
       lastName?: string;
       role?: Role;
+      groupId?: number | null;
     } = {};
     if (dto.email && dto.email !== user.email) {
       const conflict = await this.prisma.user.findUnique({
@@ -244,6 +247,13 @@ export class UsersService {
     }
     if (dto.number_of_absences !== undefined) {
       data.number_of_absences = dto.number_of_absences;
+    }
+    if (dto.groupId !== undefined) {
+      if (dto.groupId !== null) {
+        const group = await this.prisma.group.findUnique({ where: { id: dto.groupId } });
+        if (!group) throw new NotFoundException(`Group with id=${dto.groupId} not found`);
+      }
+      data.groupId = dto.groupId;
     }
     console.log(data)
     const updated = await this.prisma.user.update({

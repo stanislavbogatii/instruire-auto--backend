@@ -410,6 +410,17 @@ export class ExamsController {
     return this.examsService.getUserPracticeHistory(req.user.id, page, limit);
   }
 
+  @Get('practice/history/user/:userId')
+  @ApiOperation({ summary: 'Get full practice history for any user (Admin/Manager only)' })
+  @ApiBearerAuth('access-token')
+  @UseGuards(AuthGuard('jwt'), RolesGuard)
+  @Roles(Role.ADMIN, Role.MANAGER)
+  getUserPracticeHistoryAdmin(
+    @Param('userId', ParseIntPipe) userId: number,
+  ) {
+    return this.examsService.getUserPracticeHistoryAdmin(userId);
+  }
+
   @Get('practice/ticket/:ticketId')
   @ApiOperation({ summary: 'Get practice session for specific ticket' })
   @ApiBearerAuth('access-token')
