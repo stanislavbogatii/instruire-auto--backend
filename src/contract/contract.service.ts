@@ -351,8 +351,8 @@ export class ContractService {
   <div class="section-title">III. PREȚUL CONTRACTULUI. CONDIȚIILE DE PLATĂ A PREȚULUI ȘI ALTOR PLĂȚI</div>
   <p>1. Părțile au convenit că pentru prestarea serviciilor indicate în pct. 1.1. din prezentul Contract, Beneficiarul se obligă să achite Prestatorului prețul convenit și stipulată de Părți:</p>
   <div class="indent">
-    <p>a) Taxa de instruire pentru lecțiile teoretice constituie <strong>2550 de lei</strong>, iar din 15 februarie 2026 costul cursului va fi de 3200 de lei. Necesită a fi vărsată integral la data semnării contractului.</p>
-    <p>b) Taxa de instruire pentru o lecție practică constituie <strong>415 de lei</strong>, iar începând cu 1 mai 2026 aceasta va fi de 450 lei. Sunt obligatorii 30 lecții practice. Poate fi achitată:</p>
+    <p>a) Taxa de instruire pentru lecțiile teoretice constituie <strong>3200 de lei</strong>. Necesită a fi vărsată integral la data semnării contractului.</p>
+    <p>b) Taxa de instruire pentru o lecție practică constituie <strong>450 de lei</strong>. Sunt obligatorii 30 lecții practice. Poate fi achitată:</p>
     <ul>
       <li>Integral;</li>
       <li>În două tranșe;</li>
