@@ -144,4 +144,17 @@ export class GroupsController {
   getAllGroupStudents(@Request() req) {
     return this.groupsService.getProfessorAllGroupStudents(req.user.id);
   }
+
+  @Get('my-groups/students/practice-progress')
+  @ApiOperation({ 
+    summary: 'Get practice progress for all students across professor groups (Professor only)',
+    description: 'Returns practice progress for each student across all groups owned by the professor'
+  })
+  @ApiBearerAuth('access-token')
+  @UseGuards(AuthGuard('jwt'), RolesGuard)
+  @Roles(Role.PROFESSOR)
+  @ApiResponse({ status: 200, description: 'Practice progress across all students.' })
+  getAllGroupStudentsPracticeProgress(@Request() req) {
+    return this.groupsService.getProfessorAllStudentsPracticeProgress(req.user.id);
+  }
 }

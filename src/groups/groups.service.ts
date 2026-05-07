@@ -190,9 +190,9 @@ export class GroupsService {
       throw new NotFoundException('Student not found');
     }
 
-    if (student.groupId !== group.id) {
-      throw new BadRequestException('Student is not in your group');
-    }
+    // if (student.groupId !== group.id) {
+    //   throw new BadRequestException('Student is not in your group');
+    // }
 
     // Get practice statistics
     const skip = (page - 1) * limit;
@@ -348,6 +348,126 @@ export class GroupsService {
       totalGroups: groups.length,
       totalStudents: students.length,
       students,
+    };
+  }
+
+  /**
+   * Get practice progress for all students across professor's groups
+   */
+  async getProfessorAllStudentsPracticeProgress(professorUserId: number) {
+    const groups = await this.prisma.group.findMany({
+      where: { professorId: professorUserId },
+      select: {
+        id: true,
+        name: true,
+        users: {
+          where: { role: 'USER' },
+          select: {
+            id: true,
+            email: true,
+            firstName: true,
+            lastName: true,
+            phone: true,
+            createdAt: true,
+          },
+          orderBy: { lastName: 'asc' },
+        },
+      },
+      orderBy: { id: 'asc' },
+    });
+
+    if (!groups.length) {
+      throw new BadRequestException('Professor is not assigned to groups');
+    }
+
+    const students = groups.flatMap((group) =>
+      group.users.map((user) => ({
+        groupId: group.id,
+        groupName: group.name,
+        id: user.id,
+        email: user.email,
+        firstName: user.firstName,
+        lastName: user.lastName,
+        phone: user.phone,
+        createdAt: user.createdAt,
+      })),
+    );
+
+    if (!students.length) {
+      return {
+        totalGroups: groups.length,
+        totalStudents: 0,
+        students: [],
+      };
+    }
+
+    const studentIds = students.map((student) => student.id);
+
+    const [totalPracticesByUser, completedPracticesByUser, statusBreakdownByUser] =
+      await Promise.all([
+        this.prisma.studentTicket.groupBy({
+          by: ['userId'],
+          where: { userId: { in: studentIds } },
+          _count: true,
+        }),
+        this.prisma.studentTicket.groupBy({
+          by: ['userId'],
+          where: {
+            userId: { in: studentIds },
+            status: { in: ['COMPLETED', 'PASSED', 'FAILED'] },
+          },
+          _count: true,
+          _avg: {
+            score: true,
+          },
+        }),
+        this.prisma.studentTicket.groupBy({
+          by: ['userId', 'status'],
+          where: { userId: { in: studentIds } },
+          _count: true,
+        }),
+      ]);
+
+    const totalPracticesMap = new Map(
+      totalPracticesByUser.map((item) => [item.userId, item._count]),
+    );
+    const completedPracticesMap = new Map(
+      completedPracticesByUser.map((item) => [
+        item.userId,
+        {
+          completedPractices: item._count,
+          averageScore: item._avg.score || 0,
+        },
+      ]),
+    );
+    const statusBreakdownMap = statusBreakdownByUser.reduce(
+      (acc, item) => {
+        if (!acc[item.userId]) {
+          acc[item.userId] = {};
+        }
+        acc[item.userId][item.status] = item._count;
+        return acc;
+      },
+      {} as Record<number, Record<string, number>>,
+    );
+
+    const studentsWithProgress = students.map((student) => {
+      const completedData = completedPracticesMap.get(student.id);
+      return {
+        ...student,
+        statistics: {
+          totalPractices: totalPracticesMap.get(student.id) || 0,
+          completedPractices: completedData?.completedPractices || 0,
+          averageScore: completedData?.averageScore || 0,
+          statusBreakdown: statusBreakdownMap[student.id] || {},
+        },
+      };
+    });
+
+    return {
+      totalGroups: groups.length,
+      totalStudents: studentsWithProgress.length,
+      students: studentsWithProgress,
     };
   }
 }
