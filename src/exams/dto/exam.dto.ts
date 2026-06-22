@@ -133,6 +133,10 @@ export class SubmitPracticeAnswerDto {
   @IsInt()
   @Min(0)
   selectedAnswer: number;
+
+  @ApiProperty({ description: 'Language for hint text (ro or ru)', required: false, default: 'ro', enum: ['ro', 'ru'] })
+  @IsOptional()
+  lang?: Language;
 }
 
 export class StartPracticeByCategoryDto {

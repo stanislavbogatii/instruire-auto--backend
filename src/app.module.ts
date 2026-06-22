@@ -24,6 +24,9 @@ import { ContractModule } from './contract/contract.module';
 import { NotesModule } from './notes/notes.module';
 import { WsModule } from './ws/ws.module';
 import { QuestionCategoriesModule } from './question-categories/question-categories.module';
+import { PracticalExamSlotsModule } from './practical-exam-slots/practical-exam-slots.module';
+import { InstructorSubstitutionsModule } from './instructor-substitutions/instructor-substitutions.module';
+import { InstructorRatingsModule } from './instructor-ratings/instructor-ratings.module';
 
 @Module({
   imports: [
@@ -40,6 +43,9 @@ import { QuestionCategoriesModule } from './question-categories/question-categor
     QuestionCategoriesModule,
     ImagesModule,
     NotesModule,
+    PracticalExamSlotsModule,
+    InstructorSubstitutionsModule,
+    InstructorRatingsModule,
     ScheduleModule.forRoot(),
     ConfigModule.forRoot({
       isGlobal: true,

@@ -13,9 +13,10 @@ model User {
   email               String                  @unique
   hash                String
 
-  medical_documents   Boolean                 @default(false)
-  individual_work     Boolean                 @default(false)
-  number_of_absences  Int                     @default(0)
+  medical_documents      Boolean                 @default(false)
+  individual_work        Boolean                 @default(false)
+  number_of_absences     Int                     @default(0)
+  canBookPracticalExam   Boolean                 @default(false)
 
   color               String?                 @default("")
   role                Role                    @default(USER)
@@ -39,6 +40,8 @@ model User {
   reservationHistory  ReservationHistory[]
   examPermissions     StudentExamPermission[]
   studentTickets      StudentTicket[]
+  practicalExamSlotReservations PracticalExamSlotReservation[]
+  instructorRatings             InstructorRating[]
   group               Group?                  @relation(fields: [groupId], references: [id])
 
   @@index([groupId], map: "User_groupId_fkey")
@@ -84,6 +87,7 @@ model Reservation {
   instructorsGroup   InstructorsGroup?    @relation(fields: [instructorsGroupId], references: [id])
   user               User                 @relation(fields: [userId], references: [id])
   history            ReservationHistory[]
+  rating             InstructorRating?
 
   @@index([instructorId], map: "Reservation_instructorId_fkey")
   @@index([userId], map: "Reservation_userId_fkey")
@@ -174,6 +178,10 @@ model Instructor {
   reservationHistory ReservationHistory[]
   examPermissions    StudentExamPermission[]
   sectorSchedule     InstructorSectorSchedule[]
+  practicalExamSlots PracticalExamSlot[]
+  substitutionsAsBase       InstructorSubstitution[] @relation("BaseInstructor")
+  substitutionsAsSubstitute InstructorSubstitution[] @relation("SubstituteInstructor")
+  ratings                   InstructorRating[]
 
   @@index([instructorsGroupId])
   @@index([userId], map: "Instructor_userId_fkey")
@@ -211,6 +219,7 @@ model Question {
   image                String?
   answers              String                @db.Text
   correctAnswer        Int
+  hint                 String?               @db.Text
   categoryId           Int?
   createdAt            DateTime              @default(now())
   updatedAt            DateTime              @updatedAt
@@ -420,7 +429,87 @@ enum InstructorType {
   SUPERIOR
 }
 
+model InstructorSubstitution {
+  id                     Int        @id @default(autoincrement())
+  baseInstructorId       Int
+  substituteInstructorId Int
+  date                   DateTime
+  isActive               Boolean    @default(true)
+  createdAt              DateTime   @default(now())
+  updatedAt              DateTime   @updatedAt
+  baseInstructor         Instructor @relation("BaseInstructor", fields: [baseInstructorId], references: [id], onDelete: Cascade)
+  substituteInstructor   Instructor @relation("SubstituteInstructor", fields: [substituteInstructorId], references: [id], onDelete: Cascade)
+
+  @@unique([baseInstructorId, date])
+  @@index([baseInstructorId])
+  @@index([substituteInstructorId])
+  @@index([date])
+}
+
+
 enum InstructorBlackoutType {
   SINGLE
   REPEAT
+}
+
+enum PracticalExamReservationStatus {
+  SCHEDULED
+  PASSED
+  FAILED
+  ABSENT
+  CANCELLED
+}
+
+model PracticalExamSlot {
+  id           Int                          @id @default(autoincrement())
+  date         DateTime
+  time         String
+  sector       String
+  gearbox      String
+  capacity     Int
+  isActive     Boolean                      @default(true)
+  instructorId Int?
+  createdAt    DateTime                     @default(now())
+  updatedAt    DateTime                     @updatedAt
+  instructor   Instructor?                  @relation(fields: [instructorId], references: [id], onDelete: SetNull)
+  reservations PracticalExamSlotReservation[]
+
+  @@index([instructorId])
+  @@index([date])
+}
+
+model PracticalExamSlotReservation {
+  id            Int                            @id @default(autoincrement())
+  slotId        Int
+  userId        Int
+  positionInCar Int
+  color         String                         @default("")
+  status        PracticalExamReservationStatus @default(SCHEDULED)
+  createdAt     DateTime                       @default(now())
+  updatedAt     DateTime                       @updatedAt
+  slot          PracticalExamSlot              @relation(fields: [slotId], references: [id], onDelete: Cascade)
+  user          User                           @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([slotId, userId])
+  @@index([slotId])
+  @@index([userId])
+}
+
+model InstructorRating {
+  id            Int        @id @default(autoincrement())
+  userId        Int
+  instructorId  Int
+  reservationId Int        @unique
+  rating        Int        /// 1–5
+  comment       String?    @db.Text
+  createdAt     DateTime   @default(now())
+  updatedAt     DateTime   @updatedAt
+  user          User       @relation(fields: [userId], references: [id], onDelete: Cascade)
+  instructor    Instructor @relation(fields: [instructorId], references: [id], onDelete: Cascade)
+  reservation   Reservation @relation(fields: [reservationId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, reservationId])
+  @@index([instructorId])
+  @@index([userId])
+  @@index([createdAt])
 }

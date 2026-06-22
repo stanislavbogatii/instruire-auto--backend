@@ -6,6 +6,7 @@ import { FilterReservationsDto } from './dto/filter-reservations.dto';
 import { HistoryService } from './history.service';
 import { Car, Instructor, InstructorsGroup, Reservation } from '@prisma/client';
 import { BusyReservationResponse } from './dto/ busy-reservation.dto';
+import { InstructorSubstitutionsService } from 'src/instructor-substitutions/instructor-substitutions.service';
 
 type ReservationConflict = {
   index: number;
@@ -28,7 +29,8 @@ type PendingReservationCreate = {
 export class ReservationsService {
   constructor(
     private prisma: PrismaService,
-    private historyService: HistoryService
+    private historyService: HistoryService,
+    private substitutionsService: InstructorSubstitutionsService,
   ) {}
   private readonly dailySlots = [
     '07:00',
@@ -540,19 +542,21 @@ export class ReservationsService {
   }
 
   async getUserReservations(userId: number) {
-    return await this.prisma.reservation.findMany({
+    const reservations = await this.prisma.reservation.findMany({
       where: { userId, deletedAt: null },
       orderBy: { startTime: 'asc' },
       include: {
         instructor: {
-          select: {
-            phone: true,
-            firstName: true,
-            lastName: true
-          }
-        }
-      }
+          select: { id: true, phone: true, firstName: true, lastName: true },
+        },
+      },
     });
+    if (!reservations.length) return reservations;
+    const dates = reservations.map((r) => new Date(r.startTime));
+    const minDate = new Date(Math.min(...dates.map((d) => d.getTime())));
+    const maxDate = new Date(Math.max(...dates.map((d) => d.getTime())));
+    const substitutions = await this.substitutionsService.getActiveSubstitutionsForDateRange(minDate, maxDate);
+    return this.substitutionsService.enrichReservations(reservations, substitutions);
   }
 
   /**
@@ -702,8 +706,18 @@ export class ReservationsService {
       this.prisma.reservation.count({ where: { ...where, deletedAt: null } })
     ]);
 
+    // Enrich with effective instructor (substitution logic)
+    let enrichedData: any[] = reservations;
+    if (reservations.length > 0) {
+      const dates = reservations.map((r) => new Date(r.startTime));
+      const minDate = new Date(Math.min(...dates.map((d) => d.getTime())));
+      const maxDate = new Date(Math.max(...dates.map((d) => d.getTime())));
+      const substitutions = await this.substitutionsService.getActiveSubstitutionsForDateRange(minDate, maxDate);
+      enrichedData = this.substitutionsService.enrichReservations(reservations, substitutions);
+    }
+
     return {
-      data: reservations,
+      data: enrichedData,
       total,
       limit,
       skip,
@@ -965,71 +979,80 @@ export class ReservationsService {
   }
 
   async getReservationsByUserId(userId: number) {
-    return this.prisma.reservation.findMany({
-      where: {
-        userId,
-        deletedAt: null
-      },
+    const reservations = await this.prisma.reservation.findMany({
+      where: { userId, deletedAt: null },
       include: {
-        instructor: {
-          select: {
-            id: true,
-            phone: true,
-            firstName: true,
-            lastName: true
-          }
-        },
-        car: {
-          select: {
-            id: true,
-            plateNumber: true
-          }
-        },
-        user: {
-          select: {
-            id: true,
-            email: true,
-            firstName: true,
-            lastName: true,
-            phone: true
-          }
-        }
-      }
+        instructor: { select: { id: true, phone: true, firstName: true, lastName: true } },
+        car: { select: { id: true, plateNumber: true } },
+        user: { select: { id: true, email: true, firstName: true, lastName: true, phone: true } },
+      },
     });
+    if (!reservations.length) return reservations;
+    const dates = reservations.map((r) => new Date(r.startTime));
+    const minDate = new Date(Math.min(...dates.map((d) => d.getTime())));
+    const maxDate = new Date(Math.max(...dates.map((d) => d.getTime())));
+    const substitutions = await this.substitutionsService.getActiveSubstitutionsForDateRange(minDate, maxDate);
+    return this.substitutionsService.enrichReservations(reservations, substitutions);
   }
 
   async getReservationsByInstructorId(instructorId: number) {
-    return this.prisma.reservation.findMany({
-      where: {
-        instructorId,
-        deletedAt: null
-      },
+    // Fetch own reservations
+    const ownReservations = await this.prisma.reservation.findMany({
+      where: { instructorId, deletedAt: null },
       include: {
-        instructor: {
-          select: {
-            id: true,
-            phone: true,
-            firstName: true,
-            lastName: true
-          }
-        },
-        car: {
-          select: {
-            id: true,
-            plateNumber: true
-          }
-        },
-        user: {
-          select: {
-            id: true,
-            email: true,
-            firstName: true,
-            lastName: true,
-            phone: true
-          }
-        }
-      }
+        instructor: { select: { id: true, phone: true, firstName: true, lastName: true } },
+        car: { select: { id: true, plateNumber: true } },
+        user: { select: { id: true, email: true, firstName: true, lastName: true, phone: true } },
+      },
     });
+
+    // Fetch reservations of base instructors that this instructor is substituting
+    const substitutionsAsSubstitute = await this.prisma.instructorSubstitution.findMany({
+      where: { substituteInstructorId: instructorId, isActive: true },
+      include: { substituteInstructor: { select: { id: true, phone: true, firstName: true, lastName: true } } },
+    });
+
+    let inheritedReservations: any[] = [];
+    if (substitutionsAsSubstitute.length > 0) {
+      for (const sub of substitutionsAsSubstitute) {
+        const dayStart = new Date(sub.date);
+        dayStart.setUTCHours(0, 0, 0, 0);
+        const dayEnd = new Date(dayStart);
+        dayEnd.setUTCDate(dayEnd.getUTCDate() + 1);
+
+        const dayReservations = await this.prisma.reservation.findMany({
+          where: {
+            instructorId: sub.baseInstructorId,
+            startTime: { gte: dayStart, lt: dayEnd },
+            deletedAt: null,
+          },
+          include: {
+            instructor: { select: { id: true, phone: true, firstName: true, lastName: true } },
+            car: { select: { id: true, plateNumber: true } },
+            user: { select: { id: true, email: true, firstName: true, lastName: true, phone: true } },
+          },
+        });
+        inheritedReservations = inheritedReservations.concat(
+          dayReservations.map((r) => ({
+            ...r,
+            effectiveInstructor: sub.substituteInstructor,
+            substitution: { id: sub.id, baseInstructorId: sub.baseInstructorId },
+          })),
+        );
+      }
+    }
+
+    // Determine date range of own reservations for bulk substitution lookup
+    let enrichedOwn: any[] = ownReservations;
+    if (ownReservations.length > 0) {
+      const dates = ownReservations.map((r) => new Date(r.startTime));
+      const minDate = new Date(Math.min(...dates.map((d) => d.getTime())));
+      const maxDate = new Date(Math.max(...dates.map((d) => d.getTime())));
+      const substitutions = await this.substitutionsService.getActiveSubstitutionsForDateRange(minDate, maxDate);
+      enrichedOwn = this.substitutionsService.enrichReservations(ownReservations, substitutions);
+    }
+
+    return [...enrichedOwn, ...inheritedReservations];
   }
 
   async findBusyReservationByInstructorId(instructor_id: number): Promise<BusyReservationResponse | null> {

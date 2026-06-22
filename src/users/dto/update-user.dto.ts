@@ -103,4 +103,13 @@ export class UpdateUserDto extends PartialType(CreateUserDto) {
   @IsInt()
   @Min(1)
   groupId?: number | null;
+
+  @ApiPropertyOptional({ 
+    example: true, 
+    description: 'Whether the student is allowed to book a practical exam (Admin/Manager only)',
+    required: false,
+  })
+  @IsOptional()
+  @IsBoolean()
+  canBookPracticalExam?: boolean;
 }

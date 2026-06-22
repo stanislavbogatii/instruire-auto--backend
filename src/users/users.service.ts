@@ -39,6 +39,7 @@ const UPDATE_POLICY_FIELDS: Record<UpdatePolicy, (keyof UpdateUserDto)[]> = {
     'individual_work',
     'number_of_absences',
     'groupId',
+    'canBookPracticalExam',
   ],
   MANAGER: [
     'email',
@@ -53,6 +54,7 @@ const UPDATE_POLICY_FIELDS: Record<UpdatePolicy, (keyof UpdateUserDto)[]> = {
     'individual_work',
     'number_of_absences',
     'groupId',
+    'canBookPracticalExam',
   ],
   PROFESSOR: [
     'firstName',
@@ -191,6 +193,7 @@ export class UsersService {
       lastName?: string;
       role?: Role;
       groupId?: number | null;
+      canBookPracticalExam?: boolean;
     } = {};
     if (dto.email && dto.email !== user.email) {
       const conflict = await this.prisma.user.findUnique({
@@ -247,6 +250,9 @@ export class UsersService {
     }
     if (dto.number_of_absences !== undefined) {
       data.number_of_absences = dto.number_of_absences;
+    }
+    if (dto.canBookPracticalExam !== undefined) {
+      data.canBookPracticalExam = dto.canBookPracticalExam;
     }
     if (dto.groupId !== undefined) {
       if (dto.groupId !== null) {

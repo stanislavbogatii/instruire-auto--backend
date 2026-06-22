@@ -18,6 +18,7 @@ export class QuestionsService {
         image: createQuestionDto.image,
         answers: JSON.stringify(createQuestionDto.answers),
         correctAnswer: createQuestionDto.correctAnswer,
+        hint: createQuestionDto.hint ?? null,
         categoryId,
       },
       include: {
@@ -85,6 +86,7 @@ export class QuestionsService {
         image: updateQuestionDto.image,
         answers: updateQuestionDto.answers ? JSON.stringify(updateQuestionDto.answers) : undefined,
         correctAnswer: updateQuestionDto.correctAnswer,
+        hint: updateQuestionDto.hint !== undefined ? (updateQuestionDto.hint ?? null) : undefined,
         categoryId: updateQuestionDto.categoryId || undefined,
       },
       include: {

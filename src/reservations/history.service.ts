@@ -217,7 +217,10 @@ export class HistoryService {
       'gearbox',
       'privateMessage',
       'color',
-      'isConfirmed'
+      'isConfirmed',
+      'isCancelled',
+      'isFavorite',
+      'isImportant',
     ];
 
     fieldsToTrack.forEach(field => {

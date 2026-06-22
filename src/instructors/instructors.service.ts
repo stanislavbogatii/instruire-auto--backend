@@ -111,18 +111,35 @@ export class InstructorsService {
       throw new NotFoundException(`Instructor #${id} not found`);
     }
 
+    const data: Record<string, unknown> = {};
+    if (updateInstructorDto.firstName !== undefined) {
+      data.firstName = updateInstructorDto.firstName;
+    }
+    if (updateInstructorDto.lastName !== undefined) {
+      data.lastName = updateInstructorDto.lastName;
+    }
+    if (updateInstructorDto.phone !== undefined) {
+      data.phone = updateInstructorDto.phone;
+    }
+    if (updateInstructorDto.sector !== undefined) {
+      data.sector = updateInstructorDto.sector;
+    }
+    if (updateInstructorDto.order !== undefined) {
+      data.order = updateInstructorDto.order;
+    }
+    if (updateInstructorDto.color !== undefined) {
+      data.color = updateInstructorDto.color;
+    }
+    if (updateInstructorDto.instructorType !== undefined) {
+      data.instructorType = updateInstructorDto.instructorType;
+    }
+    if (updateInstructorDto.isExamen !== undefined) {
+      data.isExamen = updateInstructorDto.isExamen;
+    }
+
     return this.prisma.instructor.update({
       where: { id },
-      data: {
-        firstName: updateInstructorDto.firstName,
-        order: updateInstructorDto.order,
-        lastName: updateInstructorDto.lastName,
-        phone: updateInstructorDto.phone,
-        sector: updateInstructorDto.sector,
-        color: updateInstructorDto.color,
-        instructorType: updateInstructorDto.instructorType,
-        isExamen: updateInstructorDto.isExamen,
-      },
+      data,
     });
   }
 

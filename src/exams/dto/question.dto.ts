@@ -30,6 +30,15 @@ export class CreateQuestionDto {
   @IsOptional()
   @IsInt()
   categoryId?: number;
+
+  @ApiProperty({
+    description: 'Hint shown after a wrong answer in practice mode only. Bilingual JSON: {"ro":"...","ru":"..."}  or plain string.',
+    required: false,
+    example: '{"ro":"Semnul interzice depășirea.","ru":"Знак запрещает обгон."}'
+  })
+  @IsOptional()
+  @IsString()
+  hint?: string;
 }
 
 export class UpdateQuestionDto {
@@ -64,4 +73,12 @@ export class UpdateQuestionDto {
   @IsOptional()
   @IsInt()
   categoryId?: number;
+
+  @ApiProperty({
+    description: 'Hint shown after a wrong answer in practice mode only. Bilingual JSON or plain string.',
+    required: false,
+  })
+  @IsOptional()
+  @IsString()
+  hint?: string;
 }

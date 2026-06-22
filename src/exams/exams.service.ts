@@ -974,6 +974,7 @@ export class ExamsService {
         image: answer.question.image,
         imageUrl: this.imageService.getImageUrl(answer.question.image), // Add full image URL
         answers: parseAnswers(answer.question.answers, lang),
+        hint: answer.question.hint ? parseQuestionText(answer.question.hint, lang) : null,
         order: answer.order,
         selectedAnswer: answer.selectedAnswer,
         isCorrect: answer.isCorrect,
@@ -1048,6 +1049,7 @@ export class ExamsService {
     return {
       isCorrect,
       correctAnswer: answerRecord.question.correctAnswer,
+      hint: answerRecord.question.hint ? parseQuestionText(answerRecord.question.hint, submitAnswerDto.lang ?? 'ro') : null,
       progress: {
         answered: answeredCount,
         total: practice.totalQuestions,
