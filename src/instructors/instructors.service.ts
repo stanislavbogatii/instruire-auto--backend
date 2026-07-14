@@ -209,34 +209,10 @@ export class InstructorsService {
     const start = startDate ? new Date(startDate) : now;
     const end = endDate ? new Date(endDate) : null;
 
-    const blackoutFilters =
-      end === null
-        ? [
-            {
-              // Single-date blackout that starts after the requested start
-              dateTime: { gte: start },
-            },
-            {
-              // Range blackout that starts after the requested start
-              startDateTime: { gte: start },
-            },
-          ]
-        : [
-            {
-              // Single-date blackout that falls within the requested window
-              dateTime: { gte: start, lte: end },
-            },
-            {
-              // Range blackout fully contained within the requested window
-              startDateTime: { gte: start },
-              endDateTime: { lte: end },
-            },
-          ];
-
     return this.prisma.instructorBlackout.findMany({
       where: {
         instructorId,
-        OR: blackoutFilters,
+        dateTime: end === null ? { gte: start } : { gte: start, lte: end },
       },
       orderBy: {
         dateTime: 'asc',
@@ -253,33 +229,9 @@ export class InstructorsService {
     const start = startDate ? new Date(startDate) : now;
     const end = endDate ? new Date(endDate) : null;
 
-    const blackoutFilters =
-      end === null
-        ? [
-            {
-              // Single-date blackout that starts after the requested start
-              dateTime: { gte: start },
-            },
-            {
-              // Range blackout that starts after the requested start
-              startDateTime: { gte: start },
-            },
-          ]
-        : [
-            {
-              // Single-date blackout that falls within the requested window
-              dateTime: { gte: start, lte: end },
-            },
-            {
-              // Range blackout fully contained within the requested window
-              startDateTime: { gte: start },
-              endDateTime: { lte: end },
-            },
-          ];
-
     return this.prisma.instructorBlackout.findMany({
       where: {
-        OR: blackoutFilters
+        dateTime: end === null ? { gte: start } : { gte: start, lte: end },
       },
       orderBy: {
         dateTime: 'asc',
@@ -301,14 +253,6 @@ export class InstructorsService {
       await this.prisma.instructorBlackout.create({
         data: {
           instructorId,
-          type: blackout.type,
-          repeatEveryDays: blackout.repeatEveryDays,
-          startDateTime: blackout.startDateTime
-            ? new Date(blackout.startDateTime)
-            : null,
-          endDateTime: blackout.endDateTime
-            ? new Date(blackout.endDateTime)
-            : null,
           dateTime: new Date(dateTime),
         },
       });

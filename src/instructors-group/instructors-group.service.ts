@@ -207,11 +207,7 @@ export class InstructorsGroupService {
     const blackouts: InstructorBlackoutResponseDto[] =
       group.instructors.flatMap((instructor) =>
         instructor.blackouts
-          .filter(
-            (blackout) =>
-              (blackout.endDateTime === null && blackout.dateTime >= now) ||
-              (blackout.endDateTime !== null && blackout.endDateTime >= now),
-          )
+          .filter((blackout) => blackout.dateTime >= now)
           .map((blackout) => ({
             ...blackout,
             instructorId: instructor.id,

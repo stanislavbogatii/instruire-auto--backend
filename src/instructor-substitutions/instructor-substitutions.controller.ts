@@ -48,8 +48,11 @@ export class InstructorSubstitutionsController {
 
   @Get()
   @UseGuards(RolesGuard)
-  @Roles(Role.ADMIN, Role.MANAGER)
-  @ApiOperation({ summary: 'Listează înlocuirile cu filtre opționale (Admin/Manager)' })
+  @Roles(Role.ADMIN, Role.MANAGER, Role.INSTRUCTOR)
+  @ApiOperation({
+    summary:
+      'Listează înlocuirile cu filtre opționale (Admin/Manager/Instructor — doar citire pentru instructori)',
+  })
   @ApiQuery({ name: 'date', required: false, description: 'Dată exactă (ISO 8601)' })
   @ApiQuery({ name: 'dateFrom', required: false, description: 'Interval de la (ISO 8601)' })
   @ApiQuery({ name: 'dateTo', required: false, description: 'Interval până la (ISO 8601)' })
@@ -63,8 +66,11 @@ export class InstructorSubstitutionsController {
 
   @Get(':id')
   @UseGuards(RolesGuard)
-  @Roles(Role.ADMIN, Role.MANAGER)
-  @ApiOperation({ summary: 'Detalii înlocuire după ID (Admin/Manager)' })
+  @Roles(Role.ADMIN, Role.MANAGER, Role.INSTRUCTOR)
+  @ApiOperation({
+    summary:
+      'Detalii înlocuire după ID (Admin/Manager/Instructor — doar citire pentru instructori)',
+  })
   @ApiParam({ name: 'id', type: Number })
   @ApiResponse({ status: 200, description: 'Înlocuirea.' })
   @ApiResponse({ status: 404, description: 'Înlocuire inexistentă.' })

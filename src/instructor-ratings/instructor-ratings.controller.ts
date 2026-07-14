@@ -2,6 +2,8 @@ import {
   Controller,
   Get,
   Post,
+  Patch,
+  Delete,
   Body,
   UseGuards,
   Query,
@@ -23,6 +25,7 @@ import { Role, User } from '@prisma/client';
 import { Session } from 'src/common/session.decorator';
 import { InstructorRatingsService } from './instructor-ratings.service';
 import { SubmitRatingDto } from './dto/submit-rating.dto';
+import { UpdateRatingDto } from './dto/update-rating.dto';
 import { RatingStatsQueryDto } from './dto/rating-stats-query.dto';
 
 @ApiTags('instructor-ratings')
@@ -111,8 +114,34 @@ export class InstructorRatingsController {
   @ApiQuery({ name: 'instructorId', required: false, type: Number })
   @ApiQuery({ name: 'year', required: false, type: Number })
   @ApiQuery({ name: 'month', required: false, type: Number })
+  @ApiQuery({ name: 'rating', required: false, type: Number, description: 'Filtru stele 1–5' })
   @ApiResponse({ status: 200, description: 'Lista completă a ratingurilor.' })
   getAllRatings(@Query() query: RatingStatsQueryDto) {
     return this.service.getAllRatings(query);
+  }
+
+  @Delete('admin/:id')
+  @UseGuards(RolesGuard)
+  @Roles(Role.ADMIN)
+  @ApiOperation({ summary: 'Șterge o recenzie (doar Admin)' })
+  @ApiParam({ name: 'id', type: Number })
+  @ApiResponse({ status: 200, description: 'Recenzie ștearsă.' })
+  @ApiResponse({ status: 404, description: 'Recenzie inexistentă.' })
+  deleteRating(@Param('id', ParseIntPipe) id: number) {
+    return this.service.deleteRating(id);
+  }
+
+  @Patch('admin/:id')
+  @UseGuards(RolesGuard)
+  @Roles(Role.ADMIN, Role.MANAGER)
+  @ApiOperation({ summary: 'Actualizează o recenzie (Admin/Manager)' })
+  @ApiParam({ name: 'id', type: Number })
+  @ApiResponse({ status: 200, description: 'Recenzie actualizată.' })
+  @ApiResponse({ status: 404, description: 'Recenzie inexistentă.' })
+  updateRating(
+    @Param('id', ParseIntPipe) id: number,
+    @Body() dto: UpdateRatingDto,
+  ) {
+    return this.service.updateRating(id, dto);
   }
 }

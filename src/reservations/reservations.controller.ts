@@ -19,6 +19,10 @@ import { CreateReservationsDto } from './dto/create-reservations.dto';
 import { CreateReservationsForUserDto } from './dto/create-reservations-for-user.dto';
 import { UpdateReservationDto } from './dto/update-reservation.dto';
 import { FilterReservationsDto } from './dto/filter-reservations.dto';
+import { AutoAssignReservationsDto } from './dto/auto-assign-reservations.dto';
+import { AutoAssignReservationsForUserDto } from './dto/auto-assign-reservations-for-user.dto';
+import { EligibleInstructorsQueryDto } from './dto/eligible-instructors-query.dto';
+import { ReservationsAvailabilityQueryDto } from './dto/reservations-availability-query.dto';
 import {
   ApiTags,
   ApiBearerAuth,
@@ -100,6 +104,81 @@ export class ReservationsController {
     const reservations = await this.reservationsService.createReservationsForUser(dto.userId, dto, session.id);
     if (reservations && reservations.length > 0)
         this.wsService.emitReservationsCreated(reservations, session);
+    return reservations;
+  }
+
+  @Get('eligible-instructors')
+  @ApiOperation({
+    summary: 'List instructors eligible for a sector + gearbox combination',
+    description:
+      'Returns instructors matching the student-selected sector and gearbox. For sectors requiring the ' +
+      'mandatory poligon lessons (Ciocana, Buiucani), also returns the eligible Botanica instructor pool.',
+  })
+  @ApiQuery({ name: 'sector', required: true, type: String })
+  @ApiQuery({ name: 'gearbox', required: true, type: String })
+  async getEligibleInstructors(@Query() query: EligibleInstructorsQueryDto) {
+    return this.reservationsService.getEligibleInstructors(query.sector, query.gearbox);
+  }
+
+  @Get('availability')
+  @ApiOperation({
+    summary: 'Generate lesson availability for a sector + gearbox combination',
+    description:
+      'Availability is generated exclusively from eligible instructors, taking into account existing ' +
+      'reservations and instructor blackouts. Pass instructorMode=SINGLE to see only the sticky/' +
+      'preferred instructor calendar (same person auto-assign will use).',
+  })
+  @ApiQuery({ name: 'sector', required: true, type: String })
+  @ApiQuery({ name: 'gearbox', required: true, type: String })
+  @ApiQuery({ name: 'startDate', required: false, type: String })
+  @ApiQuery({ name: 'endDate', required: false, type: String })
+  @ApiQuery({ name: 'instructorMode', required: false, enum: ['SINGLE', 'MULTIPLE'] })
+  async getAvailability(
+    @Query() query: ReservationsAvailabilityQueryDto,
+    @Session() session: User,
+  ) {
+    return this.reservationsService.getAvailability(
+      query.sector,
+      query.gearbox,
+      query.startDate,
+      query.endDate,
+      query.instructorMode,
+      session?.id,
+    );
+  }
+
+  @Post('auto-assign')
+  @ApiOperation({
+    summary: 'Auto-assign eligible instructor(s) and create reservations for the current user',
+    description:
+      'Replaces the group-based booking flow: the student selects sector, gearbox, lesson package and ' +
+      'instructor mode (single vs multiple), and the system assigns eligible instructor(s) automatically, ' +
+      'applying the mandatory poligon lessons rule for Ciocana/Buiucani.',
+  })
+  @ApiBody({ type: AutoAssignReservationsDto })
+  @ApiResponse({ status: 201, description: 'Reservations created' })
+  async autoAssign(@Body() dto: AutoAssignReservationsDto, @Session() session: User) {
+    const reservations = await this.reservationsService.assignReservations(session.id, dto);
+
+    if (reservations.length > 0) this.wsService.emitReservationsCreated(reservations, session);
+
+    return reservations;
+  }
+
+  @Post('auto-assign/for-user')
+  @ApiOperation({
+    summary: 'Auto-assign eligible instructor(s) and create reservations for a selected user',
+    description: 'Allows admins, managers, and instructors to auto-assign reservations for any user.',
+  })
+  @ApiBody({ type: AutoAssignReservationsForUserDto })
+  @ApiResponse({ status: 201, description: 'Reservations created successfully for the selected user' })
+  async autoAssignForUser(@Body() dto: AutoAssignReservationsForUserDto, @Session() session: User) {
+    if (session.role !== Role.ADMIN && session.role !== Role.MANAGER && session.role !== Role.INSTRUCTOR) {
+      throw new ForbiddenException('Only admins, managers, and instructors can create reservations for other users');
+    }
+
+    const reservations = await this.reservationsService.assignReservationsForUser(dto.userId, dto, session.id);
+    if (reservations && reservations.length > 0) this.wsService.emitReservationsCreated(reservations, session);
     return reservations;
   }
 
@@ -214,6 +293,36 @@ export class ReservationsController {
     const reservation = await this.reservationsService.update(id, dto, session.id);
     this.wsService.emitReservationUpdated([reservation], session);
     return reservation;
+  }
+
+  @Delete('user/:userId/all')
+  @ApiOperation({
+    summary: 'Soft-delete all reservations for a student user (ADMIN/MANAGER)',
+  })
+  @ApiParam({ name: 'userId', type: Number })
+  @ApiResponse({ status: 200, description: 'All reservations soft-deleted' })
+  @ApiResponse({ status: 403, description: 'Forbidden' })
+  @ApiResponse({ status: 404, description: 'User not found' })
+  async deleteAllForUser(
+    @Param('userId', ParseIntPipe) userId: number,
+    @Session() session: User,
+  ) {
+    if (session.role !== Role.ADMIN && session.role !== Role.MANAGER) {
+      throw new ForbiddenException(
+        'Only admins and managers can delete all reservations for a user',
+      );
+    }
+
+    const result = await this.reservationsService.deleteAllForUser(
+      userId,
+      session.id,
+    );
+
+    for (const id of result.ids) {
+      this.wsService.emitReservationDeleted(+id, session);
+    }
+
+    return result;
   }
 
   @Delete(':id')

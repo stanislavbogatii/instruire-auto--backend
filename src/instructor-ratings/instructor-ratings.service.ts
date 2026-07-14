@@ -7,6 +7,7 @@ import {
 } from '@nestjs/common';
 import { PrismaService } from 'src/prisma/prisma.service';
 import { SubmitRatingDto } from './dto/submit-rating.dto';
+import { UpdateRatingDto } from './dto/update-rating.dto';
 import { RatingStatsQueryDto } from './dto/rating-stats-query.dto';
 
 @Injectable()
@@ -259,9 +260,10 @@ export class InstructorRatingsService {
   // ─── Individual ratings list (Admin/Manager) ───────────────────────────────
 
   async getAllRatings(query: RatingStatsQueryDto) {
-    const { instructorId, year, month } = query;
+    const { instructorId, year, month, rating } = query;
     const where: any = {};
     if (instructorId) where.instructorId = instructorId;
+    if (rating) where.rating = rating;
     if (year && month) {
       where.createdAt = { gte: new Date(year, month - 1, 1), lt: new Date(year, month, 1) };
     } else if (year) {
@@ -271,6 +273,52 @@ export class InstructorRatingsService {
     return this.prisma.instructorRating.findMany({
       where,
       orderBy: { createdAt: 'desc' },
+      include: {
+        instructor: { select: { id: true, firstName: true, lastName: true, sector: true } },
+        user: { select: { id: true, firstName: true, lastName: true } },
+        reservation: { select: { id: true, startTime: true } },
+      },
+    });
+  }
+
+  // ─── Delete rating (Admin only) ───────────────────────────────────────────
+
+  async deleteRating(ratingId: number) {
+    const existing = await this.prisma.instructorRating.findUnique({
+      where: { id: ratingId },
+      select: { id: true },
+    });
+    if (!existing) {
+      throw new NotFoundException(`Ratingul cu id=${ratingId} nu a fost găsit`);
+    }
+
+    await this.prisma.instructorRating.delete({
+      where: { id: ratingId },
+    });
+
+    return { ok: true, id: ratingId };
+  }
+
+  async updateRating(ratingId: number, dto: UpdateRatingDto) {
+    const existing = await this.prisma.instructorRating.findUnique({
+      where: { id: ratingId },
+      select: { id: true },
+    });
+    if (!existing) {
+      throw new NotFoundException(`Ratingul cu id=${ratingId} nu a fost găsit`);
+    }
+
+    const comment =
+      dto.comment === undefined
+        ? undefined
+        : String(dto.comment || '').trim() || null;
+
+    return this.prisma.instructorRating.update({
+      where: { id: ratingId },
+      data: {
+        rating: dto.rating,
+        ...(dto.comment !== undefined ? { comment } : {}),
+      },
       include: {
         instructor: { select: { id: true, firstName: true, lastName: true, sector: true } },
         user: { select: { id: true, firstName: true, lastName: true } },

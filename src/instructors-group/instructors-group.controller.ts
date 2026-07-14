@@ -9,7 +9,13 @@ import {
   ParseIntPipe,
   UseGuards,
 } from '@nestjs/common';
-import { ApiTags, ApiOperation, ApiResponse, ApiParam, ApiBearerAuth } from '@nestjs/swagger';
+import {
+  ApiTags,
+  ApiOperation,
+  ApiResponse,
+  ApiParam,
+  ApiBearerAuth,
+} from '@nestjs/swagger';
 import { InstructorsGroupService } from './instructors-group.service';
 import { CreateInstructorsGroupDto } from './dto/create-instructors-group.dto';
 import { UpdateInstructorsGroupDto } from './dto/update-instructors-group.dto';
@@ -47,7 +53,7 @@ export class InstructorsGroupController {
   @Get('blackouts/:instructorsGroupId')
   @ApiOperation({ summary: 'Get blackouts for an instructors group' })
   @ApiParam({ name: 'instructorsGroupId', type: Number })
-  @ApiBearerAuth('access-token') 
+  @ApiBearerAuth('access-token')
   @UseGuards(AuthGuard('jwt'))
   @ApiResponse({
     status: 200,
@@ -58,9 +64,13 @@ export class InstructorsGroupController {
     @Param('instructorsGroupId', ParseIntPipe) instructorsGroupId: number,
     @Session() session: User,
   ) {
-    const blackouts = await this.instructorsGroupService.getBlackoutsByInstructorsGroup(instructorsGroupId);
+    const blackouts =
+      await this.instructorsGroupService.getBlackoutsByInstructorsGroup(
+        instructorsGroupId,
+      );
     return plainToInstance(InstructorBlackoutResponseDto, blackouts, {
       groups: [session.role],
+      excludeExtraneousValues: true,
     });
   }
 

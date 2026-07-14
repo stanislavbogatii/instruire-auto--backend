@@ -128,12 +128,16 @@ export class GroupsService {
           where: {
             role: 'USER', 
           },
-          select: {
+            select: {
             id: true,
             email: true,
             firstName: true,
             lastName: true,
             phone: true,
+            idnp: true,
+            medical_documents: true,
+            individual_work: true,
+            number_of_absences: true,
             createdAt: true,
           },
           orderBy: {
@@ -318,12 +322,16 @@ export class GroupsService {
         id: true,
         users: {
           where: { role: 'USER' },
-          select: {
+            select: {
             id: true,
             email: true,
             firstName: true,
             lastName: true,
             phone: true,
+            idnp: true,
+            medical_documents: true,
+            individual_work: true,
+            number_of_absences: true,
             createdAt: true,
           },
           orderBy: { lastName: 'asc' },
@@ -340,6 +348,10 @@ export class GroupsService {
         firstName: user.firstName,
         lastName: user.lastName,
         phone: user.phone,
+        idnp: user.idnp,
+        medical_documents: user.medical_documents,
+        individual_work: user.individual_work,
+        number_of_absences: user.number_of_absences,
         createdAt: user.createdAt,
       })),
     );
@@ -362,12 +374,16 @@ export class GroupsService {
         name: true,
         users: {
           where: { role: 'USER' },
-          select: {
+            select: {
             id: true,
             email: true,
             firstName: true,
             lastName: true,
             phone: true,
+            idnp: true,
+            medical_documents: true,
+            individual_work: true,
+            number_of_absences: true,
             createdAt: true,
           },
           orderBy: { lastName: 'asc' },
@@ -389,6 +405,10 @@ export class GroupsService {
         firstName: user.firstName,
         lastName: user.lastName,
         phone: user.phone,
+        idnp: user.idnp,
+        medical_documents: user.medical_documents,
+        individual_work: user.individual_work,
+        number_of_absences: user.number_of_absences,
         createdAt: user.createdAt,
       })),
     );

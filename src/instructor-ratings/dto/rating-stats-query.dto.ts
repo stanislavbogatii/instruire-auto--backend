@@ -1,6 +1,6 @@
 import { ApiPropertyOptional } from '@nestjs/swagger';
 import { Type } from 'class-transformer';
-import { IsInt, IsOptional, Min } from 'class-validator';
+import { IsInt, IsOptional, Max, Min } from 'class-validator';
 
 export class RatingStatsQueryDto {
   @ApiPropertyOptional({ example: 3, description: 'ID instructor (omit pentru toți instructorii)' })
@@ -22,4 +22,12 @@ export class RatingStatsQueryDto {
   @IsInt()
   @Min(1)
   month?: number;
+
+  @ApiPropertyOptional({ example: 5, description: 'Filtru după numărul de stele (1–5)' })
+  @IsOptional()
+  @Type(() => Number)
+  @IsInt()
+  @Min(1)
+  @Max(5)
+  rating?: number;
 }

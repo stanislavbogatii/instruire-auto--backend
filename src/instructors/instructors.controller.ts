@@ -33,7 +33,7 @@ import { UpdateInstructorBlackoutDto } from './dto/update-instructor-blackout.dt
 import { SetSectorScheduleDto } from './dto/sector-schedule.dto';
 
 @ApiTags('instructors')
-@ApiBearerAuth('access-token') 
+@ApiBearerAuth('access-token')
 @UseGuards(AuthGuard('jwt'))
 @Controller('instructors')
 export class InstructorsController {
@@ -61,29 +61,50 @@ export class InstructorsController {
   @ApiParam({ name: 'instructorId', type: Number })
   @ApiQuery({ name: 'startDate', required: false, type: String })
   @ApiQuery({ name: 'endDate', required: false, type: String })
-  @ApiResponse({ status: 200, description: 'List of blackouts.', type: [InstructorBlackoutResponseDto] })
+  @ApiResponse({
+    status: 200,
+    description: 'List of blackouts.',
+    type: [InstructorBlackoutResponseDto],
+  })
   async getBlackoutsByInstructorId(
-    @Param('instructorId', ParseIntPipe) instructorId: number, 
+    @Param('instructorId', ParseIntPipe) instructorId: number,
     @Session() session: User,
     @Query('startDate') startDate?: string,
-    @Query('endDate') endDate?: string
+    @Query('endDate') endDate?: string,
   ) {
-    const blackouts = await this.instructorsService.getBlackoutsByInstructor(instructorId, startDate, endDate);
-    return plainToInstance(InstructorBlackoutResponseDto, blackouts, { groups: [session.role] });
+    const blackouts = await this.instructorsService.getBlackoutsByInstructor(
+      instructorId,
+      startDate,
+      endDate,
+    );
+    return plainToInstance(InstructorBlackoutResponseDto, blackouts, {
+      groups: [session.role],
+      excludeExtraneousValues: true,
+    });
   }
 
   @Get('blackouts')
   @ApiOperation({ summary: 'Get blackouts' })
   @ApiQuery({ name: 'startDate', required: false, type: String })
   @ApiQuery({ name: 'endDate', required: false, type: String })
-  @ApiResponse({ status: 200, description: 'List of blackouts.', type: [InstructorBlackoutResponseDto] })
+  @ApiResponse({
+    status: 200,
+    description: 'List of blackouts.',
+    type: [InstructorBlackoutResponseDto],
+  })
   async getBlackouts(
     @Session() session: User,
     @Query('startDate') startDate?: string,
-    @Query('endDate') endDate?: string
+    @Query('endDate') endDate?: string,
   ) {
-    const blackouts = await this.instructorsService.getBlackouts(startDate, endDate);
-    return plainToInstance(InstructorBlackoutResponseDto, blackouts, { groups: [session.role] });
+    const blackouts = await this.instructorsService.getBlackouts(
+      startDate,
+      endDate,
+    );
+    return plainToInstance(InstructorBlackoutResponseDto, blackouts, {
+      groups: [session.role],
+      excludeExtraneousValues: true,
+    });
   }
 
   @Delete('blackouts/:id')
@@ -95,8 +116,6 @@ export class InstructorsController {
   async deleteBlackout(@Param('id', ParseIntPipe) id: number) {
     await this.instructorsService.deleteBlackout(id);
   }
-  
-
 
   @Patch('blackouts/:id')
   @Roles(Role.ADMIN, Role.MANAGER)
@@ -104,7 +123,10 @@ export class InstructorsController {
   @ApiOperation({ summary: 'Update a blackout by ID' })
   @ApiParam({ name: 'id', type: Number })
   @ApiResponse({ status: 200, description: 'Blackout updated.' })
-  async updateBlackout(id: number, dto: UpdateInstructorBlackoutDto) {
+  async updateBlackout(
+    @Param('id', ParseIntPipe) id: number,
+    @Body() dto: UpdateInstructorBlackoutDto,
+  ) {
     await this.instructorsService.updateBlackout(id, dto);
   }
 
@@ -175,7 +197,10 @@ export class InstructorsController {
   @Post(':id/sector-schedule')
   @Roles(Role.ADMIN, Role.MANAGER)
   @UseGuards(RolesGuard)
-  @ApiOperation({ summary: 'Set weekly sector schedule for an instructor (replaces/upserts entries)' })
+  @ApiOperation({
+    summary:
+      'Set weekly sector schedule for an instructor (replaces/upserts entries)',
+  })
   @ApiParam({ name: 'id', type: Number })
   setSectorSchedule(
     @Param('id', ParseIntPipe) id: number,
@@ -187,7 +212,9 @@ export class InstructorsController {
   @Delete(':id/sector-schedule/:dayOfWeek')
   @Roles(Role.ADMIN, Role.MANAGER)
   @UseGuards(RolesGuard)
-  @ApiOperation({ summary: 'Delete sector schedule for a specific day (1=Luni...7=Duminica)' })
+  @ApiOperation({
+    summary: 'Delete sector schedule for a specific day (1=Luni...7=Duminica)',
+  })
   @ApiParam({ name: 'id', type: Number })
   @ApiParam({ name: 'dayOfWeek', type: Number })
   deleteSectorScheduleDay(
@@ -197,4 +224,3 @@ export class InstructorsController {
     return this.instructorsService.deleteSectorScheduleDay(id, dayOfWeek);
   }
 }
-

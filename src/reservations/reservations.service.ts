@@ -4,9 +4,19 @@ import { CreateReservationsDto } from './dto/create-reservations.dto';
 import { UpdateReservationDto } from './dto/update-reservation.dto';
 import { FilterReservationsDto } from './dto/filter-reservations.dto';
 import { HistoryService } from './history.service';
-import { Car, Instructor, InstructorsGroup, Reservation } from '@prisma/client';
+import { Car, Instructor, InstructorsGroup, Prisma, Reservation } from '@prisma/client';
 import { BusyReservationResponse } from './dto/ busy-reservation.dto';
 import { InstructorSubstitutionsService } from 'src/instructor-substitutions/instructor-substitutions.service';
+import {
+  MANDATORY_POLIGON_LESSONS,
+  POLIGON_SECTOR,
+  isPoligonRequiredSector,
+  normalizeSector,
+} from 'src/common/constants/sectors';
+import {
+  AutoAssignReservationsDto,
+  InstructorAssignmentMode,
+} from './dto/auto-assign-reservations.dto';
 
 type ReservationConflict = {
   index: number;
@@ -56,6 +66,18 @@ export class ReservationsService {
     return this.createReservations(userId, dto, createdBy);
   }
 
+  async assignReservationsForUser(userId: number, dto: AutoAssignReservationsDto, createdBy?: number) {
+    const targetUser = await this.prisma.user.findUnique({
+      where: { id: userId },
+    });
+
+    if (!targetUser) {
+      throw new NotFoundException(`User with ID ${userId} not found`);
+    }
+
+    return this.assignReservations(userId, dto, createdBy);
+  }
+
   async createReservations(userId: number, dto: CreateReservationsDto, createdBy?: number): Promise<Reservation[]> {
     let created: Array<Reservation> = [];
     const instructorId = dto.instructorId;
@@ -69,12 +91,14 @@ export class ReservationsService {
           select: { sector: true },
         });
 
-        const isCiocanaGroup = ((instructorsGroup?.sector || '').trim().toLowerCase() === 'ciocana');
+        const isCiocanaGroup = isPoligonRequiredSector(instructorsGroup?.sector);
 
         if (isCiocanaGroup) {
           if (reservations.length === 0) return [];
 
-          // For Ciocana groups use dedicated Botanica/Ciocana split logic.
+          const destinationSector = instructorsGroup?.sector || '';
+
+          // Sectors requiring the mandatory poligon lessons use a dedicated Botanica/destination split logic.
           const groupInstructors = await tx.instructor.findMany({
             where: {
               isActive: true,
@@ -87,7 +111,7 @@ export class ReservationsService {
           }
 
           const botanicaInstructor = groupInstructors.find(
-            instructor => (instructor.sector || '').trim().toLowerCase() === 'botanica'
+            instructor => normalizeSector(instructor.sector) === normalizeSector(POLIGON_SECTOR)
           );
 
           if (!botanicaInstructor) {
@@ -95,42 +119,30 @@ export class ReservationsService {
           }
 
           const ciocanaInstructors = groupInstructors.filter(
-            instructor => (instructor.sector || '').trim().toLowerCase() === 'ciocana'
+            instructor => normalizeSector(instructor.sector) === normalizeSector(destinationSector)
           );
 
           const botanicaReservationsCount = await tx.reservation.count({
             where: {
               userId,
-              sector: 'Botanica',
+              sector: POLIGON_SECTOR,
               deletedAt: null,
             },
           });
 
-          const botanicaSlotsToFill = Math.max(0, 7 - botanicaReservationsCount);
+          const botanicaSlotsToFill = Math.max(0, MANDATORY_POLIGON_LESSONS - botanicaReservationsCount);
           const botanicaAssignmentsCount = Math.min(botanicaSlotsToFill, reservations.length);
           const hasCiocanaAssignments = reservations.length > botanicaAssignmentsCount;
 
           if (hasCiocanaAssignments && !ciocanaInstructors.length) {
-            throw new NotFoundException("Ciocana instructors in this group not found");
+            throw new NotFoundException(`${destinationSector} instructors in this group not found`);
           }
 
           const requestedStartTimes = reservations.map(item => new Date(item.startTime));
-          const existingReservations = await tx.reservation.findMany({
-            where: {
-              instructorId: { in: groupInstructors.map(instructor => instructor.id) },
-              startTime: { in: requestedStartTimes },
-              deletedAt: null,
-            },
-            select: {
-              instructorId: true,
-              startTime: true,
-            },
-          });
-
-          const occupiedSlots = new Set(
-            existingReservations
-              .filter((reservation): reservation is { instructorId: number; startTime: Date } => reservation.instructorId !== null)
-              .map(reservation => this.buildReservationSlotKey(reservation.instructorId, reservation.startTime))
+          const occupiedSlots = await this.buildOccupiedSlots(
+            tx,
+            groupInstructors.map(instructor => instructor.id),
+            requestedStartTimes,
           );
           const plannedSlots = new Set<string>();
           const plannedReservations: PendingReservationCreate[] = [];
@@ -189,9 +201,9 @@ export class ReservationsService {
                 this.buildReservationConflict(
                   index,
                   item,
-                  `No available Ciocana instructor at ${startTime.toISOString()}`,
+                  `No available ${destinationSector} instructor at ${startTime.toISOString()}`,
                   null,
-                  'Ciocana'
+                  destinationSector
                 )
               );
               continue;
@@ -202,7 +214,7 @@ export class ReservationsService {
               item,
               instructorId: assignedCiocanaInstructor.id,
               startTime,
-              sector: 'Ciocana',
+              sector: destinationSector,
               instructorsGroupId,
             });
             ciocanaInstructorIndex++;
@@ -247,22 +259,10 @@ export class ReservationsService {
         if (reservations.length === 0) return [];
 
         const requestedStartTimes = reservations.map(item => new Date(item.startTime));
-        const existingReservations = await tx.reservation.findMany({
-          where: {
-            instructorId: { in: instructors.map(instructor => instructor.id) },
-            startTime: { in: requestedStartTimes },
-            deletedAt: null,
-          },
-          select: {
-            instructorId: true,
-            startTime: true,
-          },
-        });
-
-        const occupiedSlots = new Set(
-          existingReservations
-            .filter((reservation): reservation is { instructorId: number; startTime: Date } => reservation.instructorId !== null)
-            .map(reservation => this.buildReservationSlotKey(reservation.instructorId, reservation.startTime))
+        const occupiedSlots = await this.buildOccupiedSlots(
+          tx,
+          instructors.map(instructor => instructor.id),
+          requestedStartTimes,
         );
         const plannedSlots = new Set<string>();
         const plannedReservations: PendingReservationCreate[] = [];
@@ -345,13 +345,13 @@ export class ReservationsService {
         if (reservations.length === 0) return [];
 
         const startTimes = reservations.map(r => new Date(r.startTime));
-        const N = Math.min(7, reservations.length);
+        const N = Math.min(MANDATORY_POLIGON_LESSONS, reservations.length);
 
         const userReservationsCount = await tx.reservation.count({
           where: { userId, deletedAt: null },
         });
 
-        const allCiocana = reservations.every(r => ((r.sector || '').trim().toLowerCase() === 'ciocana'));
+        const allCiocana = reservations.every(r => isPoligonRequiredSector(r.sector));
 
         let botanicaInstructor: Instructor | null = null;
         const reservationErrors: ReservationConflict[] = [];
@@ -360,7 +360,7 @@ export class ReservationsService {
         if (userReservationsCount === 0 && allCiocana && N > 0) {
           botanicaInstructor = await tx.instructor.findFirst({
             where: {
-              sector: 'Botanica',
+              sector: POLIGON_SECTOR,
               reservations: {
                 none: {
                   startTime: { in: startTimes.slice(0, N) },
@@ -392,23 +392,7 @@ export class ReservationsService {
           ? [instructorId, botanicaInstructor.id]
           : [instructorId];
 
-        const existingReservations = await tx.reservation.findMany({
-          where: {
-            instructorId: { in: relevantInstructorIds },
-            startTime: { in: startTimes },
-            deletedAt: null,
-          },
-          select: {
-            instructorId: true,
-            startTime: true,
-          },
-        });
-
-        const occupiedSlots = new Set(
-          existingReservations
-            .filter((reservation): reservation is { instructorId: number; startTime: Date } => reservation.instructorId !== null)
-            .map(reservation => this.buildReservationSlotKey(reservation.instructorId, reservation.startTime))
-        );
+        const occupiedSlots = await this.buildOccupiedSlots(tx, relevantInstructorIds, startTimes);
         const plannedSlots = new Set<string>();
         const plannedReservations: PendingReservationCreate[] = [];
 
@@ -499,6 +483,167 @@ export class ReservationsService {
     return `${instructorId}:${startTime.toISOString()}`;
   }
 
+  /**
+   * Builds the set of "instructorId:startTime" keys that are unavailable for booking,
+   * combining existing (non-deleted) reservations with instructor blackouts.
+   */
+  private async buildOccupiedSlots(
+    tx: Prisma.TransactionClient,
+    instructorIds: number[],
+    startTimes: Date[],
+  ): Promise<Set<string>> {
+    if (instructorIds.length === 0 || startTimes.length === 0) return new Set();
+
+    const [existingReservations, blackouts] = await Promise.all([
+      tx.reservation.findMany({
+        where: {
+          instructorId: { in: instructorIds },
+          startTime: { in: startTimes },
+          deletedAt: null,
+        },
+        select: { instructorId: true, startTime: true },
+      }),
+      tx.instructorBlackout.findMany({
+        where: {
+          instructorId: { in: instructorIds },
+          dateTime: { in: startTimes },
+        },
+        select: { instructorId: true, dateTime: true },
+      }),
+    ]);
+
+    const occupiedSlots = new Set<string>();
+    for (const reservation of existingReservations) {
+      if (reservation.instructorId !== null) {
+        occupiedSlots.add(this.buildReservationSlotKey(reservation.instructorId, reservation.startTime));
+      }
+    }
+    for (const blackout of blackouts) {
+      occupiedSlots.add(this.buildReservationSlotKey(blackout.instructorId, blackout.dateTime));
+    }
+    return occupiedSlots;
+  }
+
+  /** Picks the eligible instructor with the fewest upcoming reservations. */
+  private async pickLeastBusyInstructor(
+    tx: Prisma.TransactionClient,
+    instructors: Instructor[],
+  ): Promise<Instructor> {
+    if (instructors.length === 1) return instructors[0];
+
+    const counts = await Promise.all(
+      instructors.map(instructor =>
+        tx.reservation.count({
+          where: { instructorId: instructor.id, deletedAt: null, startTime: { gte: new Date() } },
+        }),
+      ),
+    );
+
+    let best = instructors[0];
+    let bestCount = counts[0];
+    for (let i = 1; i < instructors.length; i++) {
+      if (counts[i] < bestCount) {
+        bestCount = counts[i];
+        best = instructors[i];
+      }
+    }
+    return best;
+  }
+
+  /**
+   * SINGLE mode: stick to an instructor the student already has lessons with
+   * (in this eligible pool). Fall back to least-busy on first booking.
+   */
+  private async pickStickyOrLeastBusyInstructor(
+    tx: Prisma.TransactionClient,
+    userId: number,
+    instructors: Instructor[],
+  ): Promise<Instructor> {
+    if (instructors.length === 0) {
+      throw new NotFoundException('No eligible instructors in pool');
+    }
+    if (instructors.length === 1) return instructors[0];
+
+    const poolIds = instructors.map(instructor => instructor.id);
+    const existing = await tx.reservation.findMany({
+      where: {
+        userId,
+        deletedAt: null,
+        instructorId: { in: poolIds },
+      },
+      select: { instructorId: true, startTime: true },
+      orderBy: { startTime: 'desc' },
+    });
+
+    if (existing.length > 0) {
+      const counts = new Map<number, number>();
+      for (const row of existing) {
+        if (row.instructorId == null) continue;
+        counts.set(row.instructorId, (counts.get(row.instructorId) || 0) + 1);
+      }
+
+      // Prefer the instructor with the most prior lessons in this pool;
+      // tie-break by most recent appearance in `existing` (already newest-first).
+      let bestId = existing.find(row => row.instructorId != null)?.instructorId ?? null;
+      let bestCount = bestId != null ? counts.get(bestId) || 0 : -1;
+      for (const [instructorId, count] of counts.entries()) {
+        if (count > bestCount) {
+          bestCount = count;
+          bestId = instructorId;
+        }
+      }
+
+      const sticky = instructors.find(instructor => instructor.id === bestId);
+      if (sticky) return sticky;
+    }
+
+    return this.pickLeastBusyInstructor(tx, instructors);
+  }
+
+  /**
+   * Among candidates (sticky first, then rest by least upcoming load), pick the
+   * one free for every requested slot. If none cover all, keep sticky/least-busy.
+   */
+  private async pickSingleInstructorForSlots(
+    tx: Prisma.TransactionClient,
+    userId: number,
+    instructors: Instructor[],
+    startTimes: Date[],
+    occupiedSlots: Set<string>,
+  ): Promise<Instructor> {
+    const preferred = await this.pickStickyOrLeastBusyInstructor(tx, userId, instructors);
+
+    const isFreeForAll = (instructor: Instructor) =>
+      startTimes.every(startTime => {
+        const key = this.buildReservationSlotKey(instructor.id, startTime);
+        return !occupiedSlots.has(key);
+      });
+
+    if (isFreeForAll(preferred)) return preferred;
+
+    const others = instructors.filter(instructor => instructor.id !== preferred.id);
+    if (others.length === 0) return preferred;
+
+    const counts = await Promise.all(
+      others.map(instructor =>
+        tx.reservation.count({
+          where: { instructorId: instructor.id, deletedAt: null, startTime: { gte: new Date() } },
+        }),
+      ),
+    );
+    const ranked = others
+      .map((instructor, index) => ({ instructor, count: counts[index] }))
+      .sort((a, b) => a.count - b.count)
+      .map(entry => entry.instructor);
+
+    for (const candidate of ranked) {
+      if (isFreeForAll(candidate)) return candidate;
+    }
+
+    // No one covers every slot — keep sticky so retries stay on the same person.
+    return preferred;
+  }
+
   private buildReservationConflict(
     index: number,
     reservation: CreateReservationsDto['reservations'][number],
@@ -539,6 +684,396 @@ export class ReservationsService {
         },
       },
     };
+  }
+
+  /**
+   * Finds active instructors matching a sector + gearbox pair.
+   */
+  private async findEligibleInstructors(sector: string, gearbox: string): Promise<Instructor[]> {
+    return this.prisma.instructor.findMany({
+      where: {
+        isActive: true,
+        sector,
+        cars: { some: { gearbox } },
+      },
+    });
+  }
+
+  /**
+   * Identifies the instructors eligible for a student's selected sector + gearbox.
+   * For sectors requiring the mandatory poligon lessons (Ciocana, Buiucani), also
+   * returns the eligible Botanica instructor pool used for the first lessons.
+   */
+  async getEligibleInstructors(sector: string, gearbox: string) {
+    const requiresPoligon = isPoligonRequiredSector(sector);
+
+    const [sectorInstructors, poligonInstructors] = await Promise.all([
+      this.findEligibleInstructors(sector, gearbox),
+      requiresPoligon ? this.findEligibleInstructors(POLIGON_SECTOR, gearbox) : Promise.resolve([]),
+    ]);
+
+    return {
+      sector,
+      gearbox,
+      requiresPoligon,
+      poligonSector: requiresPoligon ? POLIGON_SECTOR : null,
+      mandatoryPoligonLessons: requiresPoligon ? MANDATORY_POLIGON_LESSONS : 0,
+      sectorInstructors,
+      poligonInstructors,
+    };
+  }
+
+  /**
+   * Generates availability for a student's selected sector + gearbox, based
+   * exclusively on eligible instructors, respecting existing reservations and
+   * instructor blackouts. Returns, per day/time slot, how many eligible
+   * instructors are free (split between the poligon pool and the destination
+   * sector pool when applicable).
+   *
+   * When instructorMode=SINGLE, only the sticky/preferred instructor (per pool)
+   * is counted — matching what auto-assign SINGLE will use for this user.
+   */
+  async getAvailability(
+    sector: string,
+    gearbox: string,
+    startDate?: string,
+    endDate?: string,
+    instructorMode: InstructorAssignmentMode = InstructorAssignmentMode.MULTIPLE,
+    userId?: number,
+  ) {
+    const today = new Date();
+    const start = startDate ? new Date(startDate) : new Date(today);
+    // Always expand to full calendar days so morning slots (e.g. 07:00) are not
+    // dropped when the client sends a mid-day startDate ISO.
+    start.setUTCHours(0, 0, 0, 0);
+    const defaultEnd = new Date(start);
+    defaultEnd.setUTCMonth(defaultEnd.getUTCMonth() + 3);
+    const end = endDate ? new Date(endDate) : defaultEnd;
+    end.setUTCHours(23, 59, 59, 999);
+
+    const { requiresPoligon, sectorInstructors, poligonInstructors } = await this.getEligibleInstructors(
+      sector,
+      gearbox,
+    );
+
+    const mode = instructorMode || InstructorAssignmentMode.MULTIPLE;
+    const singleMode = mode === InstructorAssignmentMode.SINGLE;
+
+    let sectorPool = sectorInstructors;
+    let poligonPool = poligonInstructors;
+    let singleSectorInstructor: Instructor | null = null;
+    let singlePoligonInstructor: Instructor | null = null;
+
+    // Sector + poligon pools follow instructorMode (SINGLE = sticky one).
+    if (singleMode && userId && sectorInstructors.length > 0) {
+      singleSectorInstructor = await this.pickStickyOrLeastBusyInstructor(
+        this.prisma,
+        userId,
+        sectorInstructors,
+      );
+      sectorPool = [singleSectorInstructor];
+    }
+    if (singleMode && userId && requiresPoligon && poligonInstructors.length > 0) {
+      singlePoligonInstructor = await this.pickStickyOrLeastBusyInstructor(
+        this.prisma,
+        userId,
+        poligonInstructors,
+      );
+      poligonPool = [singlePoligonInstructor];
+    }
+
+    const allInstructors = requiresPoligon ? [...poligonPool, ...sectorPool] : sectorPool;
+
+    if (allInstructors.length === 0) {
+      return {
+        sector,
+        gearbox,
+        requiresPoligon,
+        poligonSector: requiresPoligon ? POLIGON_SECTOR : null,
+        instructorMode: mode,
+        singleSectorInstructor: null,
+        singlePoligonInstructor: null,
+        days: [],
+      };
+    }
+
+    const instructorIds = allInstructors.map(instructor => instructor.id);
+    const poligonIds = new Set(poligonPool.map(instructor => instructor.id));
+    const sectorIds = new Set(sectorPool.map(instructor => instructor.id));
+
+    const [reservations, blackouts] = await Promise.all([
+      this.prisma.reservation.findMany({
+        where: { instructorId: { in: instructorIds }, startTime: { gte: start, lte: end }, deletedAt: null },
+        select: { instructorId: true, startTime: true },
+      }),
+      this.prisma.instructorBlackout.findMany({
+        where: { instructorId: { in: instructorIds }, dateTime: { gte: start, lte: end } },
+        select: { instructorId: true, dateTime: true },
+      }),
+    ]);
+
+    const busySlots = new Set<string>();
+    for (const reservation of reservations) {
+      if (reservation.instructorId !== null) {
+        busySlots.add(this.buildReservationSlotKey(reservation.instructorId, reservation.startTime));
+      }
+    }
+    for (const blackout of blackouts) {
+      busySlots.add(this.buildReservationSlotKey(blackout.instructorId, blackout.dateTime));
+    }
+
+    const now = new Date();
+    const days: { date: string; slots: { time: string; poligonFreeInstructors: number; sectorFreeInstructors: number }[] }[] = [];
+
+    const cursor = new Date(start);
+    // cursor is already UTC midnight from start normalization above
+
+    while (cursor <= end) {
+      const slots: { time: string; poligonFreeInstructors: number; sectorFreeInstructors: number }[] = [];
+
+      for (const time of this.dailySlots) {
+        const [hours, minutes] = time.split(':').map(Number);
+        const slotDate = new Date(cursor);
+        slotDate.setUTCHours(hours, minutes, 0, 0);
+
+        if (slotDate < now) continue;
+
+        let poligonFree = 0;
+        let sectorFree = 0;
+        for (const instructor of allInstructors) {
+          const slotKey = this.buildReservationSlotKey(instructor.id, slotDate);
+          if (busySlots.has(slotKey)) continue;
+          if (poligonIds.has(instructor.id)) poligonFree++;
+          if (sectorIds.has(instructor.id)) sectorFree++;
+        }
+
+        slots.push({
+          time,
+          poligonFreeInstructors: requiresPoligon ? poligonFree : 0,
+          sectorFreeInstructors: sectorFree,
+        });
+      }
+
+      if (slots.length > 0) {
+        days.push({ date: cursor.toISOString().slice(0, 10), slots });
+      }
+      cursor.setUTCDate(cursor.getUTCDate() + 1);
+    }
+
+    const summarizeInstructor = (instructor: Instructor | null) =>
+      instructor
+        ? {
+            id: instructor.id,
+            firstName: instructor.firstName,
+            lastName: instructor.lastName,
+            sector: instructor.sector,
+          }
+        : null;
+
+    return {
+      sector,
+      gearbox,
+      requiresPoligon,
+      poligonSector: requiresPoligon ? POLIGON_SECTOR : null,
+      instructorMode: mode,
+      singleSectorInstructor: summarizeInstructor(singleSectorInstructor),
+      singlePoligonInstructor: summarizeInstructor(singlePoligonInstructor),
+      days,
+    };
+  }
+
+  /**
+   * Automatically assigns eligible instructors to a batch of lesson start times based
+   * on the student's selected sector, gearbox and instructor mode (single vs multiple).
+   * Sectors requiring the mandatory poligon lessons (Ciocana, Buiucani) always route the
+   * first lessons to eligible Botanica instructors first.
+   */
+  async assignReservations(
+    userId: number,
+    dto: AutoAssignReservationsDto,
+    createdBy?: number,
+  ): Promise<Reservation[]> {
+    const { sector, gearbox, instructorMode } = dto;
+    const startTimeDates = (dto.startTimes || []).map(startTime => new Date(startTime));
+
+    if (startTimeDates.length === 0) return [];
+
+    const requiresPoligon = isPoligonRequiredSector(sector);
+
+    const created = await this.prisma.$transaction(async (tx) => {
+      const sectorInstructors = await tx.instructor.findMany({
+        where: { isActive: true, sector, cars: { some: { gearbox } } },
+      });
+
+      if (sectorInstructors.length === 0) {
+        throw new NotFoundException(`No eligible instructor found for sector ${sector} and gearbox ${gearbox}`);
+      }
+
+      const poligonInstructors = requiresPoligon
+        ? await tx.instructor.findMany({
+            where: { isActive: true, sector: POLIGON_SECTOR, cars: { some: { gearbox } } },
+          })
+        : [];
+
+      if (requiresPoligon && poligonInstructors.length === 0) {
+        throw new NotFoundException(`No eligible ${POLIGON_SECTOR} instructor found for gearbox ${gearbox}`);
+      }
+
+      const poligonReservationsCount = requiresPoligon
+        ? await tx.reservation.count({ where: { userId, sector: POLIGON_SECTOR, deletedAt: null } })
+        : 0;
+
+      const poligonSlotsRemaining = requiresPoligon
+        ? Math.max(0, MANDATORY_POLIGON_LESSONS - poligonReservationsCount)
+        : 0;
+      const poligonAssignmentsCount = Math.min(poligonSlotsRemaining, startTimeDates.length);
+
+      const allInstructorIds = [
+        ...new Set([...poligonInstructors.map(i => i.id), ...sectorInstructors.map(i => i.id)]),
+      ];
+      const occupiedSlots = await this.buildOccupiedSlots(tx, allInstructorIds, startTimeDates);
+      const plannedSlots = new Set<string>();
+      const plannedReservations: PendingReservationCreate[] = [];
+      const reservationErrors: ReservationConflict[] = [];
+
+      const singlePoligonInstructor =
+        instructorMode === InstructorAssignmentMode.SINGLE &&
+        requiresPoligon &&
+        poligonAssignmentsCount > 0
+          ? await this.pickSingleInstructorForSlots(
+              tx,
+              userId,
+              poligonInstructors,
+              startTimeDates.slice(0, poligonAssignmentsCount),
+              occupiedSlots,
+            )
+          : null;
+      const singleSectorInstructor =
+        instructorMode === InstructorAssignmentMode.SINGLE
+          ? await this.pickSingleInstructorForSlots(
+              tx,
+              userId,
+              sectorInstructors,
+              startTimeDates.slice(poligonAssignmentsCount),
+              occupiedSlots,
+            )
+          : null;
+
+      let poligonRoundRobinIndex = 0;
+      let sectorRoundRobinIndex = 0;
+
+      for (const [index, startTime] of startTimeDates.entries()) {
+        const isPoligonLesson = index < poligonAssignmentsCount;
+        const pool = isPoligonLesson ? poligonInstructors : sectorInstructors;
+        const targetSector = isPoligonLesson ? POLIGON_SECTOR : sector;
+
+        let assigned: Instructor | null = null;
+
+        if (instructorMode === InstructorAssignmentMode.SINGLE) {
+          const fixedInstructor = isPoligonLesson
+            ? singlePoligonInstructor
+            : singleSectorInstructor;
+          if (fixedInstructor) {
+            const slotKey = this.buildReservationSlotKey(fixedInstructor.id, startTime);
+            if (!occupiedSlots.has(slotKey) && !plannedSlots.has(slotKey)) {
+              assigned = fixedInstructor;
+            }
+          }
+        } else {
+          let tries = 0;
+          let idx = isPoligonLesson ? poligonRoundRobinIndex : sectorRoundRobinIndex;
+
+          while (!assigned && tries < pool.length) {
+            const candidate = pool[idx % pool.length];
+            const slotKey = this.buildReservationSlotKey(candidate.id, startTime);
+            if (!occupiedSlots.has(slotKey) && !plannedSlots.has(slotKey)) {
+              assigned = candidate;
+            } else {
+              idx++;
+              tries++;
+            }
+          }
+
+          if (isPoligonLesson) poligonRoundRobinIndex = idx + 1;
+          else sectorRoundRobinIndex = idx + 1;
+        }
+
+        if (!assigned) {
+          const fixedId =
+            instructorMode === InstructorAssignmentMode.SINGLE
+              ? (isPoligonLesson ? singlePoligonInstructor?.id : singleSectorInstructor?.id) ?? null
+              : null;
+          reservationErrors.push({
+            index,
+            startTime: startTime.toISOString(),
+            instructorId: fixedId,
+            sector: targetSector,
+            message:
+              fixedId
+                ? `Instructor ${fixedId} is not available at ${startTime.toISOString()}`
+                : `No available ${targetSector} instructor at ${startTime.toISOString()}`,
+            reservation: {
+              startTime: startTime.toISOString(),
+              sector: targetSector,
+              gearbox,
+              privateMessage: dto.privateMessage,
+              color: dto.color,
+            } as CreateReservationsDto['reservations'][number],
+          });
+          continue;
+        }
+
+        const slotKey = this.buildReservationSlotKey(assigned.id, startTime);
+        plannedSlots.add(slotKey);
+        plannedReservations.push({
+          item: {
+            startTime: startTime.toISOString(),
+            sector: targetSector,
+            gearbox,
+            privateMessage: dto.privateMessage,
+            color: dto.color,
+          } as CreateReservationsDto['reservations'][number],
+          instructorId: assigned.id,
+          startTime,
+          sector: targetSector,
+          instructorsGroupId: null,
+        });
+      }
+
+      if (reservationErrors.length > 0) {
+        this.throwReservationConflicts(reservationErrors);
+      }
+
+      return Promise.all(
+        plannedReservations.map(plannedReservation =>
+          tx.reservation.create({
+            data: {
+              userId,
+              instructorId: plannedReservation.instructorId,
+              startTime: plannedReservation.startTime,
+              sector: plannedReservation.sector,
+              gearbox: plannedReservation.item.gearbox || '',
+              privateMessage: plannedReservation.item.privateMessage || '',
+              color: plannedReservation.item.color || '',
+              instructorsGroupId: null,
+              isFavorite: false,
+              isImportant: false,
+            },
+            include: this.getReservationCreateInclude(),
+          }),
+        ),
+      );
+    });
+
+    for (const reservation of created) {
+      try {
+        await this.historyService.createHistoryRecord(reservation.id, 'CREATE' as any, reservation, createdBy ?? userId);
+      } catch (error) {
+        console.warn('Failed to create history record:', error?.message ?? error);
+      }
+    }
+
+    return created;
   }
 
   async getUserReservations(userId: number) {
@@ -802,6 +1337,56 @@ export class ReservationsService {
     }
 
     return deletedReservation;
+  }
+
+  /**
+   * Soft-deletes all non-deleted reservations for a student account.
+   * Intended for ADMIN/MANAGER cleanup from the student profile.
+   */
+  async deleteAllForUser(userId: number, changedBy?: number) {
+    const user = await this.prisma.user.findUnique({ where: { id: userId } });
+    if (!user) {
+      throw new NotFoundException(`User with ID ${userId} not found`);
+    }
+
+    const reservations = await this.prisma.reservation.findMany({
+      where: { userId, deletedAt: null },
+      select: { id: true },
+    });
+
+    if (reservations.length === 0) {
+      return { deletedCount: 0, ids: [] as number[] };
+    }
+
+    const ids = reservations.map((reservation) => reservation.id);
+    const deletedAt = new Date();
+
+    await this.prisma.reservation.updateMany({
+      where: { id: { in: ids }, deletedAt: null },
+      data: { deletedAt },
+    });
+
+    for (const id of ids) {
+      try {
+        const deletedReservation = await this.prisma.reservation.findUnique({
+          where: { id },
+          include: { instructor: true, car: true, user: true },
+        });
+        if (deletedReservation) {
+          await this.historyService.createHistoryRecord(
+            id,
+            'DELETE' as any,
+            deletedReservation,
+            changedBy,
+            deletedReservation,
+          );
+        }
+      } catch (error) {
+        console.warn('Failed to create history record:', error?.message ?? error);
+      }
+    }
+
+    return { deletedCount: ids.length, ids };
   }
 
   async restoreReservation(id: number, changedBy?: number) {
