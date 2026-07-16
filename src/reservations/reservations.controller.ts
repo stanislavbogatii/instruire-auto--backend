@@ -101,7 +101,14 @@ export class ReservationsController {
       throw new ForbiddenException("Only admins, managers, and instructors can create reservations for other users");
     }
     
-    const reservations = await this.reservationsService.createReservationsForUser(dto.userId, dto, session.id);
+    const canOverrideInstructorBlackout =
+      session.role === Role.ADMIN || session.role === Role.MANAGER;
+    const reservations = await this.reservationsService.createReservationsForUser(
+      dto.userId,
+      dto,
+      session.id,
+      canOverrideInstructorBlackout,
+    );
     if (reservations && reservations.length > 0)
         this.wsService.emitReservationsCreated(reservations, session);
     return reservations;
@@ -177,7 +184,14 @@ export class ReservationsController {
       throw new ForbiddenException('Only admins, managers, and instructors can create reservations for other users');
     }
 
-    const reservations = await this.reservationsService.assignReservationsForUser(dto.userId, dto, session.id);
+    const canOverrideInstructorBlackout =
+      session.role === Role.ADMIN || session.role === Role.MANAGER;
+    const reservations = await this.reservationsService.assignReservationsForUser(
+      dto.userId,
+      dto,
+      session.id,
+      canOverrideInstructorBlackout,
+    );
     if (reservations && reservations.length > 0) this.wsService.emitReservationsCreated(reservations, session);
     return reservations;
   }

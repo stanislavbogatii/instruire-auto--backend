@@ -250,11 +250,22 @@ export class InstructorsService {
           `Instructor with ID ${instructorId} not found`,
         );
       }
-      await this.prisma.instructorBlackout.create({
-        data: {
-          instructorId,
-          dateTime: new Date(dateTime),
+      const resolvedDateTime = new Date(dateTime);
+      // Idempotent: Ctrl+Q / double-submit must not fail when the slot is
+      // already blocked (unique on instructorId+dateTime).
+      await this.prisma.instructorBlackout.upsert({
+        where: {
+          instructorId_dateTime: {
+            instructorId,
+            dateTime: resolvedDateTime,
+          },
         },
+        create: {
+          instructorId,
+          dateTime: resolvedDateTime,
+          type: 'SINGLE',
+        },
+        update: {},
       });
     }
   }

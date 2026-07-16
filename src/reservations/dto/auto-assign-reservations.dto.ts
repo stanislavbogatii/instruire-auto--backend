@@ -2,6 +2,7 @@ import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
 import {
   ArrayMinSize,
   IsArray,
+  IsBoolean,
   IsDateString,
   IsEnum,
   IsNotEmpty,
@@ -65,4 +66,13 @@ export class AutoAssignReservationsDto {
   @IsString()
   @IsOptional()
   color?: string;
+
+  @ApiPropertyOptional({
+    example: true,
+    description:
+      'Mark reservation as important. Defaults to true for student self-booking.',
+  })
+  @IsBoolean()
+  @IsOptional()
+  isImportant?: boolean;
 }

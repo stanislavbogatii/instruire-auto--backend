@@ -54,7 +54,12 @@ export class ReservationsService {
     '19:30',
   ];
 
-  async createReservationsForUser(userId: number, dto: CreateReservationsDto, createdBy?: number) {
+  async createReservationsForUser(
+    userId: number,
+    dto: CreateReservationsDto,
+    createdBy?: number,
+    ignoreInstructorBlackouts = false,
+  ) {
     const targetUser = await this.prisma.user.findUnique({
       where: { id: userId },
     });
@@ -63,10 +68,20 @@ export class ReservationsService {
       throw new NotFoundException(`User with ID ${userId} not found`);
     }
 
-    return this.createReservations(userId, dto, createdBy);
+    return this.createReservations(
+      userId,
+      dto,
+      createdBy,
+      ignoreInstructorBlackouts,
+    );
   }
 
-  async assignReservationsForUser(userId: number, dto: AutoAssignReservationsDto, createdBy?: number) {
+  async assignReservationsForUser(
+    userId: number,
+    dto: AutoAssignReservationsDto,
+    createdBy?: number,
+    ignoreInstructorBlackouts = false,
+  ) {
     const targetUser = await this.prisma.user.findUnique({
       where: { id: userId },
     });
@@ -75,10 +90,15 @@ export class ReservationsService {
       throw new NotFoundException(`User with ID ${userId} not found`);
     }
 
-    return this.assignReservations(userId, dto, createdBy);
+    return this.assignReservations(userId, dto, createdBy, ignoreInstructorBlackouts);
   }
 
-  async createReservations(userId: number, dto: CreateReservationsDto, createdBy?: number): Promise<Reservation[]> {
+  async createReservations(
+    userId: number,
+    dto: CreateReservationsDto,
+    createdBy?: number,
+    ignoreInstructorBlackouts = false,
+  ): Promise<Reservation[]> {
     let created: Array<Reservation> = [];
     const instructorId = dto.instructorId;
     const instructorsGroupId = dto.instructorsGroupId;
@@ -143,6 +163,7 @@ export class ReservationsService {
             tx,
             groupInstructors.map(instructor => instructor.id),
             requestedStartTimes,
+            ignoreInstructorBlackouts,
           );
           const plannedSlots = new Set<string>();
           const plannedReservations: PendingReservationCreate[] = [];
@@ -263,6 +284,7 @@ export class ReservationsService {
           tx,
           instructors.map(instructor => instructor.id),
           requestedStartTimes,
+          ignoreInstructorBlackouts,
         );
         const plannedSlots = new Set<string>();
         const plannedReservations: PendingReservationCreate[] = [];
@@ -392,7 +414,12 @@ export class ReservationsService {
           ? [instructorId, botanicaInstructor.id]
           : [instructorId];
 
-        const occupiedSlots = await this.buildOccupiedSlots(tx, relevantInstructorIds, startTimes);
+        const occupiedSlots = await this.buildOccupiedSlots(
+          tx,
+          relevantInstructorIds,
+          startTimes,
+          ignoreInstructorBlackouts,
+        );
         const plannedSlots = new Set<string>();
         const plannedReservations: PendingReservationCreate[] = [];
 
@@ -480,7 +507,71 @@ export class ReservationsService {
   }
 
   private buildReservationSlotKey(instructorId: number, startTime: Date): string {
-    return `${instructorId}:${startTime.toISOString()}`;
+    // Normalize to minute precision so blackout/reservation ISO variants still collide.
+    const iso = startTime.toISOString();
+    const normalized = `${iso.slice(0, 16)}:00.000Z`;
+    return `${instructorId}:${normalized}`;
+  }
+
+  private normalizeSlotInstants(startTimes: Date[]): Date[] {
+    return startTimes.map((value) => {
+      const d = new Date(value);
+      d.setUTCSeconds(0, 0);
+      return d;
+    });
+  }
+
+  /**
+   * Admin/Manager booking on a blocked slot: remove the blackout first,
+   * then create the reservation in the freed slot.
+   */
+  private async clearSingleBlackoutsForSlots(
+    tx: Prisma.TransactionClient,
+    instructorIds: number[],
+    startTimes: Date[],
+  ): Promise<number> {
+    if (instructorIds.length === 0 || startTimes.length === 0) return 0;
+
+    const timesMs = startTimes
+      .map((value) => new Date(value).getTime())
+      .filter((ms) => Number.isFinite(ms));
+    if (!timesMs.length) return 0;
+
+    const minMs = Math.min(...timesMs) - 24 * 60 * 60 * 1000;
+    const maxMs = Math.max(...timesMs) + 24 * 60 * 60 * 1000;
+
+    const wantedKeys = new Set<string>();
+    for (const instructorId of instructorIds) {
+      for (const startTime of startTimes) {
+        wantedKeys.add(this.buildReservationSlotKey(instructorId, startTime));
+      }
+    }
+
+    const candidates = await tx.instructorBlackout.findMany({
+      where: {
+        instructorId: { in: instructorIds },
+        dateTime: {
+          gte: new Date(minMs),
+          lte: new Date(maxMs),
+        },
+      },
+      select: { id: true, instructorId: true, dateTime: true },
+    });
+
+    const idsToDelete = candidates
+      .filter((row) =>
+        wantedKeys.has(
+          this.buildReservationSlotKey(row.instructorId, row.dateTime),
+        ),
+      )
+      .map((row) => row.id);
+
+    if (!idsToDelete.length) return 0;
+
+    const result = await tx.instructorBlackout.deleteMany({
+      where: { id: { in: idsToDelete } },
+    });
+    return result.count;
   }
 
   /**
@@ -491,8 +582,15 @@ export class ReservationsService {
     tx: Prisma.TransactionClient,
     instructorIds: number[],
     startTimes: Date[],
+    ignoreInstructorBlackouts = false,
   ): Promise<Set<string>> {
     if (instructorIds.length === 0 || startTimes.length === 0) return new Set();
+
+    if (ignoreInstructorBlackouts) {
+      await this.clearSingleBlackoutsForSlots(tx, instructorIds, startTimes);
+    }
+
+    const normalizedStartTimes = this.normalizeSlotInstants(startTimes);
 
     const [existingReservations, blackouts] = await Promise.all([
       tx.reservation.findMany({
@@ -503,13 +601,18 @@ export class ReservationsService {
         },
         select: { instructorId: true, startTime: true },
       }),
-      tx.instructorBlackout.findMany({
-        where: {
-          instructorId: { in: instructorIds },
-          dateTime: { in: startTimes },
-        },
-        select: { instructorId: true, dateTime: true },
-      }),
+      ignoreInstructorBlackouts
+        ? Promise.resolve([])
+        : tx.instructorBlackout.findMany({
+            where: {
+              instructorId: { in: instructorIds },
+              OR: [
+                { dateTime: { in: startTimes } },
+                { dateTime: { in: normalizedStartTimes } },
+              ],
+            },
+            select: { instructorId: true, dateTime: true },
+          }),
     ]);
 
     const occupiedSlots = new Set<string>();
@@ -892,6 +995,7 @@ export class ReservationsService {
     userId: number,
     dto: AutoAssignReservationsDto,
     createdBy?: number,
+    ignoreInstructorBlackouts = false,
   ): Promise<Reservation[]> {
     const { sector, gearbox, instructorMode } = dto;
     const startTimeDates = (dto.startTimes || []).map(startTime => new Date(startTime));
@@ -931,7 +1035,12 @@ export class ReservationsService {
       const allInstructorIds = [
         ...new Set([...poligonInstructors.map(i => i.id), ...sectorInstructors.map(i => i.id)]),
       ];
-      const occupiedSlots = await this.buildOccupiedSlots(tx, allInstructorIds, startTimeDates);
+      const occupiedSlots = await this.buildOccupiedSlots(
+        tx,
+        allInstructorIds,
+        startTimeDates,
+        ignoreInstructorBlackouts,
+      );
       const plannedSlots = new Set<string>();
       const plannedReservations: PendingReservationCreate[] = [];
       const reservationErrors: ReservationConflict[] = [];
@@ -1057,7 +1166,8 @@ export class ReservationsService {
               color: plannedReservation.item.color || '',
               instructorsGroupId: null,
               isFavorite: false,
-              isImportant: false,
+              // Student self-booking (auto-assign): important by default.
+              isImportant: dto.isImportant ?? true,
             },
             include: this.getReservationCreateInclude(),
           }),
