@@ -22,6 +22,8 @@ import {
 } from './dto/exam.dto';
 import { TicketsService } from './tickets.service';
 import { Cron, CronExpression } from '@nestjs/schedule';
+import { NotificationsService } from '../notifications/notifications.service';
+import { NotificationType } from '@prisma/client';
 
 enum ExamStatus {
   IN_PROGRESS = 'IN_PROGRESS',
@@ -39,6 +41,7 @@ export class ExamsService {
     private pdfService: PdfService,
     private imageService: ImageService,
     private userContextService: UserContextService,
+    private notificationsService: NotificationsService,
   ) {}
 
   async createStudentPermission(
@@ -517,17 +520,37 @@ export class ExamsService {
     //   }
     // }
 
+    await this.notificationsService.create(
+      updatedExam.userId,
+      NotificationType.EXAM_RESULT,
+      status === ExamStatus.COMPLETED ? 'Examen promovat' : 'Examen nepromovat',
+      status === ExamStatus.COMPLETED
+        ? `Ai promovat examenul cu ${correctAnswers}/${exam.totalQuestions} răspunsuri corecte.`
+        : `Nu ai promovat examenul (${correctAnswers}/${exam.totalQuestions} răspunsuri corecte).`,
+      { examId, status, score: correctAnswers },
+    );
+
     return updatedExam;
   }
 
   async expireExam(examId: number) {
-    return this.prisma.exam.update({
+    const updatedExam = await this.prisma.exam.update({
       where: { id: examId },
       data: {
         status: ExamStatus.EXPIRED,
         completedAt: new Date(),
       },
     });
+
+    await this.notificationsService.create(
+      updatedExam.userId,
+      NotificationType.EXAM_RESULT,
+      'Examen expirat',
+      'Timpul alocat examenului a expirat înainte de finalizare.',
+      { examId, status: ExamStatus.EXPIRED },
+    );
+
+    return updatedExam;
   }
 
   async markExamAsFailed(examId: number, userId?: number, reason?: string) {
@@ -586,6 +609,14 @@ export class ExamsService {
     //     console.error('Failed to send fallback email:', fallbackError);
     //   }
     // }
+
+    await this.notificationsService.create(
+      updatedExam.userId,
+      NotificationType.EXAM_RESULT,
+      'Examen nepromovat',
+      `Examenul a fost marcat ca nepromovat (${correctAnswers}/${exam.totalQuestions} răspunsuri corecte).`,
+      { examId, status: ExamStatus.FAILED, score: correctAnswers },
+    );
 
     return updatedExam;
   }

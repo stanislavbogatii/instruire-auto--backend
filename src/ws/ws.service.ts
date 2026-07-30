@@ -28,6 +28,10 @@ export class WsService {
     });
   }
 
+  emitNotification(userId: number, notification: unknown) {
+    this.gateway.server.to(`user:${userId}`).emit('notification:new', notification);
+  }
+
   private mapUser(user: User) {
     return {
       id: user.id,

@@ -14,6 +14,7 @@ import { WsJwtGuard } from './ws-jwt.guard';
 import { ReservationLockStore } from './reservation-lock.store';
 import { UseGuards } from '@nestjs/common';
 import { CreateReservationsDto } from '../reservations/dto/create-reservations.dto';
+import { PrismaService } from '../prisma/prisma.service';
 
 interface AuthenticatedSocket extends Socket {
   user?: {
@@ -31,6 +32,29 @@ interface AuthenticatedSocket extends Socket {
 export class WsGateway implements OnGatewayConnection, OnGatewayDisconnect {
   @WebSocketServer()
   server: Server;
+
+  constructor(private readonly prisma: PrismaService) {}
+
+  // Client emits this right after connecting (JWT payload only has sub/email,
+  // no role, so we resolve the real user + role from the DB) to join its
+  // personal room for targeted delivery (notifications, chat) instead of the
+  // global broadcasts used elsewhere in this gateway.
+  @SubscribeMessage('register')
+  async handleRegister(@ConnectedSocket() client: AuthenticatedSocket) {
+    const sub = client.user?.sub;
+    if (!sub) return;
+
+    const user = await this.prisma.user.findUnique({
+      where: { id: sub },
+      select: { id: true, role: true },
+    });
+    if (!user) return;
+
+    client.join(`user:${user.id}`);
+    if (user.role === 'ADMIN' || user.role === 'MANAGER') {
+      client.join('role:staff');
+    }
+  }
 
   handleConnection(client: AuthenticatedSocket) {
     console.log(

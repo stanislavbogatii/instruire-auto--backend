@@ -43,6 +43,7 @@ model User {
   practicalExamSlotReservations PracticalExamSlotReservation[]
   instructorRatings             InstructorRating[]
   lessonVideoSends               LessonVideoSend[]
+  notifications                  Notification[]
   group               Group?                  @relation(fields: [groupId], references: [id])
 
   @@index([groupId], map: "User_groupId_fkey")
@@ -541,4 +542,27 @@ model LessonVideoSend {
   @@index([userId])
   @@index([instructorId])
   @@index([videoId])
+}
+
+model Notification {
+  id        Int              @id @default(autoincrement())
+  userId    Int
+  type      NotificationType
+  title     String
+  body      String           @db.Text
+  data      String?          @db.Text
+  isRead    Boolean          @default(false)
+  readAt    DateTime?
+  createdAt DateTime         @default(now())
+  user      User             @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId, isRead])
+}
+
+enum NotificationType {
+  LESSON_VIDEO
+  LESSON_REMINDER
+  EXAM_RESULT
+  EXAM_DOCUMENT
+  GENERAL
 }

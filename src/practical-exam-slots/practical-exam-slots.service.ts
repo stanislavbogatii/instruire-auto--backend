@@ -15,7 +15,8 @@ import {
 } from './dto/update-reservation-status.dto';
 import { ListReservationsDto } from './dto/list-reservations.dto';
 import { BookForStudentDto } from './dto/book-for-student.dto';
-import { User } from '@prisma/client';
+import { User, NotificationType } from '@prisma/client';
+import { NotificationsService } from '../notifications/notifications.service';
 
 /** Final statuses — no more changes possible after these */
 const FINAL_STATUSES: PracticalExamReservationStatus[] = [
@@ -43,7 +44,10 @@ const SLOT_INCLUDE = {
 
 @Injectable()
 export class PracticalExamSlotsService {
-  constructor(private prisma: PrismaService) {}
+  constructor(
+    private prisma: PrismaService,
+    private notificationsService: NotificationsService,
+  ) {}
 
   // ─── Slot CRUD ─────────────────────────────────────────────────────────
 
@@ -338,7 +342,7 @@ export class PracticalExamSlotsService {
       }
     }
 
-    return this.prisma.practicalExamSlotReservation.update({
+    const updated = await this.prisma.practicalExamSlotReservation.update({
       where: { id: reservationId },
       data: { status: dto.status },
       include: {
@@ -346,6 +350,33 @@ export class PracticalExamSlotsService {
         user: { select: RESERVATION_USER_SELECT },
       },
     });
+
+    const RESULT_STATUS_MESSAGES: Partial<Record<PracticalExamReservationStatus, { title: string; body: string }>> = {
+      [PracticalExamReservationStatus.PASSED]: {
+        title: 'Examen practic promovat',
+        body: 'Felicitări! Ai promovat examenul practic.',
+      },
+      [PracticalExamReservationStatus.FAILED]: {
+        title: 'Examen practic nepromovat',
+        body: 'Nu ai promovat examenul practic.',
+      },
+      [PracticalExamReservationStatus.ABSENT]: {
+        title: 'Absență la examenul practic',
+        body: 'Ai fost marcat absent la examenul practic programat.',
+      },
+    };
+    const message = RESULT_STATUS_MESSAGES[dto.status];
+    if (message) {
+      await this.notificationsService.create(
+        updated.userId,
+        NotificationType.EXAM_RESULT,
+        message.title,
+        message.body,
+        { reservationId, status: dto.status },
+      );
+    }
+
+    return updated;
   }
 
   // ─── List reservations for a slot ordered by positionInCar ────────────

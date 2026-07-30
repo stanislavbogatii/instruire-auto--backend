@@ -8,10 +8,15 @@ import { PrismaService } from '../prisma/prisma.service';
 import { CreateRecommendedVideoDto } from './dto/create-recommended-video.dto';
 import { UpdateRecommendedVideoDto } from './dto/update-recommended-video.dto';
 import { SendLessonVideoDto } from './dto/send-lesson-video.dto';
+import { NotificationsService } from '../notifications/notifications.service';
+import { NotificationType } from '@prisma/client';
 
 @Injectable()
 export class RecommendedVideosService {
-  constructor(private prisma: PrismaService) {}
+  constructor(
+    private prisma: PrismaService,
+    private notificationsService: NotificationsService,
+  ) {}
 
   async create(dto: CreateRecommendedVideoDto) {
     return this.prisma.recommendedVideo.create({ data: dto });
@@ -132,7 +137,7 @@ export class RecommendedVideosService {
       throw new ConflictException('Un videoclip a fost deja trimis pentru această lecție');
     }
 
-    return this.prisma.lessonVideoSend.create({
+    const send = await this.prisma.lessonVideoSend.create({
       data: {
         reservationId,
         userId: reservation.userId,
@@ -144,5 +149,15 @@ export class RecommendedVideosService {
         user: { select: { id: true, firstName: true, lastName: true } },
       },
     });
+
+    await this.notificationsService.create(
+      reservation.userId,
+      NotificationType.LESSON_VIDEO,
+      'Videoclip recomandat',
+      `Instructorul tău ți-a recomandat un videoclip: ${video.title}`,
+      { reservationId, videoId, youtubeUrl: video.youtubeUrl },
+    );
+
+    return send;
   }
 }

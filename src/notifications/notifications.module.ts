@@ -4,12 +4,14 @@ import { NotificationsController } from './notifications.controller';
 import { PrismaModule } from '../prisma/prisma.module';
 import { MailModule } from '../mail/mail.module';
 import { ScheduleModule } from '@nestjs/schedule';
+import { WsModule } from '../ws/ws.module';
 
 @Module({
   imports: [
     PrismaModule,
     MailModule,
-    ScheduleModule.forRoot()
+    ScheduleModule.forRoot(),
+    WsModule,
   ],
   controllers: [NotificationsController],
   providers: [NotificationsService],
