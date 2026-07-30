@@ -32,6 +32,14 @@ export class WsService {
     this.gateway.server.to(`user:${userId}`).emit('notification:new', notification);
   }
 
+  emitChatMessageToStudent(studentId: number, message: unknown) {
+    this.gateway.server.to(`user:${studentId}`).emit('chat:message', message);
+  }
+
+  emitChatMessageToStaff(message: unknown) {
+    this.gateway.server.to('role:staff').emit('chat:message', message);
+  }
+
   private mapUser(user: User) {
     return {
       id: user.id,

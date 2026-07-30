@@ -28,6 +28,7 @@ import { PracticalExamSlotsModule } from './practical-exam-slots/practical-exam-
 import { InstructorSubstitutionsModule } from './instructor-substitutions/instructor-substitutions.module';
 import { InstructorRatingsModule } from './instructor-ratings/instructor-ratings.module';
 import { RecommendedVideosModule } from './recommended-videos/recommended-videos.module';
+import { ChatModule } from './chat/chat.module';
 
 @Module({
   imports: [
@@ -48,6 +49,7 @@ import { RecommendedVideosModule } from './recommended-videos/recommended-videos
     InstructorSubstitutionsModule,
     InstructorRatingsModule,
     RecommendedVideosModule,
+    ChatModule,
     ScheduleModule.forRoot(),
     ConfigModule.forRoot({
       isGlobal: true,
