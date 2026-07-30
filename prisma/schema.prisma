@@ -42,6 +42,7 @@ model User {
   studentTickets      StudentTicket[]
   practicalExamSlotReservations PracticalExamSlotReservation[]
   instructorRatings             InstructorRating[]
+  lessonVideoSends               LessonVideoSend[]
   group               Group?                  @relation(fields: [groupId], references: [id])
 
   @@index([groupId], map: "User_groupId_fkey")
@@ -88,6 +89,7 @@ model Reservation {
   user               User                 @relation(fields: [userId], references: [id])
   history            ReservationHistory[]
   rating             InstructorRating?
+  videoSend          LessonVideoSend?
 
   @@index([instructorId], map: "Reservation_instructorId_fkey")
   @@index([userId], map: "Reservation_userId_fkey")
@@ -182,6 +184,7 @@ model Instructor {
   substitutionsAsBase       InstructorSubstitution[] @relation("BaseInstructor")
   substitutionsAsSubstitute InstructorSubstitution[] @relation("SubstituteInstructor")
   ratings                   InstructorRating[]
+  videoSends                LessonVideoSend[]
 
   @@index([instructorsGroupId])
   @@index([userId], map: "Instructor_userId_fkey")
@@ -512,4 +515,30 @@ model InstructorRating {
   @@index([instructorId])
   @@index([userId])
   @@index([createdAt])
+}
+
+model RecommendedVideo {
+  id         Int      @id @default(autoincrement())
+  title      String
+  youtubeUrl String
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
+  sends      LessonVideoSend[]
+}
+
+model LessonVideoSend {
+  id            Int              @id @default(autoincrement())
+  reservationId Int              @unique
+  userId        Int
+  instructorId  Int
+  videoId       Int
+  createdAt     DateTime         @default(now())
+  reservation   Reservation      @relation(fields: [reservationId], references: [id], onDelete: Cascade)
+  user          User             @relation(fields: [userId], references: [id], onDelete: Cascade)
+  instructor    Instructor       @relation(fields: [instructorId], references: [id], onDelete: Cascade)
+  video         RecommendedVideo @relation(fields: [videoId], references: [id], onDelete: Restrict)
+
+  @@index([userId])
+  @@index([instructorId])
+  @@index([videoId])
 }
