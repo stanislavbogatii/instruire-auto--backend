@@ -14,4 +14,9 @@ export class UpdateGroupDto extends PartialType(CreateGroupDto) {
   @IsOptional()
   @MaxLength(20)
   token?: string;
+
+  @ApiPropertyOptional({ description: 'New sector for the group', example: 'Botanica' })
+  @IsOptional()
+  @MaxLength(100)
+  sector?: string;
 }

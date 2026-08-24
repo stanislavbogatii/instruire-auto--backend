@@ -18,6 +18,7 @@ import { UpdateReservationStatusDto } from './dto/update-reservation-status.dto'
 import { ListReservationsDto } from './dto/list-reservations.dto';
 import { BookForStudentDto } from './dto/book-for-student.dto';
 import { BookSlotDto } from './dto/book-slot.dto';
+import { UpdatePracticalExamReservationDto } from './dto/update-practical-exam-reservation.dto';
 import {
   ApiTags,
   ApiOperation,
@@ -167,7 +168,12 @@ export class PracticalExamSlotsController {
     @Body() dto: BookSlotDto,
     @Session() session: User,
   ) {
-    return this.service.bookSlot(session, slotId, dto.color);
+    return this.service.bookSlot(
+      session,
+      slotId,
+      dto.color,
+      dto.privateMessage,
+    );
   }
 
   @Post(':id/book-for-student')
@@ -184,7 +190,12 @@ export class PracticalExamSlotsController {
     @Param('id', ParseIntPipe) slotId: number,
     @Body() dto: BookForStudentDto,
   ) {
-    return this.service.bookSlotForStudent(slotId, dto.studentId, dto.color);
+    return this.service.bookSlotForStudent(
+      slotId,
+      dto.studentId,
+      dto.color,
+      dto.privateMessage,
+    );
   }
 
   @Delete('reservations/:reservationId')
@@ -199,6 +210,25 @@ export class PracticalExamSlotsController {
     @Param('reservationId', ParseIntPipe) reservationId: number,
   ) {
     return this.service.deleteReservation(reservationId);
+  }
+
+  @Patch('reservations/:reservationId')
+  @UseGuards(RolesGuard)
+  @Roles(Role.ADMIN, Role.MANAGER, Role.INSTRUCTOR)
+  @ApiOperation({
+    summary:
+      'Editează statusul, culoarea sau nota rezervării (Admin/Manager/Instructor EXAMEN asignat)',
+  })
+  @ApiParam({ name: 'reservationId', type: Number })
+  @ApiResponse({ status: 200, description: 'Reservation updated.' })
+  @ApiResponse({ status: 403, description: 'Forbidden.' })
+  @ApiResponse({ status: 404, description: 'Reservation not found.' })
+  updateReservation(
+    @Param('reservationId', ParseIntPipe) reservationId: number,
+    @Body() dto: UpdatePracticalExamReservationDto,
+    @Session() session: User,
+  ) {
+    return this.service.updateReservation(session, reservationId, dto);
   }
 
   @Patch('reservations/:reservationId/status')

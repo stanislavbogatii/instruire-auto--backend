@@ -1,6 +1,7 @@
 import {
   BadRequestException,
   ConflictException,
+  ForbiddenException,
   Injectable,
   NotFoundException,
 } from '@nestjs/common';
@@ -8,6 +9,7 @@ import { PrismaService } from 'src/prisma/prisma.service';
 import { CreateInstructorSubstitutionDto } from './dto/create-instructor-substitution.dto';
 import { UpdateInstructorSubstitutionDto } from './dto/update-instructor-substitution.dto';
 import { ListInstructorSubstitutionsDto } from './dto/list-instructor-substitutions.dto';
+import { User, Role } from '@prisma/client';
 
 const INSTRUCTOR_SELECT = {
   id: true,
@@ -74,7 +76,7 @@ export class InstructorSubstitutionsService {
   // ─── CRUD ────────────────────────────────────────────────────────────────
 
   async create(dto: CreateInstructorSubstitutionDto) {
-    const { baseInstructorId, substituteInstructorId, date } = dto;
+    const { baseInstructorId, substituteInstructorId, date, color, privateMessage } = dto;
 
     // Validate both instructors exist
     const [base, substitute] = await Promise.all([
@@ -119,6 +121,8 @@ export class InstructorSubstitutionsService {
         substituteInstructorId,
         date: normalizedDate,
         isActive: true,
+        ...(color !== undefined ? { color } : {}),
+        ...(privateMessage !== undefined ? { privateMessage } : {}),
       },
       include: {
         baseInstructor: { select: INSTRUCTOR_SELECT },
@@ -173,10 +177,45 @@ export class InstructorSubstitutionsService {
     return sub;
   }
 
-  async update(id: number, dto: UpdateInstructorSubstitutionDto) {
+  async update(id: number, dto: UpdateInstructorSubstitutionDto, user: User) {
     const current = await this.findOne(id);
 
-    // If changing the substitute, validate SCHIMB type
+    // Check permissions based on role
+    const isAdminOrManager = user.role === Role.ADMIN || user.role === Role.MANAGER;
+    const isInstructor = user.role === Role.INSTRUCTOR;
+
+    if (isInstructor) {
+      // Instructor (EXAMEN type) can only modify status, color, and privateMessage
+      // Only for substitutions where they are the substitute instructor
+      const instructorProfile = await this.prisma.instructor.findFirst({
+        where: { user: { id: user.id } },
+      });
+
+      if (!instructorProfile) {
+        throw new ForbiddenException('Utilizatorul nu este un instructor');
+      }
+
+      if (current.substituteInstructorId !== instructorProfile.id) {
+        throw new ForbiddenException(
+          'Puteți edita doar înlocuirile în care sunteți instructorul de schimb',
+        );
+      }
+
+      // Restrict changes to only status, color, and privateMessage
+      if (
+        dto.substituteInstructorId !== undefined ||
+        dto.date !== undefined ||
+        dto.isActive !== undefined
+      ) {
+        throw new ForbiddenException(
+          'Ca instructor, puteți modifica doar status, culoare și notă',
+        );
+      }
+    } else if (!isAdminOrManager) {
+      throw new ForbiddenException('Nu aveți permisiunea să editați înlocuiri');
+    }
+
+    // If changing the substitute (Admin/Manager only), validate SCHIMB type
     if (dto.substituteInstructorId !== undefined) {
       const substitute = await this.prisma.instructor.findUnique({
         where: { id: dto.substituteInstructorId },
@@ -210,6 +249,9 @@ export class InstructorSubstitutionsService {
         ...(dto.substituteInstructorId !== undefined ? { substituteInstructorId: dto.substituteInstructorId } : {}),
         ...(dto.date !== undefined ? { date: this.toUTCDate(dto.date) } : {}),
         ...(dto.isActive !== undefined ? { isActive: dto.isActive } : {}),
+        ...(dto.status !== undefined ? { status: dto.status } : {}),
+        ...(dto.color !== undefined ? { color: dto.color } : {}),
+        ...(dto.privateMessage !== undefined ? { privateMessage: dto.privateMessage } : {}),
       },
       include: {
         baseInstructor: { select: INSTRUCTOR_SELECT },
@@ -269,18 +311,31 @@ export class InstructorSubstitutionsService {
     return reservations.map((r) => {
       const rDate = new Date(r.startTime);
       rDate.setUTCHours(0, 0, 0, 0);
+      const dateKey = rDate.toISOString().slice(0, 10);
 
-      const sub = substitutions.find(
+      const subOnBase = substitutions.find(
         (s) =>
           s.baseInstructorId === r.instructorId &&
-          new Date(s.date).toISOString().slice(0, 10) === rDate.toISOString().slice(0, 10),
+          new Date(s.date).toISOString().slice(0, 10) === dateKey,
       );
+
+      const subOnSubstitute = substitutions.find(
+        (s) =>
+          s.substituteInstructorId === r.instructorId &&
+          new Date(s.date).toISOString().slice(0, 10) === dateKey,
+      );
+
+      const sub = subOnBase || subOnSubstitute;
 
       return {
         ...r,
         effectiveInstructor: sub ? sub.substituteInstructor : r.instructor ?? null,
         substitution: sub
-          ? { id: sub.id, substituteInstructorId: sub.substituteInstructorId }
+          ? {
+              id: sub.id,
+              baseInstructorId: sub.baseInstructorId,
+              substituteInstructorId: sub.substituteInstructorId,
+            }
           : null,
       };
     });

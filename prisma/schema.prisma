@@ -23,6 +23,7 @@ model User {
   groupId             Int?
   desiredInstructorId Int?
   professorGroups     Group[]                 @relation("ProfessorGroups")
+  managerGroups       ManagerGroup[]          @relation("ManagerGroups")
   createdAt           DateTime                @default(now())
   updatedAt           DateTime                @updatedAt
   firstName           String?                 @default("")
@@ -59,13 +60,29 @@ model Group {
   token        String      @unique
   instructorId Int?
   professorId   Int?
+  sector       String?
   createdAt    DateTime    @default(now())
   updatedAt    DateTime    @updatedAt
   instructor   Instructor? @relation(fields: [instructorId], references: [id])
   professor    User?        @relation("ProfessorGroups", fields: [professorId], references: [id])
   users        User[]
+  managerAssignments ManagerGroup[] @relation("GroupManagers")
 
   @@index([instructorId], map: "Group_instructorId_fkey")
+}
+
+model ManagerGroup {
+  id        Int      @id @default(autoincrement())
+  managerId Int
+  groupId   Int
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  manager   User     @relation("ManagerGroups", fields: [managerId], references: [id], onDelete: Cascade)
+  group     Group    @relation("GroupManagers", fields: [groupId], references: [id], onDelete: Cascade)
+
+  @@unique([managerId, groupId])
+  @@index([managerId])
+  @@index([groupId])
 }
 
 model Reservation {
@@ -441,6 +458,9 @@ model InstructorSubstitution {
   substituteInstructorId Int
   date                   DateTime
   isActive               Boolean    @default(true)
+  status                 String?    @default("SCHEDULED")  // SCHEDULED, CONFIRMED, COMPLETED, CANCELLED
+  color                  String?    @default("")           // UI персонализация
+  privateMessage         String?    @default("")           // Заметки об подмене
   createdAt              DateTime   @default(now())
   updatedAt              DateTime   @updatedAt
   baseInstructor         Instructor @relation("BaseInstructor", fields: [baseInstructorId], references: [id], onDelete: Cascade)
@@ -490,6 +510,7 @@ model PracticalExamSlotReservation {
   userId        Int
   positionInCar Int
   color         String                         @default("")
+  privateMessage String                        @default("")
   status        PracticalExamReservationStatus @default(SCHEDULED)
   createdAt     DateTime                       @default(now())
   updatedAt     DateTime                       @updatedAt

@@ -3,6 +3,7 @@ import { PrismaService } from '../prisma/prisma.service';
 import { CreateGroupDto } from './dto/create-group.dto';
 import { UpdateGroupDto } from './dto/update-group.dto';
 import { nanoid } from 'nanoid';
+import { Role } from '@prisma/client';
 
 @Injectable()
 export class GroupsService {
@@ -17,7 +18,12 @@ export class GroupsService {
 
     try {
       const group = await this.prisma.group.create({
-        data: { name: dto.name, token, professorId: dto.professorId },
+        data: {
+          name: dto.name,
+          token,
+          professorId: dto.professorId,
+          ...(dto.sector !== undefined ? { sector: dto.sector } : {}),
+        },
       });
       return group;
     } catch (e: any) {
@@ -31,13 +37,23 @@ export class GroupsService {
   /** List all groups */
   findAll() {
     return this.prisma.group.findMany({
-      include: {
+      select: {
+        id: true,
+        name: true,
+        token: true,
+        instructorId: true,
+        professorId: true,
+        sector: true,
+        createdAt: true,
+        updatedAt: true,
         instructor: {
           select: {
-            sector: true
-          }
-        }
-      }
+            id: true,
+            sector: true,
+          },
+        },
+      },
+      orderBy: { createdAt: 'desc' },
     });
   }
 
@@ -45,13 +61,22 @@ export class GroupsService {
   async findOne(id: number) {
     const group = await this.prisma.group.findUnique({ 
       where: { id },
-      include: {
+      select: {
+        id: true,
+        name: true,
+        token: true,
+        instructorId: true,
+        professorId: true,
+        sector: true,
+        createdAt: true,
+        updatedAt: true,
         instructor: {
           select: {
-            sector: true
-          }
-        }
-      }
+            id: true,
+            sector: true,
+          },
+        },
+      },
     });
     if (!group) throw new NotFoundException(`Group ${id} not found`);
     return group;
@@ -83,8 +108,9 @@ export class GroupsService {
 
     // Prepare update data
     const updateData: any = {
-      name: dto.name,
-      professorId: dto.professorId,
+      ...(dto.name !== undefined ? { name: dto.name } : {}),
+      ...(dto.professorId !== undefined ? { professorId: dto.professorId } : {}),
+      ...(dto.sector !== undefined ? { sector: dto.sector } : {}),
     };
 
     // If token is provided, validate it's unique
@@ -111,6 +137,99 @@ export class GroupsService {
   async remove(id: number) {
     await this.findOne(id);
     return this.prisma.group.delete({ where: { id } });
+  }
+
+  async assignGroupsToManager(managerId: number, groupIds: number[]) {
+    if (!groupIds || groupIds.length === 0) {
+      throw new BadRequestException('At least one group id is required');
+    }
+
+    const uniqueIds = [...new Set(groupIds)];
+    const manager = await this.prisma.user.findUnique({
+      where: { id: managerId },
+      select: { id: true, role: true },
+    });
+
+    if (!manager || manager.role !== Role.MANAGER) {
+      throw new BadRequestException('Only a manager can be assigned groups');
+    }
+
+    const existingGroups = await this.prisma.group.findMany({
+      where: { id: { in: uniqueIds } },
+      select: { id: true },
+    });
+
+    const existingGroupIds = new Set(existingGroups.map((g) => g.id));
+    const missingGroupIds = uniqueIds.filter((id) => !existingGroupIds.has(id));
+
+    if (missingGroupIds.length > 0) {
+      throw new NotFoundException(`Groups not found: ${missingGroupIds.join(', ')}`);
+    }
+
+    await this.prisma.$transaction(
+      uniqueIds.map((groupId) =>
+        this.prisma.managerGroup.upsert({
+          where: { managerId_groupId: { managerId, groupId } },
+          update: {},
+          create: { managerId, groupId },
+        }),
+      ),
+    );
+
+    return this.getAssignedGroupsForManager(managerId);
+  }
+
+  async getAssignedGroupsForManager(managerId: number) {
+    const manager = await this.prisma.user.findUnique({
+      where: { id: managerId },
+      select: { id: true, role: true },
+    });
+
+    if (!manager) {
+      throw new NotFoundException(`Manager ${managerId} not found`);
+    }
+
+    const assignments = await this.prisma.managerGroup.findMany({
+      where: { managerId },
+      orderBy: { group: { name: 'asc' } },
+      select: {
+        id: true,
+        group: {
+          select: {
+            id: true,
+            name: true,
+            token: true,
+            sector: true,
+            professorId: true,
+            createdAt: true,
+            updatedAt: true,
+          },
+        },
+      },
+    });
+
+    return assignments.map((assignment) => ({
+      id: assignment.id,
+      managerId,
+      group: assignment.group,
+    }));
+  }
+
+  async removeGroupFromManager(managerId: number, groupId: number) {
+    const assignment = await this.prisma.managerGroup.findUnique({
+      where: { managerId_groupId: { managerId, groupId } },
+      select: { id: true },
+    });
+
+    if (!assignment) {
+      throw new NotFoundException(`Assignment managerId=${managerId}, groupId=${groupId} not found`);
+    }
+
+    await this.prisma.managerGroup.delete({
+      where: { id: assignment.id },
+    });
+
+    return { managerId, groupId, removed: true };
   }
 
   // ================================

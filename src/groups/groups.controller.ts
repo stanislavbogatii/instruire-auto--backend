@@ -75,7 +75,42 @@ export class GroupsController {
     return this.groupsService.remove(id);
   }
 
+  @Get('manager/:managerId')
+  @ApiBearerAuth('access-token')
+  @UseGuards(AuthGuard('jwt'), RolesGuard)
+  @Roles(Role.ADMIN, Role.MANAGER)
+  @ApiOperation({ summary: 'List groups assigned to a manager' })
+  @ApiParam({ name: 'managerId', type: Number })
+  getManagerGroups(@Param('managerId', ParseIntPipe) managerId: number) {
+    return this.groupsService.getAssignedGroupsForManager(managerId);
+  }
 
+  @Post('manager/:managerId/assign')
+  @ApiBearerAuth('access-token')
+  @UseGuards(AuthGuard('jwt'), RolesGuard)
+  @Roles(Role.ADMIN)
+  @ApiOperation({ summary: 'Assign one or more groups to a manager' })
+  @ApiParam({ name: 'managerId', type: Number })
+  assignGroupsToManager(
+    @Param('managerId', ParseIntPipe) managerId: number,
+    @Body() body: { groupIds: number[] },
+  ) {
+    return this.groupsService.assignGroupsToManager(managerId, body.groupIds);
+  }
+
+  @Delete('manager/:managerId/group/:groupId')
+  @ApiBearerAuth('access-token')
+  @UseGuards(AuthGuard('jwt'), RolesGuard)
+  @Roles(Role.ADMIN)
+  @ApiOperation({ summary: 'Remove a manager assignment from a group' })
+  @ApiParam({ name: 'managerId', type: Number })
+  @ApiParam({ name: 'groupId', type: Number })
+  removeGroupFromManager(
+    @Param('managerId', ParseIntPipe) managerId: number,
+    @Param('groupId', ParseIntPipe) groupId: number,
+  ) {
+    return this.groupsService.removeGroupFromManager(managerId, groupId);
+  }
 
   // ================================
   // PROFESSOR ENDPOINTS

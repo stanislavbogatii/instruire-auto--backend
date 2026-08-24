@@ -1,4 +1,4 @@
-import { Injectable, NotFoundException } from '@nestjs/common';
+import { ForbiddenException, Injectable, NotFoundException } from '@nestjs/common';
 import { PrismaService } from '../prisma/prisma.service';
 import { WsService } from '../ws/ws.service';
 import { ChatMessage, Role, User } from '@prisma/client';
@@ -17,6 +17,15 @@ export class ChatService {
   // ─── Student (self) ────────────────────────────────────────────────────
 
   async getOrCreateConversationForStudent(studentId: number) {
+    const student = await this.prisma.user.findUnique({
+      where: { id: studentId },
+      select: { id: true, groupId: true },
+    });
+
+    if (!student || student.groupId === null) {
+      throw new ForbiddenException('Chat-ul este disponibil doar pentru studenții atașați unei grupe.');
+    }
+
     const conversation = await this.prisma.chatConversation.upsert({
       where: { studentId },
       create: { studentId },
@@ -33,6 +42,15 @@ export class ChatService {
   }
 
   async postStudentMessage(studentId: number, body: string) {
+    const student = await this.prisma.user.findUnique({
+      where: { id: studentId },
+      select: { id: true, groupId: true },
+    });
+
+    if (!student || student.groupId === null) {
+      throw new ForbiddenException('Chat-ul este disponibil doar pentru studenții atașați unei grupe.');
+    }
+
     const conversation = await this.prisma.chatConversation.upsert({
       where: { studentId },
       create: { studentId },
@@ -56,11 +74,35 @@ export class ChatService {
 
   // ─── Staff (ADMIN/MANAGER) ─────────────────────────────────────────────
 
-  async listConversationsForStaff() {
+  async listConversationsForStaff(actor: User) {
+    const baseWhere =
+      actor.role === Role.ADMIN
+        ? {}
+        : actor.role === Role.MANAGER
+          ? {
+              student: {
+                groupId: { not: null },
+                group: {
+                  managerAssignments: { some: { managerId: actor.id } },
+                },
+              },
+            }
+          : { studentId: actor.id };
+
     const conversations = await this.prisma.chatConversation.findMany({
+      where: baseWhere,
       orderBy: { updatedAt: 'desc' },
       include: {
-        student: { select: { id: true, firstName: true, lastName: true, email: true } },
+        student: {
+          select: {
+            id: true,
+            firstName: true,
+            lastName: true,
+            email: true,
+            groupId: true,
+            group: { select: { id: true, name: true, sector: true } },
+          },
+        },
         messages: {
           orderBy: { createdAt: 'desc' },
           take: 1,
@@ -71,18 +113,30 @@ export class ChatService {
 
     return conversations.map((c) => ({
       id: c.id,
-      student: c.student,
+      student: {
+        ...c.student,
+        group: c.student.group ?? null,
+      },
       createdAt: c.createdAt,
       updatedAt: c.updatedAt,
       lastMessage: c.messages[0] ? this.toStaffView(c.messages[0]) : null,
     }));
   }
 
-  async getConversationForStaff(id: number) {
+  async getConversationForStaff(id: number, actor: User) {
     const conversation = await this.prisma.chatConversation.findUnique({
       where: { id },
       include: {
-        student: { select: { id: true, firstName: true, lastName: true, email: true } },
+        student: {
+          select: {
+            id: true,
+            firstName: true,
+            lastName: true,
+            email: true,
+            groupId: true,
+            group: { select: { id: true, name: true, sector: true } },
+          },
+        },
         messages: {
           orderBy: { createdAt: 'asc' },
           include: { sender: { select: { id: true, firstName: true, lastName: true } } },
@@ -93,9 +147,24 @@ export class ChatService {
       throw new NotFoundException(`Conversația cu id=${id} nu a fost găsită`);
     }
 
+    if (actor.role === Role.MANAGER) {
+      const hasAccess = conversation.student.groupId !== null &&
+        await this.prisma.managerGroup.findFirst({
+          where: { managerId: actor.id, groupId: conversation.student.groupId },
+          select: { id: true },
+        });
+
+      if (!hasAccess) {
+        throw new ForbiddenException('Nu aveți acces la această conversație.');
+      }
+    }
+
     return {
       id: conversation.id,
-      student: conversation.student,
+      student: {
+        ...conversation.student,
+        group: conversation.student.group ?? null,
+      },
       createdAt: conversation.createdAt,
       updatedAt: conversation.updatedAt,
       messages: conversation.messages.map((m) => this.toStaffView(m)),
@@ -103,9 +172,28 @@ export class ChatService {
   }
 
   async postStaffMessage(conversationId: number, staffUser: User, body: string) {
-    const conversation = await this.prisma.chatConversation.findUnique({ where: { id: conversationId } });
+    const conversation = await this.prisma.chatConversation.findUnique({
+      where: { id: conversationId },
+      include: {
+        student: {
+          select: { id: true, groupId: true },
+        },
+      },
+    });
     if (!conversation) {
       throw new NotFoundException(`Conversația cu id=${conversationId} nu a fost găsită`);
+    }
+
+    if (staffUser.role === Role.MANAGER) {
+      const hasAccess = conversation.student.groupId !== null &&
+        await this.prisma.managerGroup.findFirst({
+          where: { managerId: staffUser.id, groupId: conversation.student.groupId },
+          select: { id: true },
+        });
+
+      if (!hasAccess) {
+        throw new ForbiddenException('Nu aveți acces să răspundeți la această conversație.');
+      }
     }
 
     const message = await this.prisma.$transaction(async (tx) => {

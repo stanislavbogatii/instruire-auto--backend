@@ -9,6 +9,7 @@ import {
   ParseIntPipe,
   UseGuards,
   Query,
+  Req,
 } from '@nestjs/common';
 import {
   ApiTags,
@@ -22,6 +23,8 @@ import { AuthGuard } from '@nestjs/passport';
 import { RolesGuard } from 'src/auth/guards/roles.guard';
 import { Roles } from 'src/auth/decorators/roles.decorator';
 import { Role } from '@prisma/client';
+import { Session } from 'src/common/session.decorator';
+import { User } from '@prisma/client';
 import { InstructorSubstitutionsService } from './instructor-substitutions.service';
 import { CreateInstructorSubstitutionDto } from './dto/create-instructor-substitution.dto';
 import { UpdateInstructorSubstitutionDto } from './dto/update-instructor-substitution.dto';
@@ -79,18 +82,22 @@ export class InstructorSubstitutionsController {
   }
 
   @Patch(':id')
-  @UseGuards(RolesGuard)
-  @Roles(Role.ADMIN, Role.MANAGER)
-  @ApiOperation({ summary: 'Editează sau dezactivează o înlocuire (Admin/Manager)' })
+  @UseGuards(AuthGuard('jwt'), RolesGuard)
+  @Roles(Role.ADMIN, Role.MANAGER, Role.INSTRUCTOR)
+  @ApiOperation({ 
+    summary: 'Editează sau dezactivează o înlocuire (Admin/Manager — toate câmpurile; Instructor EXAMEN — doar status/color/note)' 
+  })
   @ApiParam({ name: 'id', type: Number })
   @ApiResponse({ status: 200, description: 'Înlocuire actualizată.' })
   @ApiResponse({ status: 400, description: 'Noul instructor de schimb nu are tipul SCHIMB.' })
+  @ApiResponse({ status: 403, description: 'Instructorul nu are permisiunea să editeze.' })
   @ApiResponse({ status: 404, description: 'Înlocuire sau instructor inexistent.' })
-  update(
+  async update(
     @Param('id', ParseIntPipe) id: number,
     @Body() dto: UpdateInstructorSubstitutionDto,
+    @Session() user: User,
   ) {
-    return this.service.update(id, dto);
+    return this.service.update(id, dto, user);
   }
 
   @Delete(':id')

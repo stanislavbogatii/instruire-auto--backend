@@ -1,5 +1,5 @@
 import { IsNotEmpty, IsOptional, MaxLength } from 'class-validator';
-import { ApiProperty } from '@nestjs/swagger';
+import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
 
 export class CreateGroupDto {
   @ApiProperty({ example: 'Math 101', description: 'Name of the teaching group' })
@@ -10,4 +10,9 @@ export class CreateGroupDto {
   @ApiProperty({ example: 1, description: 'Professor ID' })
   @IsOptional()
   professorId: number;
+
+  @ApiPropertyOptional({ example: 'Botanica', description: 'Sector of the group' })
+  @IsOptional()
+  @MaxLength(100)
+  sector?: string;
 }

@@ -46,8 +46,8 @@ export class ChatController {
     status: 200,
     description: 'Lista conversațiilor (studentul + ultimul mesaj, cu identitatea completă a expeditorului), sortate după ultima activitate.',
   })
-  listConversations() {
-    return this.service.listConversationsForStaff();
+  listConversations(@Session() session: User) {
+    return this.service.listConversationsForStaff(session);
   }
 
   @Get('conversations/:id')
@@ -57,8 +57,8 @@ export class ChatController {
   @ApiParam({ name: 'id', type: Number, description: 'ID-ul conversației' })
   @ApiResponse({ status: 200, description: 'Conversația, cu toate mesajele și identitatea completă a fiecărui expeditor.' })
   @ApiResponse({ status: 404, description: 'Conversația nu a fost găsită.' })
-  getConversation(@Param('id', ParseIntPipe) id: number) {
-    return this.service.getConversationForStaff(id);
+  getConversation(@Param('id', ParseIntPipe) id: number, @Session() session: User) {
+    return this.service.getConversationForStaff(id, session);
   }
 
   @Post('conversations/:id/messages')

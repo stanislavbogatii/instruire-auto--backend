@@ -15,6 +15,7 @@ import {
 } from './dto/update-reservation-status.dto';
 import { ListReservationsDto } from './dto/list-reservations.dto';
 import { BookForStudentDto } from './dto/book-for-student.dto';
+import { UpdatePracticalExamReservationDto } from './dto/update-practical-exam-reservation.dto';
 import { User, NotificationType } from '@prisma/client';
 import { NotificationsService } from '../notifications/notifications.service';
 
@@ -48,6 +49,42 @@ export class PracticalExamSlotsService {
     private prisma: PrismaService,
     private notificationsService: NotificationsService,
   ) {}
+
+  private async notifyReservationResult(
+    userId: number,
+    reservationId: number,
+    status: PracticalExamReservationStatus,
+  ) {
+    const messages: Partial<
+      Record<
+        PracticalExamReservationStatus,
+        { title: string; body: string }
+      >
+    > = {
+      [PracticalExamReservationStatus.PASSED]: {
+        title: 'Examen practic promovat',
+        body: 'Felicitări! Ai promovat examenul practic.',
+      },
+      [PracticalExamReservationStatus.FAILED]: {
+        title: 'Examen practic nepromovat',
+        body: 'Nu ai promovat examenul practic.',
+      },
+      [PracticalExamReservationStatus.ABSENT]: {
+        title: 'Absență la examenul practic',
+        body: 'Ai fost marcat absent la examenul practic programat.',
+      },
+    };
+    const message = messages[status];
+    if (!message) return;
+
+    await this.notificationsService.create(
+      userId,
+      NotificationType.EXAM_RESULT,
+      message.title,
+      message.body,
+      { reservationId, status },
+    );
+  }
 
   // ─── Slot CRUD ─────────────────────────────────────────────────────────
 
@@ -222,7 +259,12 @@ export class PracticalExamSlotsService {
 
   // ─── Book a slot (Tasks 8, 10, 11) ────────────────────────────────────
 
-  async bookSlot(student: User, slotId: number, color?: string) {
+  async bookSlot(
+    student: User,
+    slotId: number,
+    color?: string,
+    privateMessage?: string,
+  ) {
     if (!student.canBookPracticalExam) {
       throw new ForbiddenException('You are not allowed to book a practical exam');
     }
@@ -252,6 +294,7 @@ export class PracticalExamSlotsService {
         userId: student.id,
         positionInCar: activeCount + 1,
         color: color ?? '',
+        privateMessage: privateMessage?.trim() ?? '',
         status: PracticalExamReservationStatus.SCHEDULED,
       },
       include: {
@@ -263,7 +306,12 @@ export class PracticalExamSlotsService {
 
   // ─── Admin/Manager: book on behalf of a student ─────────────────────────
 
-  async bookSlotForStudent(slotId: number, studentId: number, color?: string) {
+  async bookSlotForStudent(
+    slotId: number,
+    studentId: number,
+    color?: string,
+    privateMessage?: string,
+  ) {
     // Verify student exists
     const student = await this.prisma.user.findUnique({ where: { id: studentId } });
     if (!student) throw new NotFoundException(`User with id=${studentId} not found`);
@@ -293,6 +341,7 @@ export class PracticalExamSlotsService {
         userId: studentId,
         positionInCar: activeCount + 1,
         color: color ?? '',
+        privateMessage: privateMessage?.trim() ?? '',
         status: PracticalExamReservationStatus.SCHEDULED,
       },
       include: {
@@ -311,6 +360,87 @@ export class PracticalExamSlotsService {
     if (!reservation) throw new NotFoundException(`Reservation with id=${reservationId} not found`);
 
     return this.prisma.practicalExamSlotReservation.delete({ where: { id: reservationId } });
+  }
+
+  // ─── Edit reservation details/result ───────────────────────────────────
+
+  async updateReservation(
+    actor: User,
+    reservationId: number,
+    dto: UpdatePracticalExamReservationDto,
+  ) {
+    const reservation =
+      await this.prisma.practicalExamSlotReservation.findUnique({
+        where: { id: reservationId },
+        include: { slot: true },
+      });
+    if (!reservation) {
+      throw new NotFoundException(
+        `Reservation with id=${reservationId} not found`,
+      );
+    }
+
+    const isAdminOrManager =
+      actor.role === 'ADMIN' || actor.role === 'MANAGER';
+    if (!isAdminOrManager) {
+      if (actor.role !== 'INSTRUCTOR') {
+        throw new ForbiddenException(
+          'Not allowed to update this exam reservation',
+        );
+      }
+
+      const instructor = await this.prisma.instructor.findFirst({
+        where: { userId: actor.id },
+        select: { id: true, isExamen: true, instructorType: true },
+      });
+      const isExamInstructor =
+        instructor?.isExamen === true ||
+        String(instructor?.instructorType || '').toUpperCase() === 'EXAMEN';
+      if (
+        !instructor ||
+        !isExamInstructor ||
+        reservation.slot.instructorId !== instructor.id
+      ) {
+        throw new ForbiddenException(
+          'Instructorul EXAMEN poate edita doar rezervările din propriile sloturi',
+        );
+      }
+    }
+
+    if (
+      dto.status === undefined &&
+      dto.color === undefined &&
+      dto.privateMessage === undefined
+    ) {
+      throw new BadRequestException('No reservation fields to update');
+    }
+
+    const statusChanged =
+      dto.status !== undefined && dto.status !== reservation.status;
+    const updated = await this.prisma.practicalExamSlotReservation.update({
+      where: { id: reservationId },
+      data: {
+        ...(dto.status !== undefined ? { status: dto.status } : {}),
+        ...(dto.color !== undefined ? { color: dto.color.trim() } : {}),
+        ...(dto.privateMessage !== undefined
+          ? { privateMessage: dto.privateMessage.trim() }
+          : {}),
+      },
+      include: {
+        slot: { include: { instructor: true } },
+        user: { select: RESERVATION_USER_SELECT },
+      },
+    });
+
+    if (statusChanged && dto.status) {
+      await this.notifyReservationResult(
+        updated.userId,
+        reservationId,
+        dto.status,
+      );
+    }
+
+    return updated;
   }
 
   // ─── Update reservation status (Admin/Manager) ─────────────────────────
@@ -351,30 +481,11 @@ export class PracticalExamSlotsService {
       },
     });
 
-    const RESULT_STATUS_MESSAGES: Partial<Record<PracticalExamReservationStatus, { title: string; body: string }>> = {
-      [PracticalExamReservationStatus.PASSED]: {
-        title: 'Examen practic promovat',
-        body: 'Felicitări! Ai promovat examenul practic.',
-      },
-      [PracticalExamReservationStatus.FAILED]: {
-        title: 'Examen practic nepromovat',
-        body: 'Nu ai promovat examenul practic.',
-      },
-      [PracticalExamReservationStatus.ABSENT]: {
-        title: 'Absență la examenul practic',
-        body: 'Ai fost marcat absent la examenul practic programat.',
-      },
-    };
-    const message = RESULT_STATUS_MESSAGES[dto.status];
-    if (message) {
-      await this.notificationsService.create(
-        updated.userId,
-        NotificationType.EXAM_RESULT,
-        message.title,
-        message.body,
-        { reservationId, status: dto.status },
-      );
-    }
+    await this.notifyReservationResult(
+      updated.userId,
+      reservationId,
+      dto.status,
+    );
 
     return updated;
   }

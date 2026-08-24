@@ -18,6 +18,16 @@ import {
   InstructorAssignmentMode,
 } from './dto/auto-assign-reservations.dto';
 
+/**
+ * Un instructor de tip SCHIMB nu are coloana proprie in calendar: apare doar ca
+ * overlay peste coloana instructorului pe care il acopera intr-o zi anume. O
+ * rezervare atribuita direct unui astfel de instructor nu are nicio celula in
+ * care sa fie desenata si dispare din grafic, deci nu poate fi ales automat.
+ */
+const ASSIGNABLE_INSTRUCTOR_WHERE: Prisma.InstructorWhereInput = {
+  instructorType: { not: 'SCHIMB' },
+};
+
 type ReservationConflict = {
   index: number;
   startTime: string;
@@ -68,11 +78,14 @@ export class ReservationsService {
       throw new NotFoundException(`User with ID ${userId} not found`);
     }
 
+    // Staff booking from the calendar targets one explicit instructor cell, so the
+    // mandatory-poligon reassignment must not silently move the lesson elsewhere.
     return this.createReservations(
       userId,
       dto,
       createdBy,
       ignoreInstructorBlackouts,
+      true,
     );
   }
 
@@ -98,6 +111,7 @@ export class ReservationsService {
     dto: CreateReservationsDto,
     createdBy?: number,
     ignoreInstructorBlackouts = false,
+    respectRequestedInstructor = false,
   ): Promise<Reservation[]> {
     let created: Array<Reservation> = [];
     const instructorId = dto.instructorId;
@@ -123,6 +137,7 @@ export class ReservationsService {
             where: {
               isActive: true,
               instructorsGroupId,
+              ...ASSIGNABLE_INSTRUCTOR_WHERE,
             },
           });
 
@@ -270,6 +285,7 @@ export class ReservationsService {
           where: {
             isActive: true,
             instructorsGroupId,
+            ...ASSIGNABLE_INSTRUCTOR_WHERE,
           },
         });
 
@@ -369,20 +385,27 @@ export class ReservationsService {
         const startTimes = reservations.map(r => new Date(r.startTime));
         const N = Math.min(MANDATORY_POLIGON_LESSONS, reservations.length);
 
-        const userReservationsCount = await tx.reservation.count({
-          where: { userId, deletedAt: null },
-        });
-
         const allCiocana = reservations.every(r => isPoligonRequiredSector(r.sector));
+
+        // The first lessons of a brand-new student are redirected to a poligon
+        // instructor. This must never happen when the caller picked an explicit
+        // instructor (staff booking a specific calendar cell).
+        const applyMandatoryPoligon =
+          !respectRequestedInstructor &&
+          allCiocana &&
+          N > 0 &&
+          (await tx.reservation.count({ where: { userId, deletedAt: null } })) === 0;
 
         let botanicaInstructor: Instructor | null = null;
         const reservationErrors: ReservationConflict[] = [];
         let botanicaUnavailableForBatch = false;
 
-        if (userReservationsCount === 0 && allCiocana && N > 0) {
+        if (applyMandatoryPoligon) {
           botanicaInstructor = await tx.instructor.findFirst({
             where: {
               sector: POLIGON_SECTOR,
+              isActive: true,
+              ...ASSIGNABLE_INSTRUCTOR_WHERE,
               reservations: {
                 none: {
                   startTime: { in: startTimes.slice(0, N) },
@@ -798,6 +821,7 @@ export class ReservationsService {
         isActive: true,
         sector,
         cars: { some: { gearbox } },
+        ...ASSIGNABLE_INSTRUCTOR_WHERE,
       },
     });
   }
@@ -1006,7 +1030,12 @@ export class ReservationsService {
 
     const created = await this.prisma.$transaction(async (tx) => {
       const sectorInstructors = await tx.instructor.findMany({
-        where: { isActive: true, sector, cars: { some: { gearbox } } },
+        where: {
+          isActive: true,
+          sector,
+          cars: { some: { gearbox } },
+          ...ASSIGNABLE_INSTRUCTOR_WHERE,
+        },
       });
 
       if (sectorInstructors.length === 0) {
@@ -1015,7 +1044,12 @@ export class ReservationsService {
 
       const poligonInstructors = requiresPoligon
         ? await tx.instructor.findMany({
-            where: { isActive: true, sector: POLIGON_SECTOR, cars: { some: { gearbox } } },
+            where: {
+              isActive: true,
+              sector: POLIGON_SECTOR,
+              cars: { some: { gearbox } },
+              ...ASSIGNABLE_INSTRUCTOR_WHERE,
+            },
           })
         : [];
 
@@ -1778,6 +1812,7 @@ export class ReservationsService {
       where: {
         isActive: true,
         instructorsGroupId: instructors_group_id,
+        ...ASSIGNABLE_INSTRUCTOR_WHERE,
       },
       include: {
         reservations: true
@@ -1826,12 +1861,14 @@ export class ReservationsService {
               cars: { 
                 some: { gearbox } 
               }, 
-              isActive: true 
+              isActive: true,
+              ...ASSIGNABLE_INSTRUCTOR_WHERE,
             } 
           } 
         }, 
         include: { 
           instructors: { 
+            where: ASSIGNABLE_INSTRUCTOR_WHERE,
             include: { 
               cars: true,
               reservations: {
@@ -1890,7 +1927,8 @@ export class ReservationsService {
         sector, 
         cars: { 
           some: { gearbox } 
-        } 
+        },
+        ...ASSIGNABLE_INSTRUCTOR_WHERE,
       }, 
       include: { 
         reservations: { 
