@@ -218,6 +218,7 @@ export class PdfService {
     score: number | null;
     totalQuestions: number;
     passScore: number;
+    attemptNumber: number;
     startedAt: Date;
     completedAt: Date | null;
     user: {
@@ -323,6 +324,11 @@ export class PdfService {
         `<label>Semnătura cursantului</label>
                 <div class="field-line"></div>`
       );
+
+      html = html.replace(
+        /<div class="field-line" data-attempt-number><\/div>/,
+        `<div class="field-line" style="padding: 5px 10px; font-size: 11pt; font-weight: bold;">${examData.attemptNumber}</div>`
+      );
       
       // Calificativ field — based on exam status set by the server
       const calificativ = passed ? 'Admis' : 'Respins';
@@ -412,6 +418,303 @@ export class PdfService {
         }
       }
     }
+  }
+
+  async generateDailyProcessVerbalPdf(data: {
+    date: string;
+    exams: Array<{
+      orderNumber: number;
+      examNumber: number;
+      attemptNumber: number;
+      startedAt: Date;
+      status: string;
+      score: number | null;
+      totalQuestions: number;
+      passScore: number;
+      user: {
+        firstName: string | null;
+        lastName: string | null;
+        idnp: string | null;
+      };
+      tickets: string[];
+    }>;
+  }): Promise<Buffer> {
+    const rows = data.exams.length
+      ? data.exams.map((exam) => `
+          <tr>
+            <td>${exam.orderNumber}</td>
+            <td>${exam.examNumber}</td>
+            <td>${this.escapeHtml(`${exam.user.lastName || ''} ${exam.user.firstName || ''}`.trim())}</td>
+            <td>${this.escapeHtml(exam.user.idnp || '')}</td>
+            <td>${exam.attemptNumber}</td>
+            <td>${this.escapeHtml(exam.tickets.join(', '))}</td>
+            <td>${exam.score ?? '-'} / ${exam.totalQuestions}</td>
+            <td>${exam.status === 'COMPLETED' ? 'Admis' : 'Respins'}</td>
+          </tr>
+        `).join('')
+      : '<tr><td colspan="8">Nu există examene finalizate în această zi.</td></tr>';
+
+    const html = `
+      <!DOCTYPE html>
+      <html lang="ro">
+      <head>
+        <meta charset="UTF-8">
+        <style>
+          @page { size: A4 landscape; margin: 12mm; }
+          body { font-family: Arial, sans-serif; color: #111; font-size: 10pt; }
+          h1 { text-align: center; font-size: 16pt; margin: 0 0 6px; }
+          .date { text-align: center; margin-bottom: 18px; }
+          table { width: 100%; border-collapse: collapse; }
+          th, td { border: 1px solid #222; padding: 6px 4px; text-align: center; }
+          th { background: #e9ecef; font-size: 9pt; }
+          td:nth-child(3) { text-align: left; }
+          .signatures { display: flex; gap: 32px; margin-top: 42px; }
+          .signature { flex: 1; border-top: 1px solid #222; padding-top: 6px; }
+        </style>
+      </head>
+      <body>
+        <h1>PROCES-VERBAL ZILNIC AL EXAMENELOR TEORETICE</h1>
+        <div class="date">Data: ${this.escapeHtml(data.date)}</div>
+        <table>
+          <thead>
+            <tr>
+              <th>Nr.</th>
+              <th>Nr. examen</th>
+              <th>Nume și prenume</th>
+              <th>IDNP</th>
+              <th>Tentativa</th>
+              <th>Bilet</th>
+              <th>Rezultat</th>
+              <th>Calificativ</th>
+            </tr>
+          </thead>
+          <tbody>${rows}</tbody>
+        </table>
+        <div class="signatures">
+          <div class="signature">Președintele comisiei</div>
+          <div class="signature">Secretarul</div>
+          <div class="signature">Semnătura</div>
+        </div>
+      </body>
+      </html>
+    `;
+
+    return this.generateHtmlPdf(html);
+  }
+
+  async generatePracticalDailyProcessVerbalPdf(data: {
+    date: string;
+    exams: Array<{
+      orderNumber: number;
+      examNumber: number;
+      attemptNumber: number;
+      date: Date;
+      time: string;
+      status: string;
+      positionInCar: number;
+      sector: string;
+      gearbox: string;
+      instructor: {
+        firstName: string;
+        lastName: string;
+      } | null;
+      user: {
+        firstName: string | null;
+        lastName: string | null;
+        idnp: string | null;
+      };
+    }>;
+  }): Promise<Buffer> {
+    const statusLabels: Record<string, string> = {
+      PASSED: 'Promovat',
+      FAILED: 'Nepromovat',
+      ABSENT: 'Absent',
+    };
+    const rows = data.exams.length
+      ? data.exams.map((exam) => {
+          const instructorName = `${exam.instructor?.lastName || ''} ${exam.instructor?.firstName || ''}`.trim();
+          return `
+            <tr>
+              <td>${exam.orderNumber}</td>
+              <td>${exam.examNumber}</td>
+              <td>${this.escapeHtml(`${exam.user.lastName || ''} ${exam.user.firstName || ''}`.trim())}</td>
+              <td>${this.escapeHtml(exam.user.idnp || '')}</td>
+              <td>${exam.attemptNumber}</td>
+              <td>${this.escapeHtml(exam.time)}</td>
+              <td>${exam.positionInCar}</td>
+              <td>${this.escapeHtml(exam.sector)}</td>
+              <td>${this.escapeHtml(exam.gearbox)}</td>
+              <td>${this.escapeHtml(instructorName)}</td>
+              <td>${this.escapeHtml(statusLabels[exam.status] || exam.status)}</td>
+            </tr>
+          `;
+        }).join('')
+      : '<tr><td colspan="11">Nu există examene practice finalizate în această zi.</td></tr>';
+
+    const html = `
+      <!DOCTYPE html>
+      <html lang="ro">
+      <head>
+        <meta charset="UTF-8">
+        <style>
+          @page { size: A4 landscape; margin: 10mm; }
+          body { font-family: Arial, sans-serif; color: #111; font-size: 8pt; }
+          h1 { text-align: center; font-size: 15pt; margin: 0 0 5px; }
+          .date { text-align: center; margin-bottom: 14px; }
+          table { width: 100%; border-collapse: collapse; }
+          th, td { border: 1px solid #222; padding: 5px 3px; text-align: center; }
+          th { background: #e9ecef; font-size: 7.5pt; }
+          td:nth-child(3), td:nth-child(10) { text-align: left; }
+          .signatures { display: flex; gap: 28px; margin-top: 36px; }
+          .signature { flex: 1; border-top: 1px solid #222; padding-top: 5px; }
+        </style>
+      </head>
+      <body>
+        <h1>PROCES-VERBAL ZILNIC AL EXAMENELOR PRACTICE</h1>
+        <div class="date">Data: ${this.escapeHtml(data.date)}</div>
+        <table>
+          <thead>
+            <tr>
+              <th>Nr.</th>
+              <th>Nr. examen</th>
+              <th>Nume și prenume</th>
+              <th>IDNP</th>
+              <th>Tentativa</th>
+              <th>Ora</th>
+              <th>Loc</th>
+              <th>Sector</th>
+              <th>Cutie</th>
+              <th>Instructor</th>
+              <th>Rezultat</th>
+            </tr>
+          </thead>
+          <tbody>${rows}</tbody>
+        </table>
+        <div class="signatures">
+          <div class="signature">Președintele comisiei</div>
+          <div class="signature">Secretarul</div>
+          <div class="signature">Semnătura</div>
+        </div>
+      </body>
+      </html>
+    `;
+
+    return this.generateHtmlPdf(html);
+  }
+
+  async generatePracticalIndividualExamPdf(data: {
+    attemptNumber: number;
+    date: Date;
+    time: string;
+    status: string;
+    positionInCar: number;
+    sector: string;
+    gearbox: string;
+    instructor: {
+      firstName: string;
+      lastName: string;
+    } | null;
+    user: {
+      firstName: string | null;
+      lastName: string | null;
+      email: string;
+      phone: string | null;
+      idnp: string | null;
+    };
+  }): Promise<Buffer> {
+    const statusLabels: Record<string, string> = {
+      PASSED: 'Promovat',
+      FAILED: 'Nepromovat',
+      ABSENT: 'Absent',
+    };
+    const studentName = `${data.user.lastName || ''} ${data.user.firstName || ''}`.trim();
+    const instructorName = `${data.instructor?.lastName || ''} ${data.instructor?.firstName || ''}`.trim();
+    const examDate = data.date.toISOString().slice(0, 10);
+    const value = (text: string | number | null | undefined) => this.escapeHtml(String(text ?? ''));
+
+    const html = `
+      <!DOCTYPE html>
+      <html lang="ro">
+      <head>
+        <meta charset="UTF-8">
+        <style>
+          @page { size: A4; margin: 18mm; }
+          body { font-family: Arial, sans-serif; color: #111; font-size: 11pt; }
+          h1 { text-align: center; font-size: 17pt; margin: 0 0 6px; }
+          h2 { text-align: center; font-size: 12pt; font-weight: normal; margin: 0 0 24px; }
+          table { width: 100%; border-collapse: collapse; margin-top: 12px; }
+          th, td { border: 1px solid #222; padding: 9px 8px; }
+          th { width: 42%; background: #f0f2f4; text-align: left; }
+          .result { font-size: 13pt; font-weight: bold; text-align: center; margin: 26px 0; }
+          .signatures { display: flex; gap: 36px; margin-top: 72px; }
+          .signature { flex: 1; border-top: 1px solid #222; padding-top: 7px; }
+        </style>
+      </head>
+      <body>
+        <h1>DOCUMENT INDIVIDUAL</h1>
+        <h2>EXAMEN PRACTIC</h2>
+        <table>
+          <tr><th>Numărul tentativei</th><td>${data.attemptNumber}</td></tr>
+          <tr><th>Candidat</th><td>${value(studentName)}</td></tr>
+          <tr><th>IDNP</th><td>${value(data.user.idnp)}</td></tr>
+          <tr><th>Email</th><td>${value(data.user.email)}</td></tr>
+          <tr><th>Telefon</th><td>${value(data.user.phone)}</td></tr>
+          <tr><th>Data</th><td>${value(examDate)}</td></tr>
+          <tr><th>Ora</th><td>${value(data.time)}</td></tr>
+          <tr><th>Sector</th><td>${value(data.sector)}</td></tr>
+          <tr><th>Cutie de viteze</th><td>${value(data.gearbox)}</td></tr>
+          <tr><th>Locul în mașină</th><td>${data.positionInCar}</td></tr>
+          <tr><th>Instructor</th><td>${value(instructorName)}</td></tr>
+        </table>
+        <div class="result">Rezultat: ${value(statusLabels[data.status] || data.status)}</div>
+        <div class="signatures">
+          <div class="signature">Instructor</div>
+          <div class="signature">Candidat</div>
+        </div>
+      </body>
+      </html>
+    `;
+
+    return this.generateHtmlPdf(html);
+  }
+
+  private async generateHtmlPdf(html: string): Promise<Buffer> {
+    const browser = await puppeteer.launch({
+      headless: true,
+      args: [
+        '--no-sandbox',
+        '--disable-setuid-sandbox',
+        '--disable-dev-shm-usage',
+        '--disable-gpu',
+        '--no-first-run',
+        '--no-zygote',
+        '--single-process',
+      ],
+      executablePath: process.env.CHROME_BIN || '/usr/bin/chromium-browser',
+    });
+
+    try {
+      const page = await browser.newPage();
+      await page.setContent(html, { waitUntil: 'networkidle0' });
+      const pdf = await page.pdf({
+        format: 'A4',
+        landscape: true,
+        printBackground: true,
+        margin: { top: '12mm', right: '12mm', bottom: '12mm', left: '12mm' },
+      });
+      return Buffer.from(pdf);
+    } finally {
+      await browser.close();
+    }
+  }
+
+  private escapeHtml(value: string): string {
+    return value
+      .replace(/&/g, '&amp;')
+      .replace(/</g, '&lt;')
+      .replace(/>/g, '&gt;')
+      .replace(/"/g, '&quot;')
+      .replace(/'/g, '&#039;');
   }
 
   private generateAnswersTable(questions: Array<{
@@ -533,4 +836,3 @@ export class PdfService {
     return html;
   }
 }
-

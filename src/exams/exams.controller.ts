@@ -36,6 +36,7 @@ import {
   LanguageQueryDto,
   StartPracticeByCategoryDto,
 } from './dto/exam.dto';
+import { DailyProcessVerbalQueryDto } from './dto/daily-process-verbal.dto';
 import { CreateQuestionDto, UpdateQuestionDto } from './dto/question.dto';
 import { CreateTicketDto, UpdateTicketDto } from './dto/ticket.dto';
 
@@ -214,6 +215,45 @@ export class ExamsController {
   @Roles(Role.ADMIN, Role.MANAGER)
   getAllProfessorsStats() {
     return this.examsService.getAllProfessorsStats();
+  }
+
+  @Get('documents/daily-process-verbal')
+  @ApiOperation({
+    summary: 'Descarcă procesul verbal zilnic al examenelor teoretice',
+    description: 'Generează un PDF cu examenele finalizate în ziua selectată. Disponibil pentru Admin și Manager.',
+  })
+  @ApiQuery({ name: 'date', required: false, description: 'Ziua în format YYYY-MM-DD. Implicit: ziua curentă.' })
+  @ApiBearerAuth('access-token')
+  @UseGuards(AuthGuard('jwt'), RolesGuard)
+  @Roles(Role.MANAGER, Role.ADMIN)
+  async downloadDailyProcessVerbal(
+    @Query() query: DailyProcessVerbalQueryDto,
+    @Res() res: Response,
+  ) {
+    const report = await this.examsService.getDailyProcessVerbal(query);
+    const pdfBuffer = await this.pdfService.generateDailyProcessVerbalPdf(report);
+
+    res.set({
+      'Content-Type': 'application/pdf',
+      'Content-Disposition': `attachment; filename="Proces_Verbal_Zilnic_${report.date}.pdf"`,
+      'Content-Length': pdfBuffer.length.toString(),
+    });
+    res.end(pdfBuffer);
+  }
+
+  @Get('documents/individual/:examId')
+  @ApiOperation({
+    summary: 'Descarcă documentul individual al examenului',
+    description: 'Generează documentul individual pe baza datelor examenului. Disponibil pentru Admin și Manager.',
+  })
+  @ApiBearerAuth('access-token')
+  @UseGuards(AuthGuard('jwt'), RolesGuard)
+  @Roles(Role.MANAGER, Role.ADMIN)
+  downloadIndividualExamDocument(
+    @Param('examId', ParseIntPipe) examId: number,
+    @Res() res: Response,
+  ) {
+    return this.downloadExamResultsPdf(examId, res);
   }
 
   @Get('professor-stats/:professorId')
@@ -562,6 +602,7 @@ export class ExamsController {
         score: exam.score,
         totalQuestions: exam.totalQuestions,
         passScore: exam.passScore,
+        attemptNumber: exam.attemptNumber,
         startedAt: exam.startedAt,
         completedAt: exam.completedAt,
         user: {

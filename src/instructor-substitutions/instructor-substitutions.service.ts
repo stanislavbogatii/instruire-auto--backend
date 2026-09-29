@@ -275,8 +275,48 @@ export class InstructorSubstitutionsService {
     const range = this.dayRange(date);
     return this.prisma.instructorSubstitution.findFirst({
       where: { baseInstructorId, date: range, isActive: true },
-      include: { substituteInstructor: { select: INSTRUCTOR_SELECT } },
+      include: {
+        baseInstructor: { select: INSTRUCTOR_SELECT },
+        substituteInstructor: { select: INSTRUCTOR_SELECT },
+      },
     });
+  }
+
+  /**
+   * Resolves the instructor who actually handled a reservation.
+   * The substitution is intentionally resolved from the reservation's base
+   * instructor only; the result is a snapshot candidate for rating creation.
+   */
+  async resolveEffectiveInstructor(reservation: {
+    instructorId: number;
+    startTime: Date | string;
+    instructor?: { id: number; firstName: string; lastName: string } | null;
+  }) {
+    const substitution = await this.getActiveSubstitution(
+      reservation.instructorId,
+      new Date(reservation.startTime),
+    );
+    const instructor = substitution?.substituteInstructor ?? reservation.instructor ?? null;
+
+    return {
+      instructorId: substitution?.substituteInstructorId ?? reservation.instructorId,
+      effectiveInstructor: instructor
+        ? {
+            id: instructor.id,
+            firstName: instructor.firstName,
+            lastName: instructor.lastName,
+          }
+        : null,
+      substitution: substitution
+        ? {
+            id: substitution.id,
+            baseInstructorId: substitution.baseInstructorId,
+            substituteInstructorId: substitution.substituteInstructorId,
+            date: substitution.date,
+            isActive: substitution.isActive,
+          }
+        : null,
+    };
   }
 
   /**
@@ -335,6 +375,8 @@ export class InstructorSubstitutionsService {
               id: sub.id,
               baseInstructorId: sub.baseInstructorId,
               substituteInstructorId: sub.substituteInstructorId,
+              date: sub.date,
+              isActive: sub.isActive,
             }
           : null,
       };

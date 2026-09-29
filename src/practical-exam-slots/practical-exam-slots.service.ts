@@ -16,6 +16,7 @@ import {
 import { ListReservationsDto } from './dto/list-reservations.dto';
 import { BookForStudentDto } from './dto/book-for-student.dto';
 import { UpdatePracticalExamReservationDto } from './dto/update-practical-exam-reservation.dto';
+import { PracticalDocumentsQueryDto } from './dto/practical-documents.dto';
 import { User, NotificationType } from '@prisma/client';
 import { NotificationsService } from '../notifications/notifications.service';
 
@@ -25,6 +26,12 @@ const FINAL_STATUSES: PracticalExamReservationStatus[] = [
   PracticalExamReservationStatus.FAILED,
   PracticalExamReservationStatus.ABSENT,
   PracticalExamReservationStatus.CANCELLED,
+];
+
+const REPORT_STATUSES: PracticalExamReservationStatus[] = [
+  PracticalExamReservationStatus.PASSED,
+  PracticalExamReservationStatus.FAILED,
+  PracticalExamReservationStatus.ABSENT,
 ];
 
 const RESERVATION_USER_SELECT = {
@@ -592,5 +599,153 @@ export class PracticalExamSlotsService {
         slot: { include: { instructor: true } },
       },
     });
+  }
+
+  // ─── Admin/Manager: practical exam documents ────────────────────────────
+
+  private getUtcDayRange(date?: string) {
+    const source = date ? new Date(date) : new Date();
+    if (Number.isNaN(source.getTime())) {
+      throw new BadRequestException('Invalid document date');
+    }
+
+    const start = new Date(Date.UTC(
+      source.getUTCFullYear(),
+      source.getUTCMonth(),
+      source.getUTCDate(),
+    ));
+    const end = new Date(start);
+    end.setUTCDate(end.getUTCDate() + 1);
+    return { start, end };
+  }
+
+  private async getAttemptNumbers(userIds: number[]) {
+    if (userIds.length === 0) return new Map<number, number>();
+
+    const reservations = await this.prisma.practicalExamSlotReservation.findMany({
+      where: {
+        userId: { in: userIds },
+        status: { not: PracticalExamReservationStatus.CANCELLED },
+      },
+      orderBy: [{ createdAt: 'asc' }, { id: 'asc' }],
+      select: { id: true, userId: true },
+    });
+
+    const counters = new Map<number, number>();
+    const attempts = new Map<number, number>();
+    for (const reservation of reservations) {
+      const attempt = (counters.get(reservation.userId) ?? 0) + 1;
+      counters.set(reservation.userId, attempt);
+      attempts.set(reservation.id, attempt);
+    }
+    return attempts;
+  }
+
+  async getDailyProcessVerbal(query: PracticalDocumentsQueryDto = {}) {
+    const { start, end } = this.getUtcDayRange(query.date);
+    const reservations = await this.prisma.practicalExamSlotReservation.findMany({
+      where: {
+        status: { in: REPORT_STATUSES },
+        slot: { date: { gte: start, lt: end } },
+      },
+      orderBy: [
+        { slot: { date: 'asc' } },
+        { slot: { time: 'asc' } },
+        { positionInCar: 'asc' },
+      ],
+      include: {
+        user: {
+          select: {
+            id: true,
+            firstName: true,
+            lastName: true,
+            idnp: true,
+          },
+        },
+        slot: {
+          select: {
+            id: true,
+            date: true,
+            time: true,
+            sector: true,
+            gearbox: true,
+            instructor: {
+              select: { id: true, firstName: true, lastName: true },
+            },
+          },
+        },
+      },
+    });
+
+    const attempts = await this.getAttemptNumbers(
+      Array.from(new Set(reservations.map((reservation) => reservation.userId))),
+    );
+
+    return {
+      date: start.toISOString().slice(0, 10),
+      exams: reservations.map((reservation, index) => ({
+        orderNumber: index + 1,
+        examNumber: reservation.id,
+        attemptNumber: attempts.get(reservation.id) ?? 1,
+        date: reservation.slot.date,
+        time: reservation.slot.time,
+        status: reservation.status,
+        positionInCar: reservation.positionInCar,
+        sector: reservation.slot.sector,
+        gearbox: reservation.slot.gearbox,
+        instructor: reservation.slot.instructor,
+        user: reservation.user,
+      })),
+    };
+  }
+
+  async getIndividualExamDocument(reservationId: number) {
+    const reservation = await this.prisma.practicalExamSlotReservation.findUnique({
+      where: { id: reservationId },
+      include: {
+        user: {
+          select: {
+            id: true,
+            firstName: true,
+            lastName: true,
+            email: true,
+            phone: true,
+            idnp: true,
+          },
+        },
+        slot: {
+          include: {
+            instructor: {
+              select: { id: true, firstName: true, lastName: true },
+            },
+          },
+        },
+      },
+    });
+    if (!reservation) {
+      throw new NotFoundException(`Reservation with id=${reservationId} not found`);
+    }
+    if (
+      reservation.status === PracticalExamReservationStatus.SCHEDULED ||
+      reservation.status === PracticalExamReservationStatus.CANCELLED
+    ) {
+      throw new BadRequestException(
+        'The individual document is available only after the practical exam is finalized',
+      );
+    }
+
+    const attempts = await this.getAttemptNumbers([reservation.userId]);
+
+    return {
+      attemptNumber: attempts.get(reservation.id) ?? 1,
+      date: reservation.slot.date,
+      time: reservation.slot.time,
+      status: reservation.status,
+      positionInCar: reservation.positionInCar,
+      sector: reservation.slot.sector,
+      gearbox: reservation.slot.gearbox,
+      instructor: reservation.slot.instructor,
+      user: reservation.user,
+    };
   }
 }

@@ -9,6 +9,7 @@ import {
   ParseIntPipe,
   UseGuards,
   Query,
+  Res,
 } from '@nestjs/common';
 import { PracticalExamSlotsService } from './practical-exam-slots.service';
 import { CreatePracticalExamSlotDto } from './dto/create-practical-exam-slot.dto';
@@ -32,13 +33,19 @@ import { RolesGuard } from 'src/auth/guards/roles.guard';
 import { Roles } from 'src/auth/decorators/roles.decorator';
 import { Role, User } from '@prisma/client';
 import { Session } from 'src/common/session.decorator';
+import { Response } from 'express';
+import { PdfService } from 'src/exams/pdf.service';
+import { PracticalDocumentsQueryDto } from './dto/practical-documents.dto';
 
 @ApiTags('practical-exam-slots')
 @ApiBearerAuth('access-token')
 @UseGuards(AuthGuard('jwt'))
 @Controller('practical-exam-slots')
 export class PracticalExamSlotsController {
-  constructor(private readonly service: PracticalExamSlotsService) {}
+  constructor(
+    private readonly service: PracticalExamSlotsService,
+    private readonly pdfService: PdfService,
+  ) {}
 
   // ─── Admin/Manager: manage slots ───────────────────────────────────────
 
@@ -107,6 +114,61 @@ export class PracticalExamSlotsController {
   @ApiResponse({ status: 200, description: 'Filtered list of reservations.' })
   listReservations(@Query() query: ListReservationsDto) {
     return this.service.listReservations(query);
+  }
+
+  @Get('documents/daily-process-verbal')
+  @UseGuards(RolesGuard)
+  @Roles(Role.ADMIN, Role.MANAGER)
+  @ApiOperation({
+    summary: 'Download the daily practical exam process verbal (Admin/Manager only)',
+  })
+  @ApiQuery({
+    name: 'date',
+    required: false,
+    description: 'Exam date in YYYY-MM-DD format. Defaults to the current day.',
+  })
+  async downloadDailyProcessVerbal(
+    @Query() query: PracticalDocumentsQueryDto,
+    @Res() res: Response,
+  ) {
+    const report = await this.service.getDailyProcessVerbal(query);
+    const pdfBuffer = await this.pdfService.generatePracticalDailyProcessVerbalPdf(report);
+
+    res.set({
+      'Content-Type': 'application/pdf',
+      'Content-Disposition': `attachment; filename="Proces_Verbal_Practic_${report.date}.pdf"`,
+      'Content-Length': pdfBuffer.length.toString(),
+    });
+    res.end(pdfBuffer);
+  }
+
+  @Get('documents/individual/:reservationId')
+  @UseGuards(RolesGuard)
+  @Roles(Role.ADMIN, Role.MANAGER)
+  @ApiOperation({
+    summary: 'Download an individual practical exam document (Admin/Manager only)',
+  })
+  @ApiParam({ name: 'reservationId', type: Number })
+  async downloadIndividualExamDocument(
+    @Param('reservationId', ParseIntPipe) reservationId: number,
+    @Res() res: Response,
+  ) {
+    const document = await this.service.getIndividualExamDocument(reservationId);
+    const pdfBuffer = await this.pdfService.generatePracticalIndividualExamPdf(document);
+    const studentName = `${document.user.firstName || ''} ${document.user.lastName || ''}`
+      .trim()
+      .replace(/[^a-zA-Z0-9\s-]/g, '')
+      .replace(/\s+/g, '_') || 'Student';
+
+    res.set({
+      'Content-Type': 'application/pdf',
+      'Content-Disposition': `attachment; filename="Exam_Practic_${studentName}_${reservationId}.pdf"`,
+      'Content-Length': pdfBuffer.length.toString(),
+      'Cache-Control': 'no-cache, no-store, must-revalidate',
+      Pragma: 'no-cache',
+      Expires: '0',
+    });
+    res.end(pdfBuffer);
   }
 
   @Get(':id')

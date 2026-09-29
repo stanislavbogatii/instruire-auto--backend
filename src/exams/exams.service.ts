@@ -20,6 +20,7 @@ import {
   SubmitPracticeAnswerDto,
   StartPracticeByCategoryDto
 } from './dto/exam.dto';
+import { DailyProcessVerbalQueryDto } from './dto/daily-process-verbal.dto';
 import { TicketsService } from './tickets.service';
 import { Cron, CronExpression } from '@nestjs/schedule';
 import { NotificationsService } from '../notifications/notifications.service';
@@ -397,6 +398,57 @@ export class ExamsService {
     }
 
     return exam;
+  }
+
+  async getDailyProcessVerbal(query: DailyProcessVerbalQueryDto = {}) {
+    const reportDate = query.date ? new Date(query.date) : new Date();
+    const start = new Date(Date.UTC(
+      reportDate.getUTCFullYear(),
+      reportDate.getUTCMonth(),
+      reportDate.getUTCDate(),
+    ));
+    const end = new Date(start);
+    end.setUTCDate(end.getUTCDate() + 1);
+
+    const exams = await this.prisma.exam.findMany({
+      where: {
+        startedAt: { gte: start, lt: end },
+        status: { not: 'IN_PROGRESS' },
+      },
+      orderBy: { startedAt: 'asc' },
+      include: {
+        user: {
+          select: {
+            id: true,
+            firstName: true,
+            lastName: true,
+            idnp: true,
+          },
+        },
+        examTickets: {
+          orderBy: { id: 'asc' },
+          include: {
+            ticket: { select: { name: true } },
+          },
+        },
+      },
+    });
+
+    return {
+      date: start.toISOString().slice(0, 10),
+      exams: exams.map((exam, index) => ({
+        orderNumber: index + 1,
+        examNumber: exam.id,
+        attemptNumber: exam.attemptNumber,
+        startedAt: exam.startedAt,
+        status: exam.status,
+        score: exam.score,
+        totalQuestions: exam.totalQuestions,
+        passScore: exam.passScore,
+        user: exam.user,
+        tickets: exam.examTickets.map(({ ticket }) => ticket.name),
+      })),
+    };
   }
 
   async submitAnswer(examId: number, userId: number, submitAnswerDto: SubmitAnswerDto) {

@@ -9,10 +9,14 @@ import { PrismaService } from 'src/prisma/prisma.service';
 import { SubmitRatingDto } from './dto/submit-rating.dto';
 import { UpdateRatingDto } from './dto/update-rating.dto';
 import { RatingStatsQueryDto } from './dto/rating-stats-query.dto';
+import { InstructorSubstitutionsService } from 'src/instructor-substitutions/instructor-substitutions.service';
 
 @Injectable()
 export class InstructorRatingsService {
-  constructor(private prisma: PrismaService) {}
+  constructor(
+    private prisma: PrismaService,
+    private substitutionsService: InstructorSubstitutionsService,
+  ) {}
 
   // ─── Submit rating (student) ─────────────────────────────────────────────
 
@@ -22,6 +26,9 @@ export class InstructorRatingsService {
     // Reservation must exist and belong to this student
     const reservation = await this.prisma.reservation.findFirst({
       where: { id: reservationId, userId, deletedAt: null },
+      include: {
+        instructor: { select: { id: true, firstName: true, lastName: true } },
+      },
     });
     if (!reservation) {
       throw new NotFoundException(`Rezervarea cu id=${reservationId} nu a fost găsită`);
@@ -45,16 +52,23 @@ export class InstructorRatingsService {
       throw new ConflictException('Ai acordat deja un rating pentru această lecție');
     }
 
+    const resolution = await this.substitutionsService.resolveEffectiveInstructor({
+      ...reservation,
+      instructorId: reservation.instructorId,
+    });
+
     return this.prisma.instructorRating.create({
       data: {
         userId,
-        instructorId: reservation.instructorId,
+        instructorId: resolution.instructorId,
+        baseInstructorId: reservation.instructorId,
         reservationId,
         rating,
         comment: comment ?? null,
       },
       include: {
         instructor: { select: { id: true, firstName: true, lastName: true } },
+        baseInstructor: { select: { id: true, firstName: true, lastName: true } },
         reservation: { select: { id: true, startTime: true } },
       },
     });
@@ -82,7 +96,21 @@ export class InstructorRatingsService {
       },
       orderBy: { startTime: 'desc' },
     });
-    return reservations;
+    return Promise.all(
+      reservations.map(async (reservation) => {
+        const resolution = await this.substitutionsService.resolveEffectiveInstructor({
+          instructorId: reservation.instructorId!,
+          startTime: reservation.startTime,
+          instructor: reservation.instructor,
+        });
+
+        return {
+          ...reservation,
+          effectiveInstructor: resolution.effectiveInstructor ?? reservation.instructor,
+          substitution: resolution.substitution,
+        };
+      }),
+    );
   }
 
   // ─── My ratings history (student) ─────────────────────────────────────────
@@ -93,6 +121,7 @@ export class InstructorRatingsService {
       orderBy: { createdAt: 'desc' },
       include: {
         instructor: { select: { id: true, firstName: true, lastName: true } },
+        baseInstructor: { select: { id: true, firstName: true, lastName: true } },
         reservation: { select: { id: true, startTime: true } },
       },
     });
@@ -106,6 +135,7 @@ export class InstructorRatingsService {
       include: {
         user: { select: { id: true, firstName: true, lastName: true } },
         instructor: { select: { id: true, firstName: true, lastName: true } },
+        baseInstructor: { select: { id: true, firstName: true, lastName: true } },
       },
     });
   }
@@ -275,6 +305,7 @@ export class InstructorRatingsService {
       orderBy: { createdAt: 'desc' },
       include: {
         instructor: { select: { id: true, firstName: true, lastName: true, sector: true } },
+        baseInstructor: { select: { id: true, firstName: true, lastName: true, sector: true } },
         user: { select: { id: true, firstName: true, lastName: true } },
         reservation: { select: { id: true, startTime: true } },
       },
@@ -321,6 +352,7 @@ export class InstructorRatingsService {
       },
       include: {
         instructor: { select: { id: true, firstName: true, lastName: true, sector: true } },
+        baseInstructor: { select: { id: true, firstName: true, lastName: true, sector: true } },
         user: { select: { id: true, firstName: true, lastName: true } },
         reservation: { select: { id: true, startTime: true } },
       },

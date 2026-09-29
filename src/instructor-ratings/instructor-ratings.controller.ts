@@ -20,6 +20,7 @@ import {
 } from '@nestjs/swagger';
 import { AuthGuard } from '@nestjs/passport';
 import { RolesGuard } from 'src/auth/guards/roles.guard';
+import { SuperiorInstructorGuard } from 'src/auth/guards/superior-instructor.guard';
 import { Roles } from 'src/auth/decorators/roles.decorator';
 import { Role, User } from '@prisma/client';
 import { Session } from 'src/common/session.decorator';
@@ -71,12 +72,13 @@ export class InstructorRatingsController {
     return this.service.getRatingForReservation(reservationId);
   }
 
-  // ─── Admin/Manager endpoints ──────────────────────────────────────────────
+  // ─── Admin/Manager/Superior instructor endpoints ──────────────────────────
 
   @Get('admin/overview')
   @UseGuards(RolesGuard)
-  @Roles(Role.ADMIN, Role.MANAGER)
-  @ApiOperation({ summary: 'Statistici agregate per instructor (Admin/Manager)' })
+  @UseGuards(SuperiorInstructorGuard)
+  @Roles(Role.ADMIN, Role.MANAGER, Role.INSTRUCTOR)
+  @ApiOperation({ summary: 'Statistici agregate per instructor (Admin/Manager/Superior)' })
   @ApiQuery({ name: 'instructorId', required: false, type: Number })
   @ApiQuery({ name: 'year', required: false, type: Number })
   @ApiQuery({ name: 'month', required: false, type: Number })
@@ -87,8 +89,9 @@ export class InstructorRatingsController {
 
   @Get('admin/monthly')
   @UseGuards(RolesGuard)
-  @Roles(Role.ADMIN, Role.MANAGER)
-  @ApiOperation({ summary: 'Statistici lunare per instructor (Admin/Manager)' })
+  @UseGuards(SuperiorInstructorGuard)
+  @Roles(Role.ADMIN, Role.MANAGER, Role.INSTRUCTOR)
+  @ApiOperation({ summary: 'Statistici lunare per instructor (Admin/Manager/Superior)' })
   @ApiQuery({ name: 'instructorId', required: false, type: Number })
   @ApiQuery({ name: 'year', required: false, type: Number })
   @ApiQuery({ name: 'month', required: false, type: Number })
@@ -99,8 +102,9 @@ export class InstructorRatingsController {
 
   @Get('admin/annual')
   @UseGuards(RolesGuard)
-  @Roles(Role.ADMIN, Role.MANAGER)
-  @ApiOperation({ summary: 'Statistici anuale per instructor (Admin/Manager)' })
+  @UseGuards(SuperiorInstructorGuard)
+  @Roles(Role.ADMIN, Role.MANAGER, Role.INSTRUCTOR)
+  @ApiOperation({ summary: 'Statistici anuale per instructor (Admin/Manager/Superior)' })
   @ApiQuery({ name: 'instructorId', required: false, type: Number })
   @ApiResponse({ status: 200, description: 'Media ratingurilor pe ani.' })
   getAnnualStats(@Query() query: RatingStatsQueryDto) {
@@ -109,8 +113,9 @@ export class InstructorRatingsController {
 
   @Get('admin/all')
   @UseGuards(RolesGuard)
-  @Roles(Role.ADMIN, Role.MANAGER)
-  @ApiOperation({ summary: 'Toate ratingurile individuale cu filtre (Admin/Manager)' })
+  @UseGuards(SuperiorInstructorGuard)
+  @Roles(Role.ADMIN, Role.MANAGER, Role.INSTRUCTOR)
+  @ApiOperation({ summary: 'Toate ratingurile individuale cu filtre (Admin/Manager/Superior)' })
   @ApiQuery({ name: 'instructorId', required: false, type: Number })
   @ApiQuery({ name: 'year', required: false, type: Number })
   @ApiQuery({ name: 'month', required: false, type: Number })
