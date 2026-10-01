@@ -529,6 +529,8 @@ export class PdfService {
       PASSED: 'Promovat',
       FAILED: 'Nepromovat',
       ABSENT: 'Absent',
+      // examen încă programat: rezultatul rămâne gol, se completează la examen
+      SCHEDULED: '',
     };
     const rows = data.exams.length
       ? data.exams.map((exam) => {
@@ -545,11 +547,11 @@ export class PdfService {
               <td>${this.escapeHtml(exam.sector)}</td>
               <td>${this.escapeHtml(exam.gearbox)}</td>
               <td>${this.escapeHtml(instructorName)}</td>
-              <td>${this.escapeHtml(statusLabels[exam.status] || exam.status)}</td>
+              <td>${this.escapeHtml(statusLabels[exam.status] ?? exam.status)}</td>
             </tr>
           `;
         }).join('')
-      : '<tr><td colspan="11">Nu există examene practice finalizate în această zi.</td></tr>';
+      : '<tr><td colspan="11">Nu există examene practice în această zi.</td></tr>';
 
     const html = `
       <!DOCTYPE html>
@@ -627,6 +629,11 @@ export class PdfService {
       FAILED: 'Nepromovat',
       ABSENT: 'Absent',
     };
+    // examen încă programat: lăsăm loc de completat rezultatul de mână
+    const resultLabel =
+      data.status === 'SCHEDULED'
+        ? '______________________'
+        : statusLabels[data.status] || data.status;
     const studentName = `${data.user.lastName || ''} ${data.user.firstName || ''}`.trim();
     const instructorName = `${data.instructor?.lastName || ''} ${data.instructor?.firstName || ''}`.trim();
     const examDate = data.date.toISOString().slice(0, 10);
@@ -666,7 +673,7 @@ export class PdfService {
           <tr><th>Locul în mașină</th><td>${data.positionInCar}</td></tr>
           <tr><th>Instructor</th><td>${value(instructorName)}</td></tr>
         </table>
-        <div class="result">Rezultat: ${value(statusLabels[data.status] || data.status)}</div>
+        <div class="result">Rezultat: ${value(resultLabel)}</div>
         <div class="signatures">
           <div class="signature">Instructor</div>
           <div class="signature">Candidat</div>

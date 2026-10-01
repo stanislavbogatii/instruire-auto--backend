@@ -28,7 +28,10 @@ const FINAL_STATUSES: PracticalExamReservationStatus[] = [
   PracticalExamReservationStatus.CANCELLED,
 ];
 
+// Borderoul zilei listează toate rezervările zilei (și cele doar programate,
+// ca să poată fi completat pe hârtie la examen); doar anulările lipsesc.
 const REPORT_STATUSES: PracticalExamReservationStatus[] = [
+  PracticalExamReservationStatus.SCHEDULED,
   PracticalExamReservationStatus.PASSED,
   PracticalExamReservationStatus.FAILED,
   PracticalExamReservationStatus.ABSENT,
@@ -725,12 +728,9 @@ export class PracticalExamSlotsService {
     if (!reservation) {
       throw new NotFoundException(`Reservation with id=${reservationId} not found`);
     }
-    if (
-      reservation.status === PracticalExamReservationStatus.SCHEDULED ||
-      reservation.status === PracticalExamReservationStatus.CANCELLED
-    ) {
+    if (reservation.status === PracticalExamReservationStatus.CANCELLED) {
       throw new BadRequestException(
-        'The individual document is available only after the practical exam is finalized',
+        'The individual document is not available for a cancelled reservation',
       );
     }
 

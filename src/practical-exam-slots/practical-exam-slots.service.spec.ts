@@ -16,7 +16,7 @@ describe('PracticalExamSlotsService documents', () => {
     };
   }
 
-  it('builds the daily report from finalized practical reservations in slot order', async () => {
+  it('builds the daily report from the day\'s practical reservations in slot order', async () => {
     const { service, prisma } = createService();
     const reservation = {
       id: 17,
@@ -105,14 +105,38 @@ describe('PracticalExamSlotsService documents', () => {
     });
   });
 
-  it('does not generate an individual document for an unfinished exam', async () => {
+  it('generates the individual document for a scheduled exam, with the result left open', async () => {
     const { service, prisma } = createService();
     prisma.practicalExamSlotReservation.findUnique.mockResolvedValue({
       id: 19,
+      userId: 5,
       status: 'SCHEDULED',
+      positionInCar: 3,
+      user: { id: 5, firstName: 'Ana', lastName: 'Rusu', email: 'ana@example.com', phone: null, idnp: null },
+      slot: {
+        date: new Date('2026-10-02T00:00:00.000Z'),
+        time: '08:00',
+        sector: 'Ciocana',
+        gearbox: 'manual',
+        instructor: { id: 2, firstName: 'Ana', lastName: 'Ionescu' },
+      },
+    });
+    prisma.practicalExamSlotReservation.findMany.mockResolvedValue([{ id: 19, userId: 5 }]);
+
+    const document = await service.getIndividualExamDocument(19);
+
+    expect(document.status).toBe('SCHEDULED');
+    expect(document.attemptNumber).toBe(1);
+  });
+
+  it('does not generate an individual document for a cancelled reservation', async () => {
+    const { service, prisma } = createService();
+    prisma.practicalExamSlotReservation.findUnique.mockResolvedValue({
+      id: 20,
+      status: 'CANCELLED',
     });
 
-    await expect(service.getIndividualExamDocument(19)).rejects.toBeInstanceOf(
+    await expect(service.getIndividualExamDocument(20)).rejects.toBeInstanceOf(
       BadRequestException,
     );
   });
